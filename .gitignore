@@ -21,3 +21,9 @@ target/
 # OpenSpec 本地工作台，不入库
 openspec/
 .claude/
+
+# Claude Code 本地说明，不入库
+CLAUDE.md
+
+# 本地设计文档，不入库
+docs/
