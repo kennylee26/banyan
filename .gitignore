@@ -25,5 +25,6 @@ openspec/
 # Claude Code 本地说明，不入库
 CLAUDE.md
 
-# 本地设计文档，不入库
+# 本地设计文档、术语表与 ADR，不入库
 docs/
+GLOSSARY.md
