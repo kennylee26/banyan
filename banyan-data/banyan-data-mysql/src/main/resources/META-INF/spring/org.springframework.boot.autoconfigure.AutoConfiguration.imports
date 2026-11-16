@@ -1,0 +1,2 @@
+cn.kennylee.banyan.data.mysql.autoconfigure.MyBatisDasAutoConfiguration
+cn.kennylee.banyan.data.mysql.autoconfigure.MyBatisDasMissingClassAutoConfiguration

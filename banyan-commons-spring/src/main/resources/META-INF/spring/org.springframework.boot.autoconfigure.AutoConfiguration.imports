@@ -1,0 +1,2 @@
+cn.kennylee.banyan.commons.spring.json.JsonAutoConfiguration
+cn.kennylee.banyan.commons.spring.json.JsonMissingClassAutoConfiguration

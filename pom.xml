@@ -11,7 +11,7 @@
 
     <name>banyan</name>
     <description>基于 Spring Boot 的基础设施工具箱</description>
-    <url>https://github.com/kennylee/banyan</url>
+    <url>https://github.com/kennylee26/banyan</url>
 
     <licenses>
         <license>
@@ -30,13 +30,16 @@
     </developers>
 
     <scm>
-        <url>https://github.com/kennylee/banyan</url>
-        <connection>scm:git:https://github.com/kennylee/banyan.git</connection>
-        <developerConnection>scm:git:ssh://git@github.com/kennylee/banyan.git</developerConnection>
+        <url>https://github.com/kennylee26/banyan</url>
+        <connection>scm:git:https://github.com/kennylee26/banyan.git</connection>
+        <developerConnection>scm:git:ssh://git@github.com/kennylee26/banyan.git</developerConnection>
     </scm>
 
     <modules>
         <module>banyan-bom</module>
+        <module>banyan-commons</module>
+        <module>banyan-commons-spring</module>
+        <module>banyan-test</module>
         <module>banyan-cache</module>
         <module>banyan-trace</module>
         <module>banyan-data</module>
@@ -49,13 +52,15 @@
 
         <spring-boot.version>3.4.5</spring-boot.version>
         <mybatis-plus.version>3.5.5</mybatis-plus.version>
-        <mybatis-plus-join.version>1.4.10</mybatis-plus-join.version>
         <spring-cloud-context.version>4.1.5</spring-cloud-context.version>
         <dubbo.version>3.2.13</dubbo.version>
         <feign.version>13.5</feign.version>
 
         <embedded-redis.version>1.4.3</embedded-redis.version>
         <flapdoodle-mongo.version>4.18.0</flapdoodle-mongo.version>
+        <mapstruct.version>1.6.3</mapstruct.version>
+        <!-- 仅供 banyan-test 使用；消费方以 test scope 引入，不进主依赖链 -->
+        <hutool.version>5.8.27</hutool.version>
     </properties>
 
     <dependencyManagement>
@@ -66,6 +71,16 @@
                 <version>${spring-boot.version}</version>
                 <type>pom</type>
                 <scope>import</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.mapstruct</groupId>
+                <artifactId>mapstruct</artifactId>
+                <version>${mapstruct.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.mapstruct</groupId>
+                <artifactId>mapstruct-processor</artifactId>
+                <version>${mapstruct.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>

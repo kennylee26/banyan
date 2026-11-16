@@ -53,5 +53,13 @@
             <version>${flapdoodle-mongo.version}</version>
             <scope>test</scope>
         </dependency>
+
+        <!-- 公共测试装备：内嵌库配置、契约测试基类、装配测试入口 -->
+        <dependency>
+            <groupId>cn.kennylee.banyan</groupId>
+            <artifactId>banyan-test</artifactId>
+            <version>${project.version}</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 </project>

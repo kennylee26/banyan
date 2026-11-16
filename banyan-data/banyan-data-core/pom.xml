@@ -18,8 +18,17 @@
 
     <dependencies>
         <dependency>
+            <groupId>cn.kennylee.banyan</groupId>
+            <artifactId>banyan-commons</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+        <!-- 仅提供校验注解契约，不强制使用方引入实现 -->
+        <dependency>
             <groupId>jakarta.validation</groupId>
             <artifactId>jakarta.validation-api</artifactId>
+            <scope>provided</scope>
+            <optional>true</optional>
         </dependency>
 
         <dependency>

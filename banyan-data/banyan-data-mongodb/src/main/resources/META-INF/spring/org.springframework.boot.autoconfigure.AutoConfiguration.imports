@@ -1,0 +1,2 @@
+cn.kennylee.banyan.data.mongodb.autoconfigure.MongoDbDasAutoConfiguration
+cn.kennylee.banyan.data.mongodb.autoconfigure.MongoDbDasMissingClassAutoConfiguration

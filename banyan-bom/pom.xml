@@ -21,6 +21,21 @@
         <dependencies>
             <dependency>
                 <groupId>cn.kennylee.banyan</groupId>
+                <artifactId>banyan-commons</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>cn.kennylee.banyan</groupId>
+                <artifactId>banyan-commons-spring</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>cn.kennylee.banyan</groupId>
+                <artifactId>banyan-test</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>cn.kennylee.banyan</groupId>
                 <artifactId>banyan-cache</artifactId>
                 <version>${project.version}</version>
             </dependency>
