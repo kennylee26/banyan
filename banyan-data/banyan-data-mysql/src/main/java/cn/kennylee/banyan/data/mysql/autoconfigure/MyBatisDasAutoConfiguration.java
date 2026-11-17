@@ -9,6 +9,7 @@ import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.lang.NonNull;
@@ -26,6 +27,7 @@ import java.util.Map;
 @AutoConfiguration
 @ConditionalOnClass(name = "com.baomidou.mybatisplus.core.mapper.BaseMapper")
 @ConditionalOnProperty(prefix = "banyan.data-mysql", name = "enabled", matchIfMissing = true)
+@EnableConfigurationProperties(MyBatisDasProperties.class)
 public class MyBatisDasAutoConfiguration implements SmartInitializingSingleton, ApplicationContextAware {
 
     /** 应用上下文。 */
@@ -43,14 +45,15 @@ public class MyBatisDasAutoConfiguration implements SmartInitializingSingleton, 
     }
 
     /**
-     * 注册默认的 MySQL 查询策略。
+     * 注册默认的 MySQL 查询策略；是否转义由配置决定。
      *
+     * @param properties 配置
      * @return 查询策略
      */
     @Bean
     @ConditionalOnMissingBean(MyBatisDasQueryStrategy.class)
-    public MyBatisDasQueryStrategy<?> myBatisDasQueryStrategy() {
-        return new MyBatisDasQueryStrategy<>();
+    public MyBatisDasQueryStrategy<?> myBatisDasQueryStrategy(MyBatisDasProperties properties) {
+        return new MyBatisDasQueryStrategy<>(properties.getLikeEscape().isEnabled());
     }
 
     /**

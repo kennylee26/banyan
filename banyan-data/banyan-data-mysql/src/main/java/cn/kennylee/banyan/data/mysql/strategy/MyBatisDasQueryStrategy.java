@@ -4,6 +4,7 @@ import cn.kennylee.banyan.commons.util.Strings;
 import cn.kennylee.banyan.data.core.page.PageDto;
 import cn.kennylee.banyan.data.core.query.AbstractDasQueryStrategy;
 import cn.kennylee.banyan.data.core.query.DasQueryStrategy;
+import cn.kennylee.banyan.data.mysql.support.LikeEscaper;
 import cn.kennylee.banyan.data.mysql.wrapper.BanyanQueryWrapper;
 
 import java.util.Collection;
@@ -22,20 +23,43 @@ public class MyBatisDasQueryStrategy<T> extends
     private Class<T> entityClass;
     /** 当前查询容器。 */
     private BanyanQueryWrapper<T> wrapper;
+    /** 是否对 like 值做特殊字符转义；全局层开启时由装配侧传 false。 */
+    private final boolean likeEscapeEnabled;
 
     /**
-     * 构造实例。
+     * 构造实例，默认开启转义。
      */
     public MyBatisDasQueryStrategy() {
+        this(true);
+    }
+
+    /**
+     * 构造实例，默认开启转义。
+     *
+     * @param entityClass 实体类型
+     */
+    public MyBatisDasQueryStrategy(Class<T> entityClass) {
+        this(entityClass, true);
     }
 
     /**
      * 构造实例。
      *
-     * @param entityClass 实体类型
+     * @param likeEscapeEnabled 是否对 like 值做特殊字符转义
      */
-    public MyBatisDasQueryStrategy(Class<T> entityClass) {
+    public MyBatisDasQueryStrategy(boolean likeEscapeEnabled) {
+        this.likeEscapeEnabled = likeEscapeEnabled;
+    }
+
+    /**
+     * 构造实例。
+     *
+     * @param entityClass       实体类型
+     * @param likeEscapeEnabled 是否对 like 值做特殊字符转义
+     */
+    public MyBatisDasQueryStrategy(Class<T> entityClass, boolean likeEscapeEnabled) {
         this.entityClass = entityClass;
+        this.likeEscapeEnabled = likeEscapeEnabled;
     }
 
     /**
@@ -76,10 +100,10 @@ public class MyBatisDasQueryStrategy<T> extends
      * @return 转义后的值
      */
     private String escapeLike(Object value) {
-        return String.valueOf(value)
-                .replace("\\", "\\\\")
-                .replace("%", "\\%")
-                .replace("_", "\\_");
+        if (!likeEscapeEnabled) {
+            return String.valueOf(value);
+        }
+        return LikeEscaper.escape(String.valueOf(value));
     }
 
     @Override
@@ -94,7 +118,8 @@ public class MyBatisDasQueryStrategy<T> extends
      */
     @Override
     public DasQueryStrategy<Object, T> newInstance() {
-        return new MyBatisDasQueryStrategy<>(entityClass);
+        // 新实例必须继承父实例的转义开关，否则容器 bean 的配置会在复制后丢失
+        return new MyBatisDasQueryStrategy<>(entityClass, likeEscapeEnabled);
     }
 
     @Override

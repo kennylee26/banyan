@@ -13,6 +13,10 @@ import com.baomidou.mybatisplus.core.toolkit.support.SFunction;
  * 自研查询容器：直接继承本体 {@link QueryWrapper}，因此可作为 {@code Wrapper<T>} 传给
  * {@code BaseMapper.selectPage}（链式代理型容器不能）。
  * <p>相比本体只补一件事：以方法引用指定列名。不实现连表 JOIN，不生成带别名的 SELECT 列。</p>
+ * <p><b>LIKE 边界：</b>本类的 {@code like} / {@code notLike} 是原生透传，<b>不承诺</b>对
+ * {@code %}、{@code _}、{@code \} 做特殊字符转义；需要转义时请使用查询策略 DTO
+ * （受 {@code banyan.data-mysql.like-escape.enabled} 控制），或开启全局
+ * {@code banyan.data-mysql.like-escape.inner-interceptor.enabled}。传入已转义的值不会被二次加工。</p>
  *
  * @param <T> 实体类型
  * @author kennylee
@@ -107,7 +111,7 @@ public class BanyanQueryWrapper<T> extends QueryWrapper<T> {
     }
 
     /**
-     * 按字段全模糊匹配。
+     * 按字段全模糊匹配。原生透传，不承诺特殊字符转义；需要转义请用查询策略 DTO 或开启全局层。
      *
      * @param column 实体字段
      * @param value 值
@@ -119,7 +123,7 @@ public class BanyanQueryWrapper<T> extends QueryWrapper<T> {
     }
 
     /**
-     * 按字段不包含匹配。
+     * 按字段不包含匹配。原生透传，不承诺特殊字符转义；需要转义请用查询策略 DTO 或开启全局层。
      *
      * @param column 实体字段
      * @param value 值

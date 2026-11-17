@@ -32,6 +32,17 @@ class QueryWrapperRegressionTest {
     @Autowired
     private UserMapper userMapper;
 
+    /** 容器的 like 是原生透传：传入已转义的值不会被二次加工。 */
+    @Test
+    void wrapperLikeKeepsValueAsIs() {
+        BanyanQueryWrapper<UserEo> wrapper = new BanyanQueryWrapper<>(UserEo.class);
+        wrapper.like("user_name", "50\\%");
+        // MyBatis-Plus 在生成 SQL 段时才惰性填充参数表
+        wrapper.getSqlSegment();
+
+        assertThat(wrapper.getParamNameValuePairs().values()).contains("%50\\%%");
+    }
+
     /** 自研容器可直接用于分页。 */
     @Test
     void wrapperCanBeUsedDirectlyBySelectPage() {

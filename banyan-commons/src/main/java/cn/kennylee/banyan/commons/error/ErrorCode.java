@@ -111,7 +111,10 @@ public enum ErrorCode {
     BATCH_UPDATE_FAILED("banyan.data.batch-update-failed"),
 
     /** 批量执行失败后回滚也失败。 */
-    BATCH_ROLLBACK_FAILED("banyan.data.batch-rollback-failed");
+    BATCH_ROLLBACK_FAILED("banyan.data.batch-rollback-failed"),
+
+    /** 全局 LIKE 转义遇到不支持的参数形态。 */
+    LIKE_ESCAPE_UNSUPPORTED_PARAM("banyan.mysql.like-escape-unsupported-param");
 
     /** 资源文件中的消息 key。 */
     private final String messageKey;
