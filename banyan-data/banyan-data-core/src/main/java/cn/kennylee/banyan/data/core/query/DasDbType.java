@@ -9,8 +9,6 @@ package cn.kennylee.banyan.data.core.query;
 public enum DasDbType {
     /** MySQL。 */
     MYSQL,
-    /**
-     * 操作。
-     */
+    /** MongoDB。 */
     MONGODB
 }
