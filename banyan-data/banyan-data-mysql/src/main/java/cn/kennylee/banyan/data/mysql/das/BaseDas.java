@@ -28,6 +28,7 @@ import com.baomidou.mybatisplus.core.metadata.TableInfoHelper;
 import com.baomidou.mybatisplus.extension.conditions.query.QueryChainWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 
+import lombok.Getter;
 import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
 import org.mybatis.spring.SqlSessionUtils;
@@ -69,6 +70,7 @@ public abstract class BaseDas<T extends Identifiable<P>, P extends Serializable>
     private IdProvider idProvider = new MybatisIdWorkerProvider();
 
     /** 主键生成策略，默认雪花。 */
+    @Getter
     private IdPolicy idPolicy = IdPolicy.ASSIGN_ID;
 
     /** 应用上下文。 */
@@ -113,15 +115,6 @@ public abstract class BaseDas<T extends Identifiable<P>, P extends Serializable>
             return;
         }
         this.idPolicy = idPolicy;
-    }
-
-    /**
-     * 获取当前主键生成策略。
-     *
-     * @return 主键生成策略
-     */
-    public IdPolicy getIdPolicy() {
-        return idPolicy;
     }
 
 
@@ -578,8 +571,7 @@ public abstract class BaseDas<T extends Identifiable<P>, P extends Serializable>
      * @return 可写入的实体列表
      */
     private List<T> prepareEntities(Collection<T> entities) {
-        List<T> entitiesToSave = new ArrayList<>(entities);
-        return entitiesToSave;
+        return new ArrayList<>(entities);
     }
 
     /**
