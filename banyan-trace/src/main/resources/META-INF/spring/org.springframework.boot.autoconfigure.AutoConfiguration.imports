@@ -1,0 +1,3 @@
+cn.kennylee.banyan.trace.autoconfigure.TraceAutoConfiguration
+cn.kennylee.banyan.trace.autoconfigure.TraceContextPropagationAutoConfiguration
+cn.kennylee.banyan.trace.autoconfigure.TraceMissingClassAutoConfiguration

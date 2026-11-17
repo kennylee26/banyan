@@ -1,0 +1,4 @@
+spring:
+  autoconfigure:
+    exclude:
+      - org.apache.dubbo.spring.boot.autoconfigure.DubboAutoConfiguration

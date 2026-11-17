@@ -1,0 +1,2 @@
+banyanTraceConsumer=cn.kennylee.banyan.trace.dubbo.DubboTraceConsumerFilter
+banyanTraceProvider=cn.kennylee.banyan.trace.dubbo.DubboTraceProviderFilter

@@ -23,8 +23,15 @@
         </dependency>
 
         <dependency>
-            <groupId>org.codehaus.janino</groupId>
-            <artifactId>janino</artifactId>
+            <groupId>cn.kennylee.banyan</groupId>
+            <artifactId>banyan-commons</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>cn.kennylee.banyan</groupId>
+            <artifactId>banyan-commons-spring</artifactId>
+            <version>${project.version}</version>
         </dependency>
 
         <dependency>
@@ -52,6 +59,13 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-webflux</artifactId>
+            <scope>provided</scope>
+            <optional>true</optional>
+        </dependency>
+        <!-- 响应式上下文传播（可选）：版本由 Spring Boot BOM 的 micrometer-bom 管理 -->
+        <dependency>
+            <groupId>io.micrometer</groupId>
+            <artifactId>context-propagation</artifactId>
             <scope>provided</scope>
             <optional>true</optional>
         </dependency>

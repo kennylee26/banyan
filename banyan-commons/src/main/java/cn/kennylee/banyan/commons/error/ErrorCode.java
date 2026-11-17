@@ -114,7 +114,10 @@ public enum ErrorCode {
     BATCH_ROLLBACK_FAILED("banyan.data.batch-rollback-failed"),
 
     /** 全局 LIKE 转义遇到不支持的参数形态。 */
-    LIKE_ESCAPE_UNSUPPORTED_PARAM("banyan.mysql.like-escape-unsupported-param");
+    LIKE_ESCAPE_UNSUPPORTED_PARAM("banyan.mysql.like-escape-unsupported-param"),
+
+    /** 使用方已有任务装饰器时跳过自动兜底。 */
+    TRACE_CUSTOM_DECORATOR_SKIPPED("banyan.trace.custom-decorator-skipped");
 
     /** 资源文件中的消息 key。 */
     private final String messageKey;
