@@ -1,5 +1,6 @@
 package cn.kennylee.banyan.data.mysql.wrapper;
 
+import cn.kennylee.banyan.commons.util.Beans;
 import cn.kennylee.banyan.commons.util.Strings;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.TableFieldInfo;
@@ -200,7 +201,7 @@ public class BanyanQueryWrapper<T> extends QueryWrapper<T> {
     /** 把方法引用解析为数据库列名。 */
     private String columnName(SFunction<T, ?> column) {
         String methodName = LambdaUtils.extract(column).getImplMethodName();
-        String property = toPropertyName(methodName);
+        String property = Beans.propertyName(methodName);
         TableInfo tableInfo = TableInfoHelper.getTableInfo(entityClass);
         if (tableInfo != null) {
             if (property.equals(tableInfo.getKeyProperty())) {
@@ -215,25 +216,4 @@ public class BanyanQueryWrapper<T> extends QueryWrapper<T> {
         return Strings.toUnderlineCase(property);
     }
 
-    /** getter 方法名转属性名。 */
-    private String toPropertyName(String methodName) {
-        if (methodName.startsWith("get") && methodName.length() > 3) {
-            return decapitalize(methodName.substring(3));
-        }
-        if (methodName.startsWith("is") && methodName.length() > 2) {
-            return decapitalize(methodName.substring(2));
-        }
-        return methodName;
-    }
-
-    /** 首字母转小写。 */
-    private String decapitalize(String name) {
-        if (name.isEmpty()) {
-            return name;
-        }
-        if (name.length() > 1 && Character.isUpperCase(name.charAt(0)) && Character.isUpperCase(name.charAt(1))) {
-            return name;
-        }
-        return Character.toLowerCase(name.charAt(0)) + name.substring(1);
-    }
 }

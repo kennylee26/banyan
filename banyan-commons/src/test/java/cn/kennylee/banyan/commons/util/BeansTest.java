@@ -42,6 +42,23 @@ class BeansTest {
         assertTrue(map.containsKey("email"));
     }
 
+    /** getter 方法名解析属性名；非 getter 原样返回。 */
+    @Test
+    void parsesPropertyNames() {
+        assertEquals("name", Beans.propertyName("getName"));
+        assertEquals("active", Beans.propertyName("isActive"));
+        assertEquals("URL", Beans.propertyName("getURL"));
+        assertEquals("count", Beans.propertyName("count"));
+    }
+
+    /** 首字母转小写：前两个字母都大写时保持原样。 */
+    @Test
+    void decapitalizesLikeJavaBeans() {
+        assertEquals("name", Beans.decapitalize("Name"));
+        assertEquals("URL", Beans.decapitalize("URL"));
+        assertEquals("", Beans.decapitalize(""));
+    }
+
     /** 对 null 返回空 Map。 */
     @Test
     void toMapOnNullReturnsEmptyMap() {

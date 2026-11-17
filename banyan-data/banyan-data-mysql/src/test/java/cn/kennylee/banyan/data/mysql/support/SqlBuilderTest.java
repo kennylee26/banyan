@@ -24,6 +24,29 @@ class SqlBuilderTest {
         assertThat(sql).isEqualTo("INSERT INTO users (id,user_name) VALUES (?,?),(?,?)");
     }
 
+    /** CASE WHEN 批量更新：每列按有值的行生成分支，末尾 ELSE 列名保留原值，主键只出现在 WHERE。 */
+    @Test
+    void buildsCaseWhenBatchUpdate() {
+        String sql = SqlBuilder.updateCaseWhenSql("users", "id",
+                List.of("user_name", "age"), List.of(2, 1), 2);
+
+        assertThat(sql).isEqualTo(
+                "UPDATE users SET user_name = CASE id WHEN ? THEN ? WHEN ? THEN ? ELSE user_name END, "
+                        + "age = CASE id WHEN ? THEN ? ELSE age END WHERE id IN (?,?)");
+        assertThat(sql).doesNotContain("id = CASE");
+    }
+
+    /** CASE WHEN 更新的列清单与行数非法时快速失败。 */
+    @Test
+    void rejectsIllegalCaseWhenArguments() {
+        assertThatThrownBy(() -> SqlBuilder.updateCaseWhenSql("users", "id", List.of(), List.of(), 1))
+                .isInstanceOf(BanyanException.class);
+        assertThatThrownBy(() -> SqlBuilder.updateCaseWhenSql("users", "id", List.of("age"), List.of(1), 0))
+                .isInstanceOf(BanyanException.class);
+        assertThatThrownBy(() -> SqlBuilder.updateCaseWhenSql("users", "id", List.of("age"), List.of(), 1))
+                .isInstanceOf(IllegalArgumentException.class);
+    }
+
     /** 列或行数非法时快速失败。 */
     @Test
     void rejectsIllegalArguments() {

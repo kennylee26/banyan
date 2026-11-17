@@ -34,4 +34,13 @@ public class UserEo extends BaseEo<Long> {
 
     /** 创建时间。 */
     private LocalDateTime createTime;
+
+    /** 昵称。 */
+    private String nickName;
+
+    /** 城市。 */
+    private String city;
+
+    /** 状态。 */
+    private Integer status;
 }

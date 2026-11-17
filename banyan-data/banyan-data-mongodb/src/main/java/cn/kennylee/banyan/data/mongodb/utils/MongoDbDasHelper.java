@@ -15,6 +15,9 @@ public final class MongoDbDasHelper {
     /** Mongo 主键字段名。 */
     public static final String MONGO_ID = "_id";
 
+    /** Mongo 文档类型字段名，由 Spring Data 写入，不属于业务字段。 */
+    public static final String MONGO_CLASS = "_class";
+
     /** 时间戳换算使用的固定时区（+8）。 */
     public static final ZoneOffset DEFAULT_ZONE_OFFSET = ZoneOffset.ofHours(8);
 

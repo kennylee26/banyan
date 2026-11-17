@@ -2,6 +2,7 @@ package cn.kennylee.banyan.data.core.das;
 
 import cn.kennylee.banyan.commons.error.BanyanException;
 import cn.kennylee.banyan.commons.error.ErrorCode;
+import cn.kennylee.banyan.commons.error.Messages;
 import cn.kennylee.banyan.data.core.page.PageResult;
 import cn.kennylee.banyan.data.core.page.PageDto;
 import cn.kennylee.banyan.data.core.page.SortDto;
@@ -11,8 +12,12 @@ import cn.kennylee.banyan.data.core.query.DasQueryStrategy;
 import cn.kennylee.banyan.data.core.query.DasQueryStrategyRegistry;
 
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.function.Consumer;
 
 /**
@@ -42,6 +47,33 @@ public abstract class AbstractDas<T extends Identifiable<P>, P extends Serializa
     protected AbstractDas(DasQueryStrategyRegistry registry, DasDbType dbType) {
         this.registry = registry;
         this.dbType = dbType;
+    }
+
+    /**
+     * 批量更新的整批前置校验：入参非 null、每条记录主键非空且不重复，返回入参副本。
+     * <p>「每条记录至少有一个可更新字段」依赖各实现的元数据，由实现侧补充校验。</p>
+     *
+     * @param entities 实体集合
+     * @return 入参副本；空集合时返回空列表（调用方据此 no-op）
+     * @throws IllegalArgumentException 入参为 null，或存在缺主键、重复主键的记录
+     */
+    protected List<T> prepareBatchUpdate(Collection<T> entities) {
+        if (entities == null) {
+            throw new IllegalArgumentException(Messages.get(ErrorCode.BATCH_UPDATE_NULL_ARG));
+        }
+        List<T> entitiesToUpdate = new ArrayList<>(entities);
+        Set<P> seenIds = new HashSet<>(entitiesToUpdate.size());
+        for (T entity : entitiesToUpdate) {
+            P id = entity.getId();
+            if (id == null) {
+                throw new IllegalArgumentException(Messages.get(ErrorCode.BATCH_UPDATE_ID_REQUIRED));
+            }
+            if (!seenIds.add(id)) {
+                throw new IllegalArgumentException(Messages.get(
+                        ErrorCode.BATCH_UPDATE_DUPLICATE_ID, String.valueOf(id)));
+            }
+        }
+        return entitiesToUpdate;
     }
 
     /**

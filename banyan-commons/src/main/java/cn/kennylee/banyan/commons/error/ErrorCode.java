@@ -41,6 +41,12 @@ public enum ErrorCode {
     /** 行数不合法。 */
     ROWS_POSITIVE("banyan.sql.rows-positive"),
 
+    /** 主键列名为空。 */
+    ID_COLUMN_REQUIRED("banyan.sql.id-column-required"),
+
+    /** 更新列与取值行数不匹配。 */
+    COLUMN_VALUE_COUNT_MISMATCH("banyan.sql.column-value-count-mismatch"),
+
     /** 批量保存失败。 */
     BATCH_SAVE_FAILED("banyan.mysql.batch-save-failed"),
 
@@ -66,7 +72,46 @@ public enum ErrorCode {
     MONGO_BATCH_IGNORED_ERRORS("banyan.mongodb.batch-ignored-errors"),
 
     /** 页码超出最大允许值。 */
-    MAX_PAGE_EXCEEDED("banyan.validation.max-page-exceeded");
+    MAX_PAGE_EXCEEDED("banyan.validation.max-page-exceeded"),
+
+    /** 批量按主键更新的入参为 null。 */
+    BATCH_UPDATE_NULL_ARG("banyan.data.batch-update-null-arg"),
+
+    /** 批量按主键更新的记录缺少主键。 */
+    BATCH_UPDATE_ID_REQUIRED("banyan.data.batch-update-id-required"),
+
+    /** 批量按主键更新的记录主键重复。 */
+    BATCH_UPDATE_DUPLICATE_ID("banyan.data.batch-update-duplicate-id"),
+
+    /** 批量按主键更新的记录没有可更新字段。 */
+    BATCH_UPDATE_NO_UPDATABLE_FIELD("banyan.data.batch-update-no-updatable-field"),
+
+    /** 批量更新因方言不支持而降级。 */
+    BATCH_UPDATE_DIALECT_FALLBACK("banyan.data.batch-update-dialect-fallback"),
+
+    /** 批量更新因字段并集超限而降级。 */
+    BATCH_UPDATE_COLUMNS_FALLBACK("banyan.data.batch-update-columns-fallback"),
+
+    /** 批量更新由调用方显式关闭单条批量 SQL。 */
+    BATCH_UPDATE_SKIP_BY_CALLER("banyan.data.batch-update-skip-by-caller"),
+
+    /** 批量保存因方言不支持而降级。 */
+    BATCH_SAVE_DIALECT_FALLBACK("banyan.data.batch-save-dialect-fallback"),
+
+    /** 批量保存由调用方显式关闭单条批量 SQL。 */
+    BATCH_SAVE_SKIP_BY_CALLER("banyan.data.batch-save-skip-by-caller"),
+
+    /** 批量保存走单条多值 INSERT。 */
+    BATCH_SAVE_MULTI_VALUE("banyan.data.batch-save-multi-value"),
+
+    /** 批量更新的列数上限配置非法。 */
+    BATCH_UPDATE_MAX_COLUMNS_INVALID("banyan.data.batch-update-max-columns-invalid"),
+
+    /** 批量更新失败。 */
+    BATCH_UPDATE_FAILED("banyan.data.batch-update-failed"),
+
+    /** 批量执行失败后回滚也失败。 */
+    BATCH_ROLLBACK_FAILED("banyan.data.batch-rollback-failed");
 
     /** 资源文件中的消息 key。 */
     private final String messageKey;

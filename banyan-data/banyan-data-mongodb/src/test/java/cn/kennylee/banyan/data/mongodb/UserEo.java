@@ -28,4 +28,7 @@ public class UserEo implements MongoDbEo<ObjectId> {
 
     /** 邮箱。 */
     private String email;
+
+    /** 城市。 */
+    private String city;
 }

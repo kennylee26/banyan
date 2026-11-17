@@ -10,19 +10,24 @@ import cn.kennylee.banyan.commons.util.CollUtils;
 import cn.kennylee.banyan.commons.error.ErrorCode;
 import cn.kennylee.banyan.commons.error.Messages;
 import cn.kennylee.banyan.data.mongodb.utils.MongoDbDasHelper;
+import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+import org.bson.Document;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.BulkOperations;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.core.query.Update;
 
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Stream;
 
@@ -42,7 +47,9 @@ public abstract class AbstractMongoDas<T extends MongoDbEo<P>, P extends Seriali
     /** Mongo 操作模板。 */
     private final MongoTemplate mongoTemplate;
 
-    /** 分页查询是否允许使用磁盘。 */
+    /** 分页查询是否允许使用磁盘（大结果集排序时避免内存限制）。 */
+    @Getter
+    @Setter
     private boolean findPageAllowDiskUse = true;
 
     /**
@@ -188,14 +195,76 @@ public abstract class AbstractMongoDas<T extends MongoDbEo<P>, P extends Seriali
     }
 
     /**
-     * 按主键更新（整条覆盖）。
+     * 按主键更新（整条覆盖，主键不存在时插入）。
+     * <p>{@link MongoTemplate#save(Object)} 失败时抛异常，成功即视为更新成功。</p>
      *
      * @param entity 实体
-     * @return 是否更新成功
+     * @return 成功时返回 true
      */
     @Override
     public boolean updateById(T entity) {
-        return mongoTemplate.save(entity) != null;
+        // save 返回保存后的实体且不会为 null，失败以异常形式抛出
+        mongoTemplate.save(entity);
+        return true;
+    }
+
+    /**
+     * 按主键批量更新：用批量操作逐文档 {@code $set} 各记录值非 null 的字段，未提供的字段保持原值。
+     * <p>返回值是数据库报告的实际修改文档数，值未变化的文档不计入，因此可能小于入参记录数。</p>
+     *
+     * @param entities 实体集合
+     * @return 实际修改的文档数
+     * @throws IllegalArgumentException 入参为 null，或存在缺主键、重复主键、只有主键的记录
+     */
+    @Override
+    public int updateBatchById(Collection<T> entities) {
+        List<T> entitiesToUpdate = prepareBatchUpdate(entities);
+        if (entitiesToUpdate.isEmpty()) {
+            return 0;
+        }
+        List<Update> updates = new ArrayList<>(entitiesToUpdate.size());
+        List<P> ids = new ArrayList<>(entitiesToUpdate.size());
+        for (T entity : entitiesToUpdate) {
+            updates.add(partialUpdate(entity, entity.getId()));
+            ids.add(entity.getId());
+        }
+        // ORDERED：遇错即停并整体失败，与 MySQL 侧「整批不保留部分成功」的语义一致
+        BulkOperations bulkOps = mongoTemplate.bulkOps(BulkOperations.BulkMode.ORDERED, getEntityClass());
+        for (int i = 0; i < ids.size(); i++) {
+            bulkOps.updateOne(idQuery(ids.get(i)), updates.get(i));
+        }
+        // BulkWriteResult#getModifiedCount() 本身返回 int，无需窄化
+        return bulkOps.execute().getModifiedCount();
+    }
+
+    /**
+     * 构造只包含非 null 字段的 {@code $set} 更新；未提供的字段不出现在更新内容里。
+     *
+     * @param entity 实体
+     * @param id     主键，仅用于异常信息
+     * @return 批量更新项
+     * @throws IllegalArgumentException 记录没有任何非 null 的可更新字段
+     */
+    private Update partialUpdate(T entity, P id) {
+        Document document = new Document();
+        // 借 Spring Data 转换拿到 @Field 映射后的文档字段名，避免手写字段名映射
+        mongoTemplate.getConverter().write(entity, document);
+        // _id 与 _class 不是业务字段，不参与 $set；否则「只有主键」的判断会失效
+        document.remove(MongoDbDasHelper.MONGO_ID);
+        document.remove(MongoDbDasHelper.MONGO_CLASS);
+        Update update = new Update();
+        int setCount = 0;
+        for (Map.Entry<String, Object> entry : document.entrySet()) {
+            if (entry.getValue() != null) {
+                update.set(entry.getKey(), entry.getValue());
+                setCount++;
+            }
+        }
+        if (setCount == 0) {
+            throw new IllegalArgumentException(Messages.get(
+                    ErrorCode.BATCH_UPDATE_NO_UPDATABLE_FIELD, String.valueOf(id)));
+        }
+        return update;
     }
 
     /**
@@ -259,24 +328,6 @@ public abstract class AbstractMongoDas<T extends MongoDbEo<P>, P extends Seriali
         query.allowDiskUse(findPageAllowDiskUse);
         query.with(PageRequest.of((int) (pageNo - 1), (int) pageSize));
         return mongoTemplate.find(query, getEntityClass());
-    }
-
-    /**
-     * 是否允许分页查询使用磁盘（大结果集排序时避免内存限制）。
-     *
-     * @return 是否允许
-     */
-    public boolean isFindPageAllowDiskUse() {
-        return findPageAllowDiskUse;
-    }
-
-    /**
-     * 设置分页查询是否允许使用磁盘。
-     *
-     * @param findPageAllowDiskUse 是否允许
-     */
-    public void setFindPageAllowDiskUse(boolean findPageAllowDiskUse) {
-        this.findPageAllowDiskUse = findPageAllowDiskUse;
     }
 
     /**

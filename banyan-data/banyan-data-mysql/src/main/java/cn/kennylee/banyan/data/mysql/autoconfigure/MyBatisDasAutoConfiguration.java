@@ -67,7 +67,6 @@ public class MyBatisDasAutoConfiguration implements SmartInitializingSingleton, 
      * 容器内单例初始化完成后，把容器中的 MySQL 策略注册进注册表；已存在 MYSQL 策略时不覆盖。
      */
     @Override
-    @SuppressWarnings("rawtypes")
     public void afterSingletonsInstantiated() {
         DasQueryStrategyRegistry registry = applicationContext.getBean(DasQueryStrategyRegistry.class);
         if (registry.containsStrategy(DasDbType.MYSQL)) {

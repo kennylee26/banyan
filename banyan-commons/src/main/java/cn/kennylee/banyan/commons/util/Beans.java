@@ -19,6 +19,15 @@ import java.util.Set;
  */
 public final class Beans {
 
+    /** 对象标识 getter，不对应业务属性。 */
+    private static final String CLASS_GETTER = "getClass";
+
+    /** 普通 getter 前缀。 */
+    private static final String GETTER_PREFIX = "get";
+
+    /** 布尔 getter 前缀。 */
+    private static final String BOOLEAN_GETTER_PREFIX = "is";
+
     private Beans() {
     }
 
@@ -56,24 +65,60 @@ public final class Beans {
         return result;
     }
 
-    /** 从 getter 方法名解析属性名。 */
+    /** 从 getter 方法解析属性名；布尔 getter 需要返回类型为 boolean / Boolean。 */
     private static String propertyName(Method method) {
         String name = method.getName();
-        if ("getClass".equals(name)) {
+        if (CLASS_GETTER.equals(name)) {
             return null;
         }
-        if (name.startsWith("get") && name.length() > 3) {
-            return decapitalize(name.substring(3));
+        String property = stripPrefix(name, GETTER_PREFIX);
+        if (property != null) {
+            return decapitalize(property);
         }
-        if (name.startsWith("is") && name.length() > 2
-                && (boolean.class.equals(method.getReturnType()) || Boolean.class.equals(method.getReturnType()))) {
-            return decapitalize(name.substring(2));
+        boolean booleanGetter = boolean.class.equals(method.getReturnType())
+                || Boolean.class.equals(method.getReturnType());
+        if (!booleanGetter) {
+            return null;
         }
-        return null;
+        String booleanProperty = stripPrefix(name, BOOLEAN_GETTER_PREFIX);
+        return booleanProperty == null ? null : decapitalize(booleanProperty);
     }
 
-    /** 首字母转小写。 */
-    private static String decapitalize(String name) {
+    /**
+     * 从 getter 方法名解析属性名，供只拿得到方法名的调用方使用（如方法引用解析）。
+     *
+     * @param methodName 方法名
+     * @return 属性名；不是 getter 时原样返回方法名
+     */
+    public static String propertyName(String methodName) {
+        String property = stripPrefix(methodName, GETTER_PREFIX);
+        if (property == null) {
+            property = stripPrefix(methodName, BOOLEAN_GETTER_PREFIX);
+        }
+        return property == null ? methodName : decapitalize(property);
+    }
+
+    /**
+     * 去掉方法名前缀；前缀后没有内容时返回 null。
+     *
+     * @param name   方法名
+     * @param prefix 前缀
+     * @return 去掉前缀后的名称；前缀不匹配或其后为空时返回 null
+     */
+    private static String stripPrefix(String name, String prefix) {
+        if (!name.startsWith(prefix) || name.length() == prefix.length()) {
+            return null;
+        }
+        return name.substring(prefix.length());
+    }
+
+    /**
+     * 首字母转小写；前两个字母都大写时保持原样（与 JavaBeans 规范一致）。
+     *
+     * @param name 名称
+     * @return 转换后的名称
+     */
+    public static String decapitalize(String name) {
         if (name.isEmpty()) {
             return name;
         }
