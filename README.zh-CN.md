@@ -14,7 +14,7 @@
 | `banyan-commons` | 纯 JDK 静态工具与可插拔能力接口，零 Spring、零第三方 |
 | `banyan-commons-spring` | 依赖 Spring 的公共层：可替换接口、策略注册器与装配骨架 |
 | `banyan-test` | 公共测试装备：内嵌 MongoDB / H2 配置、契约测试基类（test-support jar） |
-| `banyan-cache` | 统一缓存接口、多级缓存、缓存穿透保护 |
+| `banyan-cache` | 统一缓存接口，Provider 可插拔，内置可扩展的穿透防护占位 |
 | `banyan-trace` | Trace ID 生成、传播与日志集成，兼容 servlet、reactive、dubbo、feign |
 | `banyan-data` | 数据访问层（Das）父模块 |
 | `banyan-data-core` | 公共契约：分页、排序、查询条件、查询策略、校验 |

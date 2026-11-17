@@ -1,0 +1,2 @@
+cn.kennylee.banyan.cache.autoconfigure.CacheAutoConfiguration
+cn.kennylee.banyan.cache.autoconfigure.CacheMissingClassAutoConfiguration

@@ -117,7 +117,40 @@ public enum ErrorCode {
     LIKE_ESCAPE_UNSUPPORTED_PARAM("banyan.mysql.like-escape-unsupported-param"),
 
     /** 使用方已有任务装饰器时跳过自动兜底。 */
-    TRACE_CUSTOM_DECORATOR_SKIPPED("banyan.trace.custom-decorator-skipped");
+    TRACE_CUSTOM_DECORATOR_SKIPPED("banyan.trace.custom-decorator-skipped"),
+
+    /** 缓存组名或 key 非法。 */
+    CACHE_KEY_INVALID("banyan.cache.key-invalid"),
+
+    /** 缓存 key 超长。 */
+    CACHE_KEY_TOO_LONG("banyan.cache.key-too-long"),
+
+    /** 缓存值类型与期望不符。 */
+    CACHE_VALUE_TYPE_MISMATCH("banyan.cache.value-type-mismatch"),
+
+    /** 批量删除 pattern 不在命名空间内。 */
+    CACHE_PATTERN_OUTSIDE_NAMESPACE("banyan.cache.pattern-outside-namespace"),
+
+    /** Provider 不支持该操作。 */
+    CACHE_PROVIDER_UNSUPPORTED("banyan.cache.provider-unsupported"),
+
+    /** 穿透开关开启但无实现。 */
+    CACHE_PENETRATION_NOOP("banyan.cache.penetration-noop"),
+
+    /** 未获取到缓存删除锁。 */
+    CACHE_LOCK_NOT_ACQUIRED("banyan.cache.lock-not-acquired"),
+
+    /** 读写开关关闭，操作被跳过。 */
+    CACHE_READ_WRITE_DISABLED("banyan.cache.read-write-disabled"),
+
+    /** 缓存操作日志模板，参数为操作名、key、是否命中。 */
+    CACHE_OPERATION("banyan.cache.operation"),
+
+    /** 需要非空 TTL 的缓存操作收到 null。 */
+    CACHE_TTL_REQUIRED("banyan.cache.ttl-required"),
+
+    /** 释放缓存锁失败。 */
+    CACHE_LOCK_RELEASE_FAILED("banyan.cache.lock-release-failed");
 
     /** 资源文件中的消息 key。 */
     private final String messageKey;
