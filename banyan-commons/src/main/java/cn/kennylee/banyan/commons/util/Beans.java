@@ -45,24 +45,34 @@ public final class Beans {
         }
         Set<String> ignores = ignoredProperties == null ? Collections.emptySet() : new HashSet<>(ignoredProperties);
         for (Method method : bean.getClass().getMethods()) {
-            if (method.getParameterCount() != 0 || void.class.equals(method.getReturnType())) {
+            if (!isReadableGetter(method)) {
                 continue;
             }
             String property = propertyName(method);
             if (property == null || ignores.contains(property)) {
                 continue;
             }
-            try {
-                method.trySetAccessible();
-                Object value = method.invoke(bean);
-                if (value != null) {
-                    result.put(property, value);
-                }
-            } catch (IllegalAccessException | InvocationTargetException e) {
-                throw new BanyanException(ErrorCode.BEAN_READ_FAILED, e, property);
+            Object value = readProperty(bean, method, property);
+            if (value != null) {
+                result.put(property, value);
             }
         }
         return result;
+    }
+
+    /** 只接收无参、有返回值的方法；getClass 与属性名解析交给调用方。 */
+    private static boolean isReadableGetter(Method method) {
+        return method.getParameterCount() == 0 && !void.class.equals(method.getReturnType());
+    }
+
+    /** 反射读取单个属性；非 null 值由调用方决定是否写入结果。 */
+    private static Object readProperty(Object bean, Method method, String property) {
+        try {
+            method.trySetAccessible();
+            return method.invoke(bean);
+        } catch (IllegalAccessException | InvocationTargetException e) {
+            throw new BanyanException(ErrorCode.BEAN_READ_FAILED, e, property);
+        }
     }
 
     /** 从 getter 方法解析属性名；布尔 getter 需要返回类型为 boolean / Boolean。 */

@@ -1,12 +1,17 @@
 package cn.kennylee.banyan.commons.util;
 
+import cn.kennylee.banyan.commons.error.BanyanException;
+import cn.kennylee.banyan.commons.error.ErrorCode;
 import org.junit.jupiter.api.Test;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.Collections;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
@@ -63,6 +68,105 @@ class BeansTest {
     @Test
     void toMapOnNullReturnsEmptyMap() {
         assertTrue(Beans.toMap(null, Collections.emptyList()).isEmpty());
+    }
+
+    /** 忽略属性为 null 时等同于不忽略任何属性。 */
+    @Test
+    void toMapOnNullIgnoresKeepsAllProperties() {
+        Map<String, Object> map = Beans.toMap(new User("alice", 20, "a@b.com"), null);
+
+        assertEquals("alice", map.get("name"));
+        assertEquals(20, map.get("age"));
+        assertEquals("a@b.com", map.get("email"));
+    }
+
+    /** 布尔 getter 参与转换，getClass 与非 getter 方法被排除。 */
+    @Test
+    void toMapIncludesBooleanGetterAndExcludesNonGetters() {
+        Map<String, Object> map = Beans.toMap(new Account(true), Collections.emptyList());
+
+        assertEquals(true, map.get("active"));
+        assertEquals("fixed", map.get("label"));
+        assertFalse(map.containsKey("class"));
+        assertFalse(map.containsKey("compute"));
+        assertFalse(map.containsKey("nothing"));
+    }
+
+    /** 非布尔的 is 前缀方法不是 getter。 */
+    @Test
+    void toMapSkipsNonBooleanIsMethod() {
+        Map<String, Object> map = Beans.toMap(new Account(true), Collections.emptyList());
+
+        assertFalse(map.containsKey("name"));
+    }
+
+    /** getter 抛异常时包装成带错误码与属性名的领域异常。 */
+    @Test
+    void toMapWrapsGetterFailure() {
+        BanyanException exception = assertThrows(BanyanException.class,
+                () -> Beans.toMap(new FailingBean(), Collections.emptyList()));
+
+        assertEquals(ErrorCode.BEAN_READ_FAILED, exception.getErrorCode());
+        assertInstanceOf(InvocationTargetException.class, exception.getCause());
+    }
+
+    /** 有参方法即使有返回值也不是 getter。 */
+    @Test
+    void toMapSkipsParameterizedMethods() {
+        Map<String, Object> map = Beans.toMap(new Account(true), Collections.emptyList());
+
+        assertFalse(map.containsKey("withArg"));
+    }
+
+    /** 单字符名称首字母转小写，不越界。 */
+    @Test
+    void decapitalizesSingleCharacter() {
+        assertEquals("a", Beans.decapitalize("A"));
+    }
+
+    /** 首字母小写、第二字母大写时保持首字母小写。 */
+    @Test
+    void decapitalizesMixedCaseFirstLetter() {
+        assertEquals("aB", Beans.decapitalize("aB"));
+    }
+
+    static class Account {
+
+        private final boolean active;
+
+        Account(boolean active) {
+            this.active = active;
+        }
+
+        public boolean isActive() {
+            return active;
+        }
+
+        public String getLabel() {
+            return "fixed";
+        }
+
+        public String isName() {
+            return "not a getter";
+        }
+
+        public int compute() {
+            return 1;
+        }
+
+        public String getWithArg(String prefix) {
+            return prefix;
+        }
+
+        public void nothing() {
+        }
+    }
+
+    static class FailingBean {
+
+        public String getBroken() {
+            throw new IllegalStateException("boom");
+        }
     }
 
     static class User {
