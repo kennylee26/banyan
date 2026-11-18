@@ -16,7 +16,7 @@ public final class CacheScripts {
             return 0
             """;
 
-    /** 自增并判等：ARGV[1]=增量，ARGV[2]=TTL 毫秒（<=0 不过期），ARGV[3]=期望值。 */
+    /** 自增并判等：ARGV[1]=增量，ARGV[2]=TTL 毫秒（{@code <=0} 不过期），ARGV[3]=期望值。 */
     public static final String CHECK_AND_INCREMENT = """
             local value = redis.call('incrby', KEYS[1], ARGV[1])
             if tonumber(ARGV[2]) > 0 then

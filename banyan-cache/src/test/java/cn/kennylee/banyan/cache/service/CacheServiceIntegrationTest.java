@@ -12,11 +12,13 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.data.redis.core.StringRedisTemplate;
 
 import java.time.Duration;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -50,6 +52,102 @@ class CacheServiceIntegrationTest extends CacheIntegrationTestBase {
         assertThat(cacheService.get("cart", "u1", User.class).getUserName()).isEqualTo("alice");
         // Redis 中是可读 JSON
         assertThat(stringRedisTemplate.opsForValue().get("banyan-test:cart:u1")).contains("alice");
+    }
+
+    /** 泛型容器按 Type 还原元素类型。 */
+    @Test
+    void restoresGenericContainers() {
+        List<User> users = List.of(new User("alice", 30), new User("bob", 20));
+        Map<String, User> byName = Map.of("a", new User("alice", 30));
+        Set<User> unique = Set.of(new User("bob", 20));
+
+        cacheService.put("gen", "list", users, Duration.ofMinutes(5));
+        cacheService.put("gen", "map", byName, Duration.ofMinutes(5));
+        cacheService.put("gen", "set", unique, Duration.ofMinutes(5));
+
+        assertThat(cacheService.get("gen", "list", new ParameterizedTypeReference<List<User>>() {
+        })).extracting(User::getUserName).containsExactly("alice", "bob");
+        assertThat(cacheService.get("gen", "map", new ParameterizedTypeReference<Map<String, User>>() {
+        }).get("a")).extracting(User::getAge).isEqualTo(30);
+        assertThat(cacheService.get("gen", "set", new ParameterizedTypeReference<Set<User>>() {
+        })).extracting(User::getUserName).containsExactly("bob");
+
+        cacheService.batchPut("gen", Map.of(
+                "l1", users,
+                "l2", List.of(new User("carol", 40))), Duration.ofMinutes(5));
+        assertThat(cacheService.batchGet("gen", List.of("l1", "l2"),
+                new ParameterizedTypeReference<List<User>>() {
+                })).hasSize(2);
+        assertThat(cacheService.batchGet("gen", List.of("l1", "l2"),
+                new ParameterizedTypeReference<List<User>>() {
+                }).get(0)).extracting(User::getUserName).containsExactly("alice", "bob");
+        assertThat(cacheService.batchGet("gen", List.of("l1", "l2"),
+                new ParameterizedTypeReference<List<User>>() {
+                }).get(1)).extracting(User::getUserName).containsExactly("carol");
+    }
+
+    /** getOrLoad 泛型重载能还原容器元素类型，且只加载一次。 */
+    @Test
+    void getOrLoadRestoresGenericContainers() {
+        AtomicInteger loads = new AtomicInteger();
+        ParameterizedTypeReference<List<User>> type = new ParameterizedTypeReference<List<User>>() {
+        };
+
+        List<User> first = cacheService.getOrLoad("gen", "lazy", type, () -> {
+            loads.incrementAndGet();
+            return List.of(new User("alice", 30), new User("bob", 20));
+        }, Duration.ofMinutes(5));
+        List<User> second = cacheService.getOrLoad("gen", "lazy", type, () -> {
+            loads.incrementAndGet();
+            return List.of();
+        }, Duration.ofMinutes(5));
+
+        assertThat(first).extracting(User::getUserName).containsExactly("alice", "bob");
+        assertThat(second).extracting(User::getUserName).containsExactly("alice", "bob");
+        assertThat(loads).hasValue(1);
+    }
+
+    /** 便捷方法无需匿名类即可还原容器元素类型。 */
+    @Test
+    void getsContainersWithoutTypeReference() {
+        List<User> users = List.of(new User("alice", 30), new User("bob", 20));
+        cacheService.put("easy", "list", users, Duration.ofMinutes(5));
+        cacheService.put("easy", "set", Set.of(new User("bob", 20)), Duration.ofMinutes(5));
+        cacheService.put("easy", "map", Map.of("a", new User("alice", 30)),
+                Duration.ofMinutes(5));
+
+        assertThat(cacheService.getForList("easy", "list", User.class))
+                .extracting(User::getUserName).containsExactly("alice", "bob");
+        assertThat(cacheService.getForSet("easy", "set", User.class))
+                .extracting(User::getUserName).containsExactly("bob");
+        assertThat(cacheService.getForMap("easy", "map", User.class).get("a"))
+                .extracting(User::getAge).isEqualTo(30);
+    }
+
+    /** key 不存在时便捷方法返回空容器而不是 null。 */
+    @Test
+    void convenienceGettersReturnEmptyContainersWhenMissing() {
+        assertThat(cacheService.getForList("missing", "k", User.class)).isEmpty();
+        assertThat(cacheService.getForSet("missing", "k", User.class)).isEmpty();
+        assertThat(cacheService.getForMap("missing", "k", User.class)).isEmpty();
+    }
+
+    /** 读写开关关闭时便捷方法返回空容器而不是 null，且不访问 Redis。 */
+    @Test
+    void convenienceGettersReturnEmptyContainersWhenDisabled() {
+        CacheProperties properties = new CacheProperties();
+        properties.setReadWriteEnabled(false);
+        CacheService disabled = new CacheServiceImpl(
+                new RedisTemplateCacheProvider(stringRedisTemplate),
+                new CacheKeys("banyan-test", 512),
+                properties,
+                new JacksonJsonCodec(),
+                new NoOpCachePenetrationGuard());
+
+        assertThat(disabled.getForList("g", "k", User.class)).isEmpty();
+        assertThat(disabled.getForSet("g", "k", User.class)).isEmpty();
+        assertThat(disabled.getForMap("g", "k", User.class)).isEmpty();
+        assertThat(stringRedisTemplate.hasKey("banyan-test:g:k")).isFalse();
     }
 
     /** Raw 与 Object 混用报错。 */
@@ -98,7 +196,7 @@ class CacheServiceIntegrationTest extends CacheIntegrationTestBase {
     void readWriteSwitchShortCircuits() {
         CacheProperties properties = new CacheProperties();
         properties.setReadWriteEnabled(false);
-        CacheService disabled = new DefaultCacheService(
+        CacheService disabled = new CacheServiceImpl(
                 new RedisTemplateCacheProvider(stringRedisTemplate),
                 new CacheKeys("banyan-test", 512),
                 properties,

@@ -4,7 +4,7 @@ import cn.kennylee.banyan.cache.provider.CacheProvider;
 import cn.kennylee.banyan.cache.provider.RedisTemplateCacheProvider;
 import cn.kennylee.banyan.cache.service.CachePenetrationGuard;
 import cn.kennylee.banyan.cache.service.CacheService;
-import cn.kennylee.banyan.cache.service.DefaultCacheService;
+import cn.kennylee.banyan.cache.service.CacheServiceImpl;
 import cn.kennylee.banyan.cache.service.NoOpCachePenetrationGuard;
 import cn.kennylee.banyan.cache.support.CacheKeys;
 import cn.kennylee.banyan.commons.error.ErrorCode;
@@ -96,6 +96,6 @@ public class CacheAutoConfiguration {
     @ConditionalOnBean(JsonCodec.class)
     public CacheService cacheService(CacheProvider provider, CacheKeys keys, CacheProperties properties,
                                      JsonCodec jsonCodec, CachePenetrationGuard penetrationGuard) {
-        return new DefaultCacheService(provider, keys, properties, jsonCodec, penetrationGuard);
+        return new CacheServiceImpl(provider, keys, properties, jsonCodec, penetrationGuard);
     }
 }

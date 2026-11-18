@@ -10,7 +10,9 @@ import cn.kennylee.banyan.commons.error.Messages;
 import cn.kennylee.banyan.commons.spring.json.JsonCodec;
 import cn.kennylee.banyan.commons.util.Strings;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.core.ParameterizedTypeReference;
 
+import java.lang.reflect.Type;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -30,7 +32,7 @@ import java.util.function.Supplier;
  * @since 0.1.0
  */
 @Slf4j
-public class DefaultCacheService implements CacheService {
+public class CacheServiceImpl implements CacheService {
 
     /** 删缓存锁 key 后缀。 */
     private static final String LOCK_KEY_SUFFIX = ":lock";
@@ -68,7 +70,7 @@ public class DefaultCacheService implements CacheService {
      * @param jsonCodec        JSON 编解码
      * @param penetrationGuard 穿透防护
      */
-    public DefaultCacheService(CacheProvider provider, CacheKeys keys, CacheProperties properties,
+    public CacheServiceImpl(CacheProvider provider, CacheKeys keys, CacheProperties properties,
                                JsonCodec jsonCodec, CachePenetrationGuard penetrationGuard) {
         this.provider = provider;
         this.keys = keys;
@@ -94,6 +96,25 @@ public class DefaultCacheService implements CacheService {
 
     @Override
     public <T> T get(String group, String key, Class<T> type) {
+        return get(group, key, (Type) type);
+    }
+
+    @Override
+    public <T> T get(String group, String key, ParameterizedTypeReference<T> type) {
+        return get(group, key, type.getType());
+    }
+
+    /**
+     * 按 {@link Type} 读取，供本类各公开重载与接口 default 便捷方法共用。
+     *
+     * @param group 组名
+     * @param key   业务 key
+     * @param type  目标类型
+     * @param <T>   对象类型
+     * @return 对象；不存在时返回 null
+     */
+    @SuppressWarnings("unchecked")
+    private <T> T get(String group, String key, Type type) {
         if (!isReadWriteEnabled()) {
             return null;
         }
@@ -105,7 +126,7 @@ public class DefaultCacheService implements CacheService {
         }
         String json = CacheValueMarker.requireJson(stored, markerEnabled());
         logOperation("get", fullKey, true);
-        return jsonCodec.fromJson(json, type);
+        return (T) jsonCodec.fromJson(json, type);
     }
 
     @Override
@@ -161,6 +182,26 @@ public class DefaultCacheService implements CacheService {
 
     @Override
     public <T> List<T> batchGet(String group, Collection<String> keysInGroup, Class<T> type) {
+        return batchGet(group, keysInGroup, (Type) type);
+    }
+
+    @Override
+    public <T> List<T> batchGet(String group, Collection<String> keysInGroup,
+                                ParameterizedTypeReference<T> type) {
+        return batchGet(group, keysInGroup, type.getType());
+    }
+
+    /**
+     * 按 {@link Type} 批量读取，供本类各公开重载共用。
+     *
+     * @param group       组名
+     * @param keysInGroup 业务 key 集合
+     * @param type        目标类型
+     * @param <T>         对象类型
+     * @return 与入参顺序一致的结果，缺失元素为 null
+     */
+    @SuppressWarnings("unchecked")
+    private <T> List<T> batchGet(String group, Collection<String> keysInGroup, Type type) {
         if (!isReadWriteEnabled() || keysInGroup == null || keysInGroup.isEmpty()) {
             return Collections.emptyList();
         }
@@ -172,7 +213,7 @@ public class DefaultCacheService implements CacheService {
             if (stored == null) {
                 values.add(null);
             } else {
-                values.add(jsonCodec.fromJson(
+                values.add((T) jsonCodec.fromJson(
                         CacheValueMarker.requireJson(stored, markerEnabled()), type));
             }
         }
@@ -213,6 +254,27 @@ public class DefaultCacheService implements CacheService {
 
     @Override
     public <T> T getOrLoad(String group, String key, Class<T> type, Supplier<T> loader, Duration ttl) {
+        return getOrLoad(group, key, (Type) type, loader, ttl);
+    }
+
+    @Override
+    public <T> T getOrLoad(String group, String key, ParameterizedTypeReference<T> type,
+                           Supplier<T> loader, Duration ttl) {
+        return getOrLoad(group, key, type.getType(), loader, ttl);
+    }
+
+    /**
+     * 读缓存，未命中时加载并回写；按 {@link Type} 统一 Class 与泛型两条路径。
+     *
+     * @param group  组名
+     * @param key    业务 key
+     * @param type   目标类型
+     * @param loader 加载器
+     * @param ttl    回写过期时间
+     * @param <T>    对象类型
+     * @return 对象
+     */
+    private <T> T getOrLoad(String group, String key, Type type, Supplier<T> loader, Duration ttl) {
         if (!isReadWriteEnabled()) {
             return loader.get();
         }
@@ -344,12 +406,46 @@ public class DefaultCacheService implements CacheService {
         }
         String namespace = keys.namespace(group);
         String pattern = keyPattern == null ? "" : keyPattern.trim();
-        if (Strings.isBlank(namespace) || Strings.isBlank(pattern) || WILDCARD_ALL.equals(pattern)
-                || (pattern.contains(SEPARATOR) && !pattern.startsWith(namespace))) {
+        if (isInvalidPattern(namespace, pattern)) {
             log.warn(Messages.get(ErrorCode.CACHE_PATTERN_OUTSIDE_NAMESPACE, keyPattern));
             return 0;
         }
-        String fullPattern = pattern.startsWith(namespace) ? pattern : namespace + pattern;
+        return deleteInBatches(fullPattern(namespace, pattern));
+    }
+
+    /**
+     * pattern 必须落在当前命名空间内，且不能是全库通配或空白。
+     *
+     * @param namespace 当前命名空间前缀
+     * @param pattern   已 trim 的 pattern
+     * @return 是否应拒绝
+     */
+    private boolean isInvalidPattern(String namespace, String pattern) {
+        if (Strings.isBlank(namespace) || Strings.isBlank(pattern)
+                || WILDCARD_ALL.equals(pattern)) {
+            return true;
+        }
+        return pattern.contains(SEPARATOR) && !pattern.startsWith(namespace);
+    }
+
+    /**
+     * 补齐命名空间前缀：绝对 pattern 已通过校验，相对 pattern 自动补前缀。
+     *
+     * @param namespace 当前命名空间前缀
+     * @param pattern   已 trim 且合法的 pattern
+     * @return 完整匹配模式
+     */
+    private String fullPattern(String namespace, String pattern) {
+        return pattern.startsWith(namespace) ? pattern : namespace + pattern;
+    }
+
+    /**
+     * 用 SCAN 取回受上限约束的 key，再按单批大小逐批删除。
+     *
+     * @param fullPattern 完整匹配模式
+     * @return 实际删除数量
+     */
+    private long deleteInBatches(String fullPattern) {
         int batchSize = Math.max(1, properties.getScan().getBatchSize());
         List<String> matched = provider.scanKeys(fullPattern, batchSize,
                 Math.max(0, properties.getScan().getMaxDeletions()));

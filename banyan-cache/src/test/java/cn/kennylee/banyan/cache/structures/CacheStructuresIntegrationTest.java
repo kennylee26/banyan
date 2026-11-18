@@ -7,7 +7,7 @@ import cn.kennylee.banyan.cache.provider.AbstractCacheProvider;
 import cn.kennylee.banyan.cache.provider.CacheProvider;
 import cn.kennylee.banyan.cache.provider.RedisTemplateCacheProvider;
 import cn.kennylee.banyan.cache.service.CacheService;
-import cn.kennylee.banyan.cache.service.DefaultCacheService;
+import cn.kennylee.banyan.cache.service.CacheServiceImpl;
 import cn.kennylee.banyan.cache.service.NoOpCachePenetrationGuard;
 import cn.kennylee.banyan.cache.support.CacheKeys;
 import cn.kennylee.banyan.commons.spring.json.JacksonJsonCodec;
@@ -54,7 +54,7 @@ class CacheStructuresIntegrationTest extends CacheIntegrationTestBase {
         stringRedisTemplate.getConnectionFactory().getConnection().serverCommands().flushDb();
         provider = new RedisTemplateCacheProvider(stringRedisTemplate);
         properties = new CacheProperties();
-        service = new DefaultCacheService(provider, new CacheKeys("banyan-test", 512),
+        service = new CacheServiceImpl(provider, new CacheKeys("banyan-test", 512),
                 properties, new JacksonJsonCodec(), new NoOpCachePenetrationGuard());
     }
 
@@ -116,7 +116,7 @@ class CacheStructuresIntegrationTest extends CacheIntegrationTestBase {
     /** 释放锁失败不覆盖删除结果。 */
     @Test
     void releaseFailureKeepsDeleteResult(CapturedOutput output) {
-        CacheService brokenRelease = new DefaultCacheService(new AbstractCacheProvider() {
+        CacheService brokenRelease = new CacheServiceImpl(new AbstractCacheProvider() {
 
             @Override
             public boolean tryLock(String key, String token, Duration ttl) {
@@ -167,6 +167,47 @@ class CacheStructuresIntegrationTest extends CacheIntegrationTestBase {
         assertThat(service.batchDeleteByPattern("order", "u*")).isEqualTo(2);
     }
 
+    /** pattern 合法性的各个分支都被拒绝且不访问 Redis。 */
+    @Test
+    void rejectsInvalidPatternsWithoutDeleting() {
+        service.putRaw("order", "u1", "a", null);
+
+        assertThat(service.batchDeleteByPattern("order", null)).isZero();
+        assertThat(service.batchDeleteByPattern("order", "  ")).isZero();
+        assertThat(service.batchDeleteByPattern("order", "*")).isZero();
+        assertThat(service.batchDeleteByPattern("order", "banyan-test:other:u*")).isZero();
+        assertThat(service.exists("order", "u1")).isTrue();
+    }
+
+    /** 无 appName 且 group 为空时命名空间为空，pattern 被拒。 */
+    @Test
+    void rejectsPatternWhenNamespaceEmpty() {
+        CacheService noNamespace = new CacheServiceImpl(provider, new CacheKeys(null, 512),
+                properties, new JacksonJsonCodec(), new NoOpCachePenetrationGuard());
+
+        assertThat(noNamespace.batchDeleteByPattern("", "u*")).isZero();
+    }
+
+    /** 读写开关关闭时不扫描也不删除。 */
+    @Test
+    void skipsPatternDeletionWhenReadWriteDisabled() {
+        properties.setReadWriteEnabled(false);
+        service.putRaw("order", "u1", "a", null);
+
+        assertThat(service.batchDeleteByPattern("order", "u*")).isZero();
+    }
+
+    /** 多批删除：匹配数超过单批大小时按批累加删除数。 */
+    @Test
+    void deletesInMultipleBatches() {
+        properties.getScan().setBatchSize(2);
+        for (int i = 1; i <= 5; i++) {
+            service.putRaw("order", "b" + i, "v", null);
+        }
+
+        assertThat(service.batchDeleteByPattern("order", "b*")).isEqualTo(5);
+    }
+
     /** 删除上限生效。 */
     @Test
     void batchDeleteHonorsMaxDeletions() {
@@ -180,7 +221,7 @@ class CacheStructuresIntegrationTest extends CacheIntegrationTestBase {
     /** Provider 不支持 Lua 时 checkAndIncrement 降级为 false 并 WARN。 */
     @Test
     void unsupportedLuaDegradesWithWarn(CapturedOutput output) {
-        CacheService noLua = new DefaultCacheService(new AbstractCacheProvider() {
+        CacheService noLua = new CacheServiceImpl(new AbstractCacheProvider() {
         }, new CacheKeys("banyan-test", 512), properties, new JacksonJsonCodec(),
                 new NoOpCachePenetrationGuard());
 
