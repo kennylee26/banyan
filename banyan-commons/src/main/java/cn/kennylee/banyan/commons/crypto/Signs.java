@@ -21,7 +21,7 @@ import java.util.Set;
 import java.util.TreeMap;
 
 /**
- * 签名门面：规范化纯函数与出站签名。
+ * 签名共享协议：规范化纯函数、调用方参数组装与时间戳解析。
  *
  * <p>规范化串格式（固定、不可随意改动，改动即破坏互操作性）：</p>
  * <pre>
@@ -100,55 +100,49 @@ public final class Signs {
     }
 
     /**
-     * 用默认算法与系统时钟生成签名参数。
+     * 为调用方生成签名。常规使用优先选择 {@link RequestSigner}；本方法用于只需要签名参数的场景。
      *
-     * @param request 出站请求
-     * @param key     签名密钥
-     * @return 需要附加到请求上的 alg / keyId / timestamp / nonce / sign
+     * @param request 待签名请求
+     * @param key     密钥
+     * @return 五个附加签名参数，按协议固定顺序的不可变 Map
      */
-    public static Map<String, String> signOutbound(SignRequest request, SignKey key) {
-        return signOutbound(request, key, DEFAULT_ALGORITHM, Clock.systemUTC());
+    public static Map<String, String> sign(UnsignedRequest request, SignKey key) {
+        return sign(request, key, DEFAULT_ALGORITHM, Clock.systemUTC());
     }
 
     /**
-     * 用指定算法与系统时钟生成签名参数。
+     * 用指定算法为调用方生成签名。
      *
-     * @param request   出站请求
-     * @param key       签名密钥
+     * @param request   待签名请求
+     * @param key       密钥
      * @param algorithm 签名算法
-     * @return 待附加参数
+     * @return 五个附加签名参数
      */
-    public static Map<String, String> signOutbound(SignRequest request, SignKey key,
-                                                   SignAlgorithm algorithm) {
-        return signOutbound(request, key, algorithm, Clock.systemUTC());
+    public static Map<String, String> sign(UnsignedRequest request, SignKey key,
+                                           SignAlgorithm algorithm) {
+        return new RequestSigner(algorithm).sign(request, key).authParams();
     }
 
     /**
-     * 用指定算法与时钟生成签名参数。
+     * 用指定算法与时钟为调用方生成签名。
      *
-     * @param request   出站请求
-     * @param key       签名密钥
+     * @param request   待签名请求
+     * @param key       密钥
      * @param algorithm 签名算法
      * @param clock     时钟
-     * @return 待附加参数
+     * @return 五个附加签名参数
      */
-    public static Map<String, String> signOutbound(SignRequest request, SignKey key,
-                                                   SignAlgorithm algorithm, Clock clock) {
-        Objects.requireNonNull(request, "request");
-        Objects.requireNonNull(key, "key");
-        Objects.requireNonNull(algorithm, "algorithm");
-        Objects.requireNonNull(clock, "clock");
+    public static Map<String, String> sign(UnsignedRequest request, SignKey key,
+                                           SignAlgorithm algorithm, Clock clock) {
+        return new RequestSigner(algorithm, clock).sign(request, key).authParams();
+    }
 
-        long timestamp = clock.millis();
-        String nonce = newNonce();
-        SignRequest prepared = new SignRequest(request.method(), request.path(),
-                request.queryParams(), request.body(), timestamp, nonce, key.keyId(),
-                algorithm.name(), null);
-        String signature = algorithm.sign(canonicalize(prepared), key.secret());
-
+    /** 按协议固定顺序组装签名参数。 */
+    static Map<String, String> authParams(String alg, String keyId, long timestamp,
+                                          String nonce, String signature) {
         Map<String, String> params = new LinkedHashMap<>(5);
-        params.put(PARAM_ALG, algorithm.name());
-        params.put(PARAM_KEY_ID, key.keyId());
+        params.put(PARAM_ALG, alg);
+        params.put(PARAM_KEY_ID, keyId);
         params.put(PARAM_TIMESTAMP, Long.toString(timestamp));
         params.put(PARAM_NONCE, nonce);
         params.put(PARAM_SIGN, signature);
@@ -172,7 +166,7 @@ public final class Signs {
     }
 
     /** 生成一次性随机串（16 字节，小写十六进制）。 */
-    private static String newNonce() {
+    static String newNonce() {
         byte[] bytes = new byte[NONCE_BYTES];
         RANDOM.nextBytes(bytes);
         return Hexs.encode(bytes);

@@ -37,11 +37,11 @@ class SignsTest {
 
     /** 出站产出五个参数，且 nonce 每次不同。 */
     @Test
-    void signOutboundProducesFiveParamsWithUniqueNonce() {
-        SignRequest request = SignRequest.outbound("GET", "/openapi/ping", Map.of(), null);
+    void signProducesFiveParamsWithUniqueNonce() {
+        UnsignedRequest request = UnsignedRequest.of("GET", "/openapi/ping", Map.of(), null);
 
-        Map<String, String> first = Signs.signOutbound(request, key);
-        Map<String, String> second = Signs.signOutbound(request, key);
+        Map<String, String> first = Signs.sign(request, key);
+        Map<String, String> second = Signs.sign(request, key);
 
         assertEquals(Set.of(Signs.PARAM_ALG, Signs.PARAM_KEY_ID, Signs.PARAM_TIMESTAMP,
                 Signs.PARAM_NONCE, Signs.PARAM_SIGN), first.keySet());

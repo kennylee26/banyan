@@ -56,6 +56,7 @@ Some modules have their own `README.md` with usage examples and gotchas (Java pa
 
 | Guide | Covers |
 |---|---|
+| [`banyan-commons/README.md`](banyan-commons/README.md) | commons module guide; [crypto signing](banyan-commons/guides/crypto.md), [utilities](banyan-commons/guides/util.md), [error codes](banyan-commons/guides/error.md), [IDs](banyan-commons/guides/id.md) |
 | [`banyan-cache/README.md`](banyan-cache/README.md) | `put` vs `putRaw`, generic container reads, provider replacement, `banyan.cache.*` properties |
 | [`banyan-log/README.md`](banyan-log/README.md) | Lifecycle events, `banyan.log.*`, logback host include and pattern override |
 | [`banyan-trace/README.md`](banyan-trace/README.md) | MDC task decorator and executor factories |

@@ -56,6 +56,7 @@
 
 | 文档 | 内容 |
 |---|---|
+| [`banyan-commons/README.md`](banyan-commons/README.md) | commons 模块导航；[crypto 签名与防重放](banyan-commons/guides/crypto.md)、[常用工具](banyan-commons/guides/util.md)、[错误码](banyan-commons/guides/error.md)、[ID](banyan-commons/guides/id.md) |
 | [`banyan-cache/README.md`](banyan-cache/README.md) | `put` 与 `putRaw`、泛型容器读取、Provider 替换、`banyan.cache.*` 配置 |
 | [`banyan-log/README.md`](banyan-log/README.md) | 生命周期事件、`banyan.log.*`、logback 宿主 include 与 pattern 覆盖 |
 | [`banyan-trace/README.md`](banyan-trace/README.md) | MDC 任务装饰器与线程池工厂 |

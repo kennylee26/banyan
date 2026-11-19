@@ -70,10 +70,10 @@ class SignAlgorithmTest {
                 return "deadbeef";
             }
         };
-        SignRequest request = SignRequest.outbound("GET", "/openapi/ping", Map.of(), null);
+        UnsignedRequest request = UnsignedRequest.of("GET", "/openapi/ping", Map.of(), null);
         Clock clock = Clock.fixed(Instant.ofEpochMilli(1700000000000L), ZoneOffset.UTC);
 
-        Map<String, String> params = Signs.signOutbound(request, new SignKey("app1", "secret"),
+        Map<String, String> params = Signs.sign(request, new SignKey("app1", "secret"),
                 custom, clock);
 
         assertEquals("TEST", params.get("alg"));

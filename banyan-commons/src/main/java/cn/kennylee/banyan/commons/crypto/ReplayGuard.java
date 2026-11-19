@@ -76,7 +76,7 @@ public class ReplayGuard {
      * @return 验签结果
      * @throws IllegalArgumentException 请求格式非法（缺字段等）
      */
-    public VerifyResult verifyInbound(SignRequest request, Map<String, SignKey> keys) {
+    public VerifyResult verify(SignRequest request, Map<String, SignKey> keys) {
         Objects.requireNonNull(request, "request");
         requireSigned(request);
 

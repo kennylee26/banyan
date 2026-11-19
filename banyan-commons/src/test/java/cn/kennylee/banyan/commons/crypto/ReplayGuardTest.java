@@ -36,7 +36,7 @@ class ReplayGuardTest {
     /** 合法请求通过。 */
     @Test
     void acceptsValidRequest() {
-        assertEquals(VerifyResult.SUCCESS, guard.verifyInbound(signedRequest(), keys));
+        assertEquals(VerifyResult.SUCCESS, guard.verify(signedRequest(), keys));
     }
 
     /** 签名被篡改。 */
@@ -47,7 +47,7 @@ class ReplayGuardTest {
                 signed.queryParams(), signed.body(), signed.timestamp(), signed.nonce(),
                 signed.keyId(), signed.alg(), signed.signature() + "0");
 
-        assertEquals(VerifyResult.INVALID, guard.verifyInbound(tampered, keys));
+        assertEquals(VerifyResult.INVALID, guard.verify(tampered, keys));
     }
 
     /** 超出时间窗口。 */
@@ -56,7 +56,7 @@ class ReplayGuardTest {
         SignRequest signed = signedRequest();
         clock.advance(Duration.ofMillis(WINDOW + 1));
 
-        assertEquals(VerifyResult.INVALID, guard.verifyInbound(signed, keys));
+        assertEquals(VerifyResult.INVALID, guard.verify(signed, keys));
     }
 
     /** 同一请求重放。 */
@@ -64,8 +64,8 @@ class ReplayGuardTest {
     void rejectsReplay() {
         SignRequest signed = signedRequest();
 
-        assertEquals(VerifyResult.SUCCESS, guard.verifyInbound(signed, keys));
-        assertEquals(VerifyResult.INVALID, guard.verifyInbound(signed, keys));
+        assertEquals(VerifyResult.SUCCESS, guard.verify(signed, keys));
+        assertEquals(VerifyResult.INVALID, guard.verify(signed, keys));
     }
 
     /** 恰好落在窗口边界即拒绝，避免与 nonce 过期边界形成重放窗口。 */
@@ -74,7 +74,7 @@ class ReplayGuardTest {
         SignRequest signed = signedRequest();
         clock.advance(Duration.ofMillis(WINDOW));
 
-        assertEquals(VerifyResult.INVALID, guard.verifyInbound(signed, keys));
+        assertEquals(VerifyResult.INVALID, guard.verify(signed, keys));
     }
 
     /** 超窗口请求在签名计算前就被拒绝。 */
@@ -100,7 +100,7 @@ class ReplayGuardTest {
         SignRequest signed = signedRequest();
         clock.advance(Duration.ofMillis(WINDOW));
 
-        assertEquals(VerifyResult.INVALID, countingGuard.verifyInbound(signed, keys));
+        assertEquals(VerifyResult.INVALID, countingGuard.verify(signed, keys));
         assertEquals(0, signCalls.get());
     }
 
@@ -123,7 +123,7 @@ class ReplayGuardTest {
                 new InMemoryNonceStore(clock), clock, WINDOW);
 
         assertEquals(VerifyResult.SUCCESS,
-                customGuard.verifyInbound(signedRequest(key, custom), keys));
+                customGuard.verify(signedRequest(key, custom), keys));
     }
 
     /** 多 keyId 并存，各自用对应密钥验签。 */
@@ -133,9 +133,9 @@ class ReplayGuardTest {
         Map<String, SignKey> allKeys = Map.of("app1", key, "app2", second);
 
         assertEquals(VerifyResult.SUCCESS,
-                guard.verifyInbound(signedRequest(key, algorithm), allKeys));
+                guard.verify(signedRequest(key, algorithm), allKeys));
         assertEquals(VerifyResult.SUCCESS,
-                guard.verifyInbound(signedRequest(second, algorithm), allKeys));
+                guard.verify(signedRequest(second, algorithm), allKeys));
     }
 
     /** 时间戳 0 视为格式非法，1 视为合法格式（随后由窗口拒绝）。 */
@@ -149,8 +149,8 @@ class ReplayGuardTest {
                 signed.body(), 1L, signed.nonce(), signed.keyId(), signed.alg(),
                 signed.signature());
 
-        assertThrows(IllegalArgumentException.class, () -> guard.verifyInbound(zero, keys));
-        assertEquals(VerifyResult.INVALID, guard.verifyInbound(one, keys));
+        assertThrows(IllegalArgumentException.class, () -> guard.verify(zero, keys));
+        assertEquals(VerifyResult.INVALID, guard.verify(one, keys));
     }
 
     /** 窗口必须为正：0 拒绝，1 接受。 */
@@ -161,13 +161,13 @@ class ReplayGuardTest {
 
         ReplayGuard oneMillis = new ReplayGuard(algorithm,
                 new InMemoryNonceStore(clock), clock, 1L);
-        assertEquals(VerifyResult.SUCCESS, oneMillis.verifyInbound(signedRequest(), keys));
+        assertEquals(VerifyResult.SUCCESS, oneMillis.verify(signedRequest(), keys));
     }
 
     /** 未知 keyId 统一失败。 */
     @Test
     void rejectsUnknownKeyId() {
-        assertEquals(VerifyResult.INVALID, guard.verifyInbound(signedRequest(), Map.of()));
+        assertEquals(VerifyResult.INVALID, guard.verify(signedRequest(), Map.of()));
     }
 
     /** 算法标识不匹配统一失败。 */
@@ -178,7 +178,7 @@ class ReplayGuardTest {
                 signed.body(), signed.timestamp(), signed.nonce(), signed.keyId(), "OTHER",
                 signed.signature());
 
-        assertEquals(VerifyResult.INVALID, guard.verifyInbound(other, keys));
+        assertEquals(VerifyResult.INVALID, guard.verify(other, keys));
     }
 
     /** 格式非法抛参数异常。 */
@@ -189,7 +189,7 @@ class ReplayGuardTest {
                 signed.queryParams(), signed.body(), signed.timestamp(), null,
                 signed.keyId(), signed.alg(), signed.signature());
 
-        assertThrows(IllegalArgumentException.class, () -> guard.verifyInbound(missingNonce, keys));
+        assertThrows(IllegalArgumentException.class, () -> guard.verify(missingNonce, keys));
     }
 
     /** 描述信息不泄漏 body 与签名。 */
@@ -209,8 +209,8 @@ class ReplayGuardTest {
 
     /** 用指定密钥与算法构造合法签名请求。 */
     private SignRequest signedRequest(SignKey signingKey, SignAlgorithm signingAlgorithm) {
-        Map<String, String> params = Signs.signOutbound(
-                SignRequest.outbound("POST", "/openapi/orders", Map.of("a", List.of("1")), "{}"),
+        Map<String, String> params = Signs.sign(
+                UnsignedRequest.of("POST", "/openapi/orders", Map.of("a", List.of("1")), "{}"),
                 signingKey, signingAlgorithm, clock);
         return new SignRequest("POST", "/openapi/orders", Map.of("a", List.of("1")), "{}",
                 Signs.parseTimestamp(params.get(Signs.PARAM_TIMESTAMP)),

@@ -14,19 +14,18 @@ import java.util.Map;
  * 待签名/待验签请求的纯数据载体：只含字符串、Map 与基本类型，
  * 不含任何 HTTP / Spring 类型。
  *
- * <p>出站场景用 {@link #outbound(String, String, Map, String)} 创建，时间戳、nonce、
- * keyId、alg、signature 由 {@link Signs#signOutbound} 填充；入站场景由使用方从自己的
- * HTTP 层解析后构造完整对象。</p>
+ * <p>入站验签由使用方从自己的 HTTP 层解析后构造；调用方签名请使用
+ * {@link RequestSigner}，不需要直接操作本类。</p>
  *
  * @param method      请求方法
  * @param path        请求路径
  * @param queryParams 查询参数，允许同名多值
  * @param body        请求体原文，可为 null（按空串参与摘要）
- * @param timestamp   毫秒时间戳，出站创建时为 0
- * @param nonce       一次性随机串，出站创建时为 null
- * @param keyId       密钥标识，出站创建时为 null
- * @param alg         签名算法标识，出站创建时为 null
- * @param signature   签名串，出站创建时为 null
+ * @param timestamp   毫秒时间戳，待签名时为 0
+ * @param nonce       一次性随机串，待签名时为 null
+ * @param keyId       密钥标识，待签名时为 null
+ * @param alg         签名算法标识，待签名时为 null
+ * @param signature   签名串，待签名时为 null
  * @author kennylee
  * @since 0.1.0
  */
@@ -49,20 +48,6 @@ public record SignRequest(String method, String path, Map<String, List<String>> 
         requireText(method, FIELD_METHOD);
         requireText(path, FIELD_PATH);
         queryParams = copyParams(queryParams);
-    }
-
-    /**
-     * 创建出站请求：只有 method / path / query / body，其余字段待签名时填充。
-     *
-     * @param method      请求方法
-     * @param path        请求路径
-     * @param queryParams 查询参数
-     * @param body        请求体
-     * @return 出站请求
-     */
-    public static SignRequest outbound(String method, String path,
-                                       Map<String, List<String>> queryParams, String body) {
-        return new SignRequest(method, path, queryParams, body, 0L, null, null, null, null);
     }
 
     /**
@@ -92,8 +77,8 @@ public record SignRequest(String method, String path, Map<String, List<String>> 
         }
     }
 
-    /** 深拷贝查询参数并过滤 null。 */
-    private static Map<String, List<String>> copyParams(Map<String, List<String>> params) {
+    /** 深拷贝查询参数并过滤 null，供同包内的 UnsignedRequest 复用。 */
+    static Map<String, List<String>> copyParams(Map<String, List<String>> params) {
         if (params == null || params.isEmpty()) {
             return Map.of();
         }

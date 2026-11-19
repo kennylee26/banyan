@@ -143,10 +143,11 @@ class CanonicalizeTest {
     /** 未签名的出站请求不能参与规范化。 */
     @Test
     void rejectsUnsignedRequest() {
-        SignRequest outbound = SignRequest.outbound("GET", "/openapi/ping", Map.of(), null);
+        SignRequest unsigned = new SignRequest("GET", "/openapi/ping", Map.of(), null,
+                0L, null, null, null, null);
 
         org.junit.jupiter.api.Assertions.assertThrows(IllegalArgumentException.class,
-                () -> Signs.canonicalize(outbound));
+                () -> Signs.canonicalize(unsigned));
     }
 
     /** 时间戳边界：0 与负数拒绝，1 接受。 */
