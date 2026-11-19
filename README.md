@@ -50,6 +50,17 @@ The template does **not** load automatically. Include it from your own `logback-
 - Without `banyan-trace` on the classpath the trace field prints `N/A`; the module never generates or propagates trace IDs.
 - Override the whole console/file pattern with `logging.pattern.console` / `logging.pattern.file`; custom variables use the `BANYAN_` prefix.
 
+## Module guides
+
+Some modules have their own `README.md` with usage examples and gotchas (Java package responsibilities stay in `package-info.java`):
+
+| Guide | Covers |
+|---|---|
+| [`banyan-cache/README.md`](banyan-cache/README.md) | `put` vs `putRaw`, generic container reads, provider replacement, `banyan.cache.*` properties |
+| [`banyan-log/README.md`](banyan-log/README.md) | Lifecycle events, `banyan.log.*`, logback host include and pattern override |
+| [`banyan-trace/README.md`](banyan-trace/README.md) | MDC task decorator and executor factories |
+| [`banyan-data-mysql/README.md`](banyan-data/banyan-data-mysql/README.md) | `BanyanQueryWrapper`, LIKE escaping boundary |
+
 ## Coordinates
 
 ```xml

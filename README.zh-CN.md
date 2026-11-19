@@ -50,6 +50,17 @@
 - 未引入 `banyan-trace` 时 trace 字段显示 `N/A`；本模块不生成、不传播 TraceId。
 - 可用 `logging.pattern.console` / `logging.pattern.file` 整体替换控制台/文件 pattern；本库自定义变量统一 `BANYAN_` 前缀。
 
+## 模块用法文档
+
+以下模块根目录有 `README.md`，写用法、示例与坑（Java package 职责仍由 `package-info.java` 承担）：
+
+| 文档 | 内容 |
+|---|---|
+| [`banyan-cache/README.md`](banyan-cache/README.md) | `put` 与 `putRaw`、泛型容器读取、Provider 替换、`banyan.cache.*` 配置 |
+| [`banyan-log/README.md`](banyan-log/README.md) | 生命周期事件、`banyan.log.*`、logback 宿主 include 与 pattern 覆盖 |
+| [`banyan-trace/README.md`](banyan-trace/README.md) | MDC 任务装饰器与线程池工厂 |
+| [`banyan-data-mysql/README.md`](banyan-data/banyan-data-mysql/README.md) | `BanyanQueryWrapper`、LIKE 转义边界 |
+
 ## 坐标
 
 ```xml
