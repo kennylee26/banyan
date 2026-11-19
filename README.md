@@ -11,7 +11,7 @@ An infrastructure toolkit for Spring Boot.
 | Module | Description |
 |---|---|
 | `banyan-bom` | Dependency version management |
-| `banyan-commons` | Pure-JDK static utilities and pluggable provider interfaces; no Spring, no third-party deps |
+| `banyan-commons` | Pure-JDK static utilities and pluggable provider interfaces; no Spring, no third-party deps (includes HMAC-SHA256 signing and replay guard) |
 | `banyan-commons-spring` | Spring-based common layer: replaceable interfaces, strategy registry and auto-configuration skeleton |
 | `banyan-test` | Shared test support: embedded MongoDB / H2 setup and contract-test bases (test-support jar) |
 | `banyan-cache` | Unified cache API with pluggable providers and an extensible cache-penetration guard placeholder |

@@ -11,7 +11,7 @@
 | 模块 | 说明 |
 |---|---|
 | `banyan-bom` | 依赖版本管理 |
-| `banyan-commons` | 纯 JDK 静态工具与可插拔能力接口，零 Spring、零第三方 |
+| `banyan-commons` | 纯 JDK 静态工具与可插拔能力接口，零 Spring、零第三方（内含 HMAC-SHA256 签名与防重放） |
 | `banyan-commons-spring` | 依赖 Spring 的公共层：可替换接口、策略注册器与装配骨架 |
 | `banyan-test` | 公共测试装备：内嵌 MongoDB / H2 配置、契约测试基类（test-support jar） |
 | `banyan-cache` | 统一缓存接口，Provider 可插拔，内置可扩展的穿透防护占位 |

@@ -171,7 +171,13 @@ public enum ErrorCode {
     LOG_ENV_PLATFORM("banyan.log.env.platform"),
 
     /** 环境快照：内存信息。 */
-    LOG_ENV_MEMORY("banyan.log.env.memory");
+    LOG_ENV_MEMORY("banyan.log.env.memory"),
+
+    /** 签名请求参数非法。 */
+    SIGN_REQUEST_INVALID("banyan.sign.request-invalid"),
+
+    /** 签名密钥本身非法（keyId 或 secret 为空）。 */
+    SIGN_KEY_INVALID("banyan.sign.key-invalid");
 
     /** 资源文件中的消息 key。 */
     private final String messageKey;
