@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- 按天加大小滚动的文件 appender 片段：只定义 appender，root 由宿主决定。 -->
+<included>
+    <appender name="FILE-DAILY" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${BANYAN_LOG_FILE}</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <fileNamePattern>${BANYAN_LOG_FILE}-%d{yyyy-MM-dd}.%i.log</fileNamePattern>
+            <maxFileSize>${BANYAN_LOG_MAX_SIZE}</maxFileSize>
+            <maxHistory>${BANYAN_LOG_MAX_HISTORY}</maxHistory>
+            <totalSizeCap>${BANYAN_LOG_TOTAL_CAP}</totalSizeCap>
+        </rollingPolicy>
+        <encoder>
+            <pattern>${FILE_LOG_PATTERN}</pattern>
+            <charset>${FILE_LOG_CHARSET:-UTF-8}</charset>
+        </encoder>
+    </appender>
+</included>

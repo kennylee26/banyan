@@ -150,7 +150,28 @@ public enum ErrorCode {
     CACHE_TTL_REQUIRED("banyan.cache.ttl-required"),
 
     /** 释放缓存锁失败。 */
-    CACHE_LOCK_RELEASE_FAILED("banyan.cache.lock-release-failed");
+    CACHE_LOCK_RELEASE_FAILED("banyan.cache.lock-release-failed"),
+
+    /** 应用启动横幅。 */
+    LOG_BANNER("banyan.log.banner"),
+
+    /** 应用优雅停机提示。 */
+    LOG_SHUTDOWN("banyan.log.shutdown"),
+
+    /** 应用启动失败。 */
+    LOG_STARTUP_FAILED("banyan.log.startup-failed"),
+
+    /** 环境快照标题。 */
+    LOG_ENV_TITLE("banyan.log.env.title"),
+
+    /** 环境快照：应用与容器。 */
+    LOG_ENV_RUNTIME("banyan.log.env.runtime"),
+
+    /** 环境快照：平台信息。 */
+    LOG_ENV_PLATFORM("banyan.log.env.platform"),
+
+    /** 环境快照：内存信息。 */
+    LOG_ENV_MEMORY("banyan.log.env.memory");
 
     /** 资源文件中的消息 key。 */
     private final String messageKey;

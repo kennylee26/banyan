@@ -42,6 +42,7 @@
         <module>banyan-test</module>
         <module>banyan-cache</module>
         <module>banyan-trace</module>
+        <module>banyan-log</module>
         <module>banyan-data</module>
     </modules>
 

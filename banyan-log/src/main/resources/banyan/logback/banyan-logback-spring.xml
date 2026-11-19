@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  可选日志片段：由宿主在自己的 logback-spring.xml 中显式 include 才生效。
+  不以 logback-spring.xml 命名，避免被 Spring Boot 自动识别为主配置。
+  本片段只定义变量与 appender，不定义 root / logger / contextName；
+  所有自定义变量都带 BANYAN_ 前缀，避免覆盖宿主的同名变量。
+-->
+<included>
+    <springProperty scope="context" name="TRACE_ID_KEY"
+                    source="banyan.log.logback.trace-id-key" defaultValue="traceId"/>
+    <!-- 先定义关联字段，再引入 Boot defaults，让默认 pattern 能带上 traceId -->
+    <springProperty scope="context" name="LOG_CORRELATION_PATTERN"
+                    source="logging.pattern.correlation"
+                    defaultValue="[traceId=%X{${TRACE_ID_KEY}:-N/A}] "/>
+
+    <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
+
+    <springProperty scope="context" name="PROJECT_NAME"
+                    source="spring.application.name" defaultValue="project"/>
+    <springProperty scope="context" name="BANYAN_LOG_PATH"
+                    source="banyan.log.logback.path" defaultValue="logs"/>
+    <springProperty scope="context" name="BANYAN_LOG_MAX_SIZE"
+                    source="banyan.log.logback.max-size" defaultValue="100MB"/>
+    <springProperty scope="context" name="BANYAN_LOG_MAX_HISTORY"
+                    source="banyan.log.logback.max-history" defaultValue="30"/>
+    <springProperty scope="context" name="BANYAN_LOG_TOTAL_CAP"
+                    source="banyan.log.logback.total-size-cap" defaultValue="10GB"/>
+
+    <property name="BANYAN_LOG_FILE" value="${BANYAN_LOG_PATH}/${PROJECT_NAME}.log"/>
+
+    <include resource="banyan/logback/console-appender.xml"/>
+    <include resource="banyan/logback/file-daily-appender.xml"/>
+    <include resource="banyan/logback/error-appender.xml"/>
+</included>

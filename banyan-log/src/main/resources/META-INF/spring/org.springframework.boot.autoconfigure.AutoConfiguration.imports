@@ -1,0 +1,2 @@
+cn.kennylee.banyan.log.autoconfigure.LogAutoConfiguration
+cn.kennylee.banyan.log.autoconfigure.LogMissingClassAutoConfiguration

@@ -16,10 +16,39 @@ An infrastructure toolkit for Spring Boot.
 | `banyan-test` | Shared test support: embedded MongoDB / H2 setup and contract-test bases (test-support jar) |
 | `banyan-cache` | Unified cache API with pluggable providers and an extensible cache-penetration guard placeholder |
 | `banyan-trace` | Trace ID generation, propagation and log integration for servlet, reactive, dubbo and feign |
+| `banyan-log` | Application lifecycle logging, optional logback snippets and pure-JDK log value tools |
 | `banyan-data` | Parent module of the data access layer (Das) |
 | `banyan-data-core` | Shared contracts: paging, sorting, query criteria, query strategy, validation |
 | `banyan-data-mysql` | MySQL data access layer built on MyBatis-Plus |
 | `banyan-data-mongodb` | MongoDB data access layer built on Spring Data MongoDB |
+
+## Logging
+
+`banyan-log` provides application lifecycle logging and an optional logback snippet set.
+
+The template does **not** load automatically. Include it from your own `logback-spring.xml`:
+
+```xml
+<configuration>
+    <include resource="banyan/logback/banyan-logback-spring.xml"/>
+
+    <!-- Option A: define root yourself -->
+    <root level="INFO">
+        <appender-ref ref="CONSOLE"/>
+        <appender-ref ref="FILE-DAILY"/>
+        <appender-ref ref="ERROR-FILE"/>
+    </root>
+
+    <!-- Option B: include the optional root snippet instead (it takes over root) -->
+    <!-- <include resource="banyan/logback/banyan-logback-root.xml"/> -->
+</configuration>
+```
+
+- `banyan.log.enabled=false` only disables the Java-side lifecycle beans; the XML template is disabled by not including it.
+- `<springProperty>` requires the host file to be named `logback-spring.xml`.
+- Tune the snippet with `banyan.log.logback.path`, `max-size`, `max-history`, `total-size-cap` and `trace-id-key`.
+- Without `banyan-trace` on the classpath the trace field prints `N/A`; the module never generates or propagates trace IDs.
+- Override the whole console/file pattern with `logging.pattern.console` / `logging.pattern.file`; custom variables use the `BANYAN_` prefix.
 
 ## Coordinates
 

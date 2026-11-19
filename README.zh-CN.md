@@ -16,10 +16,39 @@
 | `banyan-test` | 公共测试装备：内嵌 MongoDB / H2 配置、契约测试基类（test-support jar） |
 | `banyan-cache` | 统一缓存接口，Provider 可插拔，内置可扩展的穿透防护占位 |
 | `banyan-trace` | Trace ID 生成、传播与日志集成，兼容 servlet、reactive、dubbo、feign |
+| `banyan-log` | 应用生命周期日志、可选 logback 输出片段与纯 JDK 日志值工具 |
 | `banyan-data` | 数据访问层（Das）父模块 |
 | `banyan-data-core` | 公共契约：分页、排序、查询条件、查询策略、校验 |
 | `banyan-data-mysql` | 基于 MyBatis-Plus 的 MySQL 数据访问层 |
 | `banyan-data-mongodb` | 基于 Spring Data MongoDB 的数据访问层 |
+
+## 日志
+
+`banyan-log` 提供应用生命周期日志，以及一组可选的 logback 输出片段。
+
+模板**不会自动生效**，必须在自己的 `logback-spring.xml` 里显式 include：
+
+```xml
+<configuration>
+    <include resource="banyan/logback/banyan-logback-spring.xml"/>
+
+    <!-- 方案 A：自己定义 root -->
+    <root level="INFO">
+        <appender-ref ref="CONSOLE"/>
+        <appender-ref ref="FILE-DAILY"/>
+        <appender-ref ref="ERROR-FILE"/>
+    </root>
+
+    <!-- 方案 B：改用可选 root 片段（引入即把 root 交给本库） -->
+    <!-- <include resource="banyan/logback/banyan-logback-root.xml"/> -->
+</configuration>
+```
+
+- `banyan.log.enabled=false` 只管 Java 侧生命周期 bean；XML 模板的禁用方式是不 include。
+- `<springProperty>` 要求宿主文件名必须是 `logback-spring.xml`。
+- 可用 `banyan.log.logback.path`、`max-size`、`max-history`、`total-size-cap`、`trace-id-key` 调整片段。
+- 未引入 `banyan-trace` 时 trace 字段显示 `N/A`；本模块不生成、不传播 TraceId。
+- 可用 `logging.pattern.console` / `logging.pattern.file` 整体替换控制台/文件 pattern；本库自定义变量统一 `BANYAN_` 前缀。
 
 ## 坐标
 

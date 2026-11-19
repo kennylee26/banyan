@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  可选 root 片段：引入它等于把 root 的级别与 appender 交给本库。
+  不引入时 root 完全由宿主自行组装。
+-->
+<included>
+    <springProperty scope="context" name="ROOT_LOG_LEVEL"
+                    source="logging.level.root" defaultValue="INFO"/>
+    <root level="${ROOT_LOG_LEVEL}">
+        <appender-ref ref="CONSOLE"/>
+        <appender-ref ref="FILE-DAILY"/>
+        <appender-ref ref="ERROR-FILE"/>
+    </root>
+</included>
