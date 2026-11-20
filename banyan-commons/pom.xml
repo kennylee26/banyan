@@ -14,13 +14,26 @@
     <artifactId>banyan-commons</artifactId>
 
     <name>banyan-commons</name>
-    <description>纯 JDK 静态工具与可插拔能力接口，零 Spring、零第三方依赖</description>
+    <description>纯 JDK 静态工具与可插拔能力接口，主依赖零 Spring、零第三方（测试依赖除外）</description>
 
     <dependencies>
-        <!-- 纯 JUnit 5：本模块不引 Spring -->
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- 仅供 Spring MVC / Servlet 使用场景测试；test scope 不进入主依赖链 -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- MockHttpServletRequest 继承 HttpServletRequest，编译场景测试需要 -->
+        <dependency>
+            <groupId>jakarta.servlet</groupId>
+            <artifactId>jakarta.servlet-api</artifactId>
             <scope>test</scope>
         </dependency>
     </dependencies>

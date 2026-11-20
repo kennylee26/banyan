@@ -5,10 +5,12 @@ import org.junit.jupiter.api.Test;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * 零破坏基线：现有包与类不动、commons 保持零第三方、新增能力只做加法。
@@ -38,33 +40,49 @@ class CryptoPackageBaselineTest {
     /** 现有类型仍在原包，不因新增 crypto 包而移动。 */
     @Test
     void existingTypesStayInPlace() {
+        // when
         for (String type : EXISTING_TYPES) {
             assertNotNull(load(type), type);
         }
     }
 
-    /** commons 的 pom 只允许 test 依赖。 */
+    /** commons 的 pom 只允许 test 依赖，主依赖链仍为零第三方。 */
     @Test
     void pomDeclaresOnlyTestDependencies() throws IOException {
+        // given
         String pom = Files.readString(Paths.get("pom.xml"));
 
+        // when
         assertFalse(pom.contains("<scope>compile</scope>"));
         assertFalse(pom.contains("<artifactId>hutool"));
         assertFalse(pom.contains("<artifactId>bouncycastle"));
         assertFalse(pom.contains("<artifactId>jackson"));
-        assertFalse(pom.contains("<artifactId>spring-boot"));
+
+        Matcher dependencies = Pattern
+                .compile("<dependency>(.*?)</dependency>", Pattern.DOTALL)
+                .matcher(pom);
+        int scoped = 0;
+        while (dependencies.find()) {
+            String dependency = dependencies.group(1);
+            assertTrue(dependency.contains("<scope>test</scope>"), dependency.trim());
+            scoped++;
+        }
+        assertTrue(scoped >= 2);
     }
 
-    /** commons 不提供自动装配。 */
+    /** 本模块源码树下不产出自动装配资源（test 依赖自带来的不算）。 */
     @Test
-    void hasNoAutoConfigurationImports() {
-        assertNull(getClass().getClassLoader().getResource(
-                "META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports"));
+    void hasNoAutoConfigurationImports() throws IOException {
+        // when
+        assertFalse(Files.exists(Paths.get("src/main/resources")
+                .resolve("META-INF/spring")
+                .resolve("org.springframework.boot.autoconfigure.AutoConfiguration.imports")));
     }
 
     /** crypto 包已创建（本任务先红，1.2 创建后转绿）。 */
     @Test
     void cryptoPackageExists() {
+        // when
         assertNotNull(getClass().getClassLoader().getResource(
                 "cn/kennylee/banyan/commons/crypto/package-info.class"));
     }

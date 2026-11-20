@@ -20,8 +20,10 @@ class Base64sTest {
     /** 编解码往返一致。 */
     @Test
     void encodeAndDecodeRoundTrip() {
+        // given
         String expected = Base64.getEncoder().encodeToString("hello".getBytes(StandardCharsets.UTF_8));
 
+        // when
         assertEquals(expected, Base64s.encode("hello"));
         assertEquals("hello", Base64s.decode(expected));
     }
@@ -29,13 +31,17 @@ class Base64sTest {
     /** 支持非 ASCII 文本。 */
     @Test
     void handlesNonAscii() {
+        // given
         String text = "中文";
+
+        // when
         assertEquals(text, Base64s.decode(Base64s.encode(text)));
     }
 
     /** null 往返返回 null。 */
     @Test
     void nullRoundTrip() {
+        // when
         assertNull(Base64s.encode(null));
         assertNull(Base64s.decode(null));
     }

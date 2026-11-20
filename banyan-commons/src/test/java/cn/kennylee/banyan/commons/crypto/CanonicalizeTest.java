@@ -38,18 +38,22 @@ class CanonicalizeTest {
     /** golden vector 固定。 */
     @Test
     void producesGoldenVector() {
+        // given
         String expected = String.join("\n",
                 "BANYAN-SIGN-V1", "POST", "/openapi/orders", "a=x+y&b=1&b=2", BODY_HASH,
                 "1700000000000", "abc", "app1", "HmacSHA256");
 
+        // when
         assertEquals(expected, Signs.canonicalize(request()));
     }
 
     /** 任一参与字段变化都会改变规范化串。 */
     @Test
     void anyFieldChangeAltersCanonical() {
+        // given
         String base = Signs.canonicalize(request());
 
+        // when
         assertNotEquals(base, Signs.canonicalize(new SignRequest("PUT", "/openapi/orders",
                 Map.of("b", List.of("2", "1"), "a", List.of("x y"), "sign", List.of("ignored")),
                 BODY, 1700000000000L, "abc", "app1", "HmacSHA256", "sig")));
@@ -79,20 +83,24 @@ class CanonicalizeTest {
     /** sign 自身不参与规范化。 */
     @Test
     void excludesSignatureField() {
+        // when
         assertFalse(Signs.canonicalize(request()).contains("sign="));
     }
 
     /** 五个协议参数无论放 header 还是 query 都不参与规范化。 */
     @Test
     void excludesAllProtocolParams() {
+        // given
         SignRequest request = new SignRequest("GET", "/openapi/ping",
                 Map.of("alg", List.of("OTHER"), "keyId", List.of("other"),
                         "timestamp", List.of("1"), "nonce", List.of("n"),
                         "sign", List.of("s"), "a", List.of("1")),
                 null, 1700000000000L, "abc", "app1", "HmacSHA256", "sig");
 
+        // when
         String canonical = Signs.canonicalize(request);
 
+        // then
         assertTrue(canonical.contains("a=1"));
         assertFalse(canonical.contains("alg=OTHER"));
         assertFalse(canonical.contains("keyId=other"));
@@ -104,12 +112,15 @@ class CanonicalizeTest {
     /** 空值跳过。 */
     @Test
     void skipsBlankValues() {
+        // given
         SignRequest request = new SignRequest("GET", "/openapi/ping",
                 Map.of("empty", List.of(""), "blank", List.of("  "), "ok", List.of("1")),
                 null, 1700000000000L, "abc", "app1", "HmacSHA256", "sig");
 
+        // when
         String canonical = Signs.canonicalize(request);
 
+        // then
         assertFalse(canonical.contains("empty="));
         assertFalse(canonical.contains("blank="));
         assertTrue(canonical.contains("ok=1"));
@@ -118,22 +129,27 @@ class CanonicalizeTest {
     /** 重复参数按值字典序。 */
     @Test
     void sortsDuplicateValues() {
+        // given
         SignRequest request = new SignRequest("GET", "/openapi/ping",
                 Map.of("b", List.of("2", "1")), null,
                 1700000000000L, "abc", "app1", "HmacSHA256", "sig");
 
+        // when
         assertTrue(Signs.canonicalize(request).contains("b=1&b=2"));
     }
 
     /** 值只做一次 UTF-8 URL 编码。 */
     @Test
     void encodesExactlyOnce() {
+        // given
         SignRequest request = new SignRequest("GET", "/openapi/ping",
                 Map.of("q", List.of("a b"), "p", List.of("100%")), null,
                 1700000000000L, "abc", "app1", "HmacSHA256", "sig");
 
+        // when
         String canonical = Signs.canonicalize(request);
 
+        // then
         assertTrue(canonical.contains("q=a+b"));
         assertTrue(canonical.contains("p=100%25"));
         assertFalse(canonical.contains("%2525"));
@@ -143,9 +159,11 @@ class CanonicalizeTest {
     /** 未签名的出站请求不能参与规范化。 */
     @Test
     void rejectsUnsignedRequest() {
+        // given
         SignRequest unsigned = new SignRequest("GET", "/openapi/ping", Map.of(), null,
                 0L, null, null, null, null);
 
+        // when
         org.junit.jupiter.api.Assertions.assertThrows(IllegalArgumentException.class,
                 () -> Signs.canonicalize(unsigned));
     }
@@ -153,6 +171,7 @@ class CanonicalizeTest {
     /** 时间戳边界：0 与负数拒绝，1 接受。 */
     @Test
     void enforcesTimestampBoundaries() {
+        // when
         assertThrows(IllegalArgumentException.class, () -> Signs.canonicalize(
                 new SignRequest("GET", "/openapi/ping", Map.of(), null,
                         0L, "abc", "app1", "HmacSHA256", "sig")));
@@ -162,40 +181,50 @@ class CanonicalizeTest {
 
         String canonical = Signs.canonicalize(new SignRequest("GET", "/openapi/ping",
                 Map.of(), null, 1L, "abc", "app1", "HmacSHA256", "sig"));
+
+        // then
         assertTrue(canonical.contains("\n1\n"));
     }
 
     /** null 查询参数按空 Map 处理。 */
     @Test
     void acceptsNullQueryParams() {
+        // given
         SignRequest request = new SignRequest("GET", "/openapi/ping", null, null,
                 1700000000000L, "abc", "app1", "HmacSHA256", "sig");
 
+        // when
         assertTrue(request.queryParams().isEmpty());
     }
 
     /** 非空 key 的 null 值列表被过滤。 */
     @Test
     void filtersNullValueLists() {
+        // given
         Map<String, List<String>> params = new HashMap<>();
         params.put("b", null);
 
+        // when
         SignRequest request = new SignRequest("GET", "/openapi/ping", params, null,
                 1700000000000L, "abc", "app1", "HmacSHA256", "sig");
 
+        // then
         assertFalse(request.queryParams().containsKey("b"));
     }
 
     /** 空 key 与 null 值在构造时被过滤。 */
     @Test
     void filtersBlankKeysAndNullValues() {
+        // given
         Map<String, List<String>> params = new HashMap<>();
         params.put("", List.of("x"));
         params.put("a", Arrays.asList("1", null));
 
+        // when
         SignRequest request = new SignRequest("GET", "/openapi/ping", params, null,
                 1700000000000L, "abc", "app1", "HmacSHA256", "sig");
 
+        // then
         assertFalse(request.queryParams().containsKey(""));
         assertEquals(1, request.queryParams().get("a").size());
         assertFalse(Signs.canonicalize(request).contains("=x"));

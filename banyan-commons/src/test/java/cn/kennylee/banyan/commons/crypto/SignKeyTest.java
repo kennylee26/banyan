@@ -34,6 +34,7 @@ class SignKeyTest {
     /** keyId 与 secret 不能为空。 */
     @Test
     void rejectsBlankFields() {
+        // when
         assertThrows(IllegalArgumentException.class, () -> new SignKey("", "secret"));
         assertThrows(IllegalArgumentException.class, () -> new SignKey("  ", "secret"));
         assertThrows(IllegalArgumentException.class, () -> new SignKey("app1", ""));
@@ -43,11 +44,13 @@ class SignKeyTest {
     /** 异常消息走错误码，不泄漏 keyId 与 secret。 */
     @Test
     void invalidKeyMessageDoesNotLeakSecret() {
+        // when
         IllegalArgumentException blankKeyId = assertThrows(IllegalArgumentException.class,
                 () -> new SignKey("", "top-secret-value"));
         IllegalArgumentException blankSecret = assertThrows(IllegalArgumentException.class,
                 () -> new SignKey("app1", ""));
 
+        // then
         assertFalse(blankKeyId.getMessage().contains("top-secret-value"));
         assertFalse(blankSecret.getMessage().contains("app1"));
     }
@@ -55,9 +58,13 @@ class SignKeyTest {
     /** toString 不输出 secret。 */
     @Test
     void toStringRedactsSecret() {
+        // given
         SignKey key = new SignKey("app1", "top-secret-value");
 
+        // when
         assertFalse(key.toString().contains("top-secret-value"));
+
+        // then
         assertEquals("app1", key.keyId());
         assertEquals("top-secret-value", key.secret());
     }

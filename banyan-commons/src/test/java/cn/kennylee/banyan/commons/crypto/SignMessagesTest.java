@@ -30,9 +30,12 @@ class SignMessagesTest {
     /** 每个 SIGN_ 错误码在中英文下都能解析。 */
     @Test
     void allSignCodesResolveInBothLocales() {
+        // given
         List<ErrorCode> signCodes = Arrays.stream(ErrorCode.values())
                 .filter(code -> code.name().startsWith("SIGN_"))
                 .toList();
+
+        // when
         assertFalse(signCodes.isEmpty(), "缺少 SIGN_ 错误码");
 
         for (ErrorCode code : signCodes) {

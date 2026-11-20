@@ -19,6 +19,7 @@ class StringsTest {
     /** 空白判断覆盖 null、空串与空白字符。 */
     @Test
     void blankDetectionCoversNullEmptyAndWhitespace() {
+        // when
         assertTrue(Strings.isBlank(null));
         assertTrue(Strings.isBlank(""));
         assertTrue(Strings.isBlank("   "));
@@ -32,6 +33,7 @@ class StringsTest {
     /** 驼峰转下划线。 */
     @Test
     void camelCaseToUnderline() {
+        // when
         assertEquals("user_name", Strings.toUnderlineCase("userName"));
         assertEquals("id", Strings.toUnderlineCase("id"));
         assertEquals("url", Strings.toUnderlineCase("URL"));
@@ -42,12 +44,14 @@ class StringsTest {
     /** 下划线转换对 null 返回 null。 */
     @Test
     void toUnderlineCaseKeepsNullAsNull() {
+        // when
         assertNull(Strings.toUnderlineCase(null));
     }
 
     /** 下划线转驼峰。 */
     @Test
     void underlineToCamelCase() {
+        // when
         assertEquals("userName", Strings.toCamelCase("user_name"));
         assertEquals("name", Strings.toCamelCase("name"));
         assertNull(Strings.toCamelCase(null));

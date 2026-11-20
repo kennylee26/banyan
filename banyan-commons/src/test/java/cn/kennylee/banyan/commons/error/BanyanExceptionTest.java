@@ -24,9 +24,13 @@ class BanyanExceptionTest {
     /** 异常携带错误码与参数，消息按当前语言解析。 */
     @Test
     void carriesErrorCodeAndArgs() {
+        // given
         Messages.setLocale(Locale.SIMPLIFIED_CHINESE);
+
+        // when
         BanyanException exception = new BanyanException(ErrorCode.TABLE_INFO_NOT_FOUND, "users");
 
+        // then
         assertEquals(ErrorCode.TABLE_INFO_NOT_FOUND, exception.getErrorCode());
         assertEquals("未找到表信息: users", exception.getMessage());
     }
@@ -34,9 +38,13 @@ class BanyanExceptionTest {
     /** 原始异常保留在 cause 中。 */
     @Test
     void keepsCause() {
+        // given
         RuntimeException cause = new RuntimeException("boom");
+
+        // when
         BanyanException exception = new BanyanException(ErrorCode.BATCH_SAVE_FAILED, cause);
 
+        // then
         assertSame(cause, exception.getCause());
     }
 }

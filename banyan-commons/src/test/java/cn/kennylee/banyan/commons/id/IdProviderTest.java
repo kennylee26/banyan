@@ -19,11 +19,14 @@ class IdProviderTest {
     /** 默认实现返回非空且唯一的 String ID。 */
     @Test
     void defaultProviderReturnsNonBlankUniqueIds() {
+        // given
         IdProvider provider = new UuidIdProvider();
 
+        // when
         String first = provider.nextId();
         String second = provider.nextId();
 
+        // then
         assertNotNull(first);
         assertFalse(first.isBlank());
         assertNotEquals(first, second);
@@ -34,11 +37,14 @@ class IdProviderTest {
     /** 默认实现的 Long ID 为正数且递增。 */
     @Test
     void defaultProviderReturnsIncreasingLongIds() {
+        // given
         IdProvider provider = new UuidIdProvider();
 
+        // when
         long first = provider.nextLongId();
         long second = provider.nextLongId();
 
+        // then
         assertTrue(first > 0);
         assertTrue(second > first);
     }
@@ -46,6 +52,7 @@ class IdProviderTest {
     /** 自定义实现可替换默认实现。 */
     @Test
     void customImplementationCanReplaceDefault() {
+        // given
         IdProvider fixed = new IdProvider() {
             @Override
             public String nextId() {
@@ -58,6 +65,7 @@ class IdProviderTest {
             }
         };
 
+        // when
         assertEquals("fixed-id", fixed.nextId());
         assertEquals(1L, fixed.nextLongId());
     }

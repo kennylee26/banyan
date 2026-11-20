@@ -23,16 +23,20 @@ class MessagesTest {
     /** 中文环境下解析中文消息并填充占位符。 */
     @Test
     void resolvesChinese() {
+        // given
         Messages.setLocale(Locale.SIMPLIFIED_CHINESE);
 
+        // when
         assertEquals("查询字段在实体上不存在: name", Messages.get(ErrorCode.UNKNOWN_PROPERTY, "name"));
     }
 
     /** 英文环境下解析英文消息。 */
     @Test
     void resolvesEnglish() {
+        // given
         Messages.setLocale(Locale.ENGLISH);
 
+        // when
         assertEquals("Query property does not exist on entity: name",
                 Messages.get(ErrorCode.UNKNOWN_PROPERTY, "name"));
     }
@@ -40,8 +44,10 @@ class MessagesTest {
     /** 资源缺失时返回 key 本身，便于排查。 */
     @Test
     void missingKeyFallsBackToKey() {
+        // given
         ResourceBundleMessageResolver resolver = new ResourceBundleMessageResolver(Locale.ENGLISH);
 
+        // when
         assertEquals("banyan.unknown.key", resolver.resolve("banyan.unknown.key"));
     }
 }

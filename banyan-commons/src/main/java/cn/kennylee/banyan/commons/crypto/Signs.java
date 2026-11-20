@@ -59,6 +59,21 @@ public final class Signs {
     /** 参数名：签名串。 */
     public static final String PARAM_SIGN = "sign";
 
+    /** HTTP header：算法标识。 */
+    public static final String HEADER_ALG = "X-Banyan-Alg";
+
+    /** HTTP header：密钥标识。 */
+    public static final String HEADER_KEY_ID = "X-Banyan-KeyId";
+
+    /** HTTP header：毫秒时间戳。 */
+    public static final String HEADER_TIMESTAMP = "X-Banyan-Timestamp";
+
+    /** HTTP header：一次性随机串。 */
+    public static final String HEADER_NONCE = "X-Banyan-Nonce";
+
+    /** HTTP header：签名串。 */
+    public static final String HEADER_SIGN = "X-Banyan-Sign";
+
     /** 协议参数集合：无论放在 header 还是 query，都不参与规范化。 */
     private static final Set<String> PROTOCOL_PARAMS = Set.of(
             PARAM_ALG, PARAM_KEY_ID, PARAM_TIMESTAMP, PARAM_NONCE, PARAM_SIGN);

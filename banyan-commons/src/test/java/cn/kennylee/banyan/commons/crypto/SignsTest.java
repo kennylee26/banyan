@@ -23,26 +23,32 @@ class SignsTest {
     /** 合法时间戳解析。 */
     @Test
     void parsesTimestamp() {
+        // when
         assertEquals(123L, Signs.parseTimestamp("123"));
     }
 
     /** 非法时间戳转成带错误码的参数异常。 */
     @Test
     void rejectsInvalidTimestamp() {
+        // when
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
                 () -> Signs.parseTimestamp("not-a-number"));
 
+        // then
         assertTrue(exception.getMessage().contains(Signs.PARAM_TIMESTAMP));
     }
 
     /** 出站产出五个参数，且 nonce 每次不同。 */
     @Test
     void signProducesFiveParamsWithUniqueNonce() {
+        // given
         UnsignedRequest request = UnsignedRequest.of("GET", "/openapi/ping", Map.of(), null);
 
+        // when
         Map<String, String> first = Signs.sign(request, key);
         Map<String, String> second = Signs.sign(request, key);
 
+        // then
         assertEquals(Set.of(Signs.PARAM_ALG, Signs.PARAM_KEY_ID, Signs.PARAM_TIMESTAMP,
                 Signs.PARAM_NONCE, Signs.PARAM_SIGN), first.keySet());
         assertEquals("app1", first.get(Signs.PARAM_KEY_ID));

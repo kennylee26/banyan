@@ -73,21 +73,55 @@ SignedRequest signed = signer.sign(
 `SignedRequest` 同时包含：
 
 - `signed.request()`：原始请求数据
-- `signed.authParams()`：需要附加到 HTTP 请求上的五个签名参数
+- `signed.authParams()`：五个协议参数及值
+- `signed.headers()`：按约定生成的 HTTP header 名及值
 
-| 参数 | 含义 |
-|---|---|
-| `alg` | 算法，当前为 `HmacSHA256` |
-| `keyId` | 告诉对方该用哪把密钥 |
-| `timestamp` | 请求时间，单位为毫秒 |
-| `nonce` | 本次请求的随机串，每次不同 |
-| `sign` | 最终签名 |
+### 签名参数统一通过 header 传递
 
-把 `authParams()` 放到 header 或 query 中都可以。这五个参数在规范化时会自动排除，
-不会因为放进 query 就被重复计算。
+调用方与提供方 MUST 使用同一组 header 名。默认值为：
 
-`RequestSigner` **只准备数据，不发送 HTTP 请求**。拿到 `SignedRequest` 后，
-使用自己的 `HttpClient`、Feign 或其他客户端发送即可。
+| 协议参数 | 默认 HTTP header | 含义 |
+|---|---|---|
+| `alg` | `X-Banyan-Alg` | 算法，当前为 `HmacSHA256` |
+| `keyId` | `X-Banyan-KeyId` | 告诉对方该用哪把密钥 |
+| `timestamp` | `X-Banyan-Timestamp` | 请求时间，单位为毫秒 |
+| `nonce` | `X-Banyan-Nonce` | 本次请求的随机串，每次不同 |
+| `sign` | `X-Banyan-Sign` | 最终签名 |
+
+若不希望使用 `X-Banyan-*` 前缀，可用 `SignHeaders` 自定义五个名字，
+**调用方和提供方必须传入同一份配置**：
+
+```java
+SignHeaders headers = new SignHeaders(
+        "X-Acme-Alg", "X-Acme-Key", "X-Acme-Time", "X-Acme-Nonce", "X-Acme-Sign");
+
+RequestSigner signer = new RequestSigner(headers);
+ReplayGuard guard = new ReplayGuard(
+        new HmacSha256SignAlgorithm(), new InMemoryNonceStore(),
+        Clock.systemUTC(), ReplayGuard.DEFAULT_WINDOW_MILLIS, headers);
+```
+
+`signed.headers()` 会按这份配置生成 header 名；提供方可直接用
+`guard.verify(signed.request(), receivedHeaders, keys)`，不必手工拼 `SignRequest`。
+
+用 `signed.headers()` 直接拿到这张表，不必自己拼 header 名。发送时把原始
+method/path/query/body 照常发出，再把这五个 header 附加进去即可：
+
+```java
+HttpRequest.Builder builder = HttpRequest.newBuilder()
+        .uri(URI.create(baseUrl + signed.request().path()))
+        .method(signed.request().method(),
+                HttpRequest.BodyPublishers.ofString(signed.request().body()));
+
+signed.headers().forEach(builder::header);
+HttpRequest httpRequest = builder.build();
+```
+
+`RequestSigner` **只准备数据，不发送 HTTP 请求**；`SignedRequest` 也不需要携带
+`RequestSigner`。拿到结果后交给自己的 `HttpClient`、Feign 或其他客户端即可。
+
+`authParams()` 仍保留协议参数名，供规范化排除、日志排查或与老系统集成；
+对外传输请以 `headers()` 为准，不再把五个参数塞进 query。
 
 如果只需要签名参数、不需要完整的 `SignedRequest`，也可以用
 `Signs.sign(request, key)`。
@@ -106,11 +140,11 @@ SignRequest request = new SignRequest(
         "/openapi/orders",
         Map.of("page", List.of("1")),
         body,
-        Signs.parseTimestamp(headers.get("timestamp")),
-        headers.get("nonce"),
-        headers.get("keyId"),
-        headers.get("alg"),
-        headers.get("sign"));
+        Signs.parseTimestamp(header(Signs.HEADER_TIMESTAMP)),
+        header(Signs.HEADER_NONCE),
+        header(Signs.HEADER_KEY_ID),
+        header(Signs.HEADER_ALG),
+        header(Signs.HEADER_SIGN));
 
 VerifyResult result = guard.verify(
         request,
@@ -205,11 +239,11 @@ public class OpenApiSignFilter implements Filter {
                 request.getRequestURI(),
                 toMultiMap(request.getParameterMap()),
                 body,
-                Signs.parseTimestamp(header(request, "timestamp")),
-                header(request, "nonce"),
-                header(request, "keyId"),
-                header(request, "alg"),
-                header(request, "sign"));
+                Signs.parseTimestamp(request.getHeader(Signs.HEADER_TIMESTAMP)),
+                request.getHeader(Signs.HEADER_NONCE),
+                request.getHeader(Signs.HEADER_KEY_ID),
+                request.getHeader(Signs.HEADER_ALG),
+                request.getHeader(Signs.HEADER_SIGN));
 
         if (guard.verify(signRequest, keys) != VerifyResult.SUCCESS) {
             ((HttpServletResponse) resp).sendError(401);

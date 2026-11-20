@@ -20,8 +20,10 @@ class HexsTest {
     /** 编解码往返一致。 */
     @Test
     void encodeAndDecodeRoundTrip() {
+        // given
         byte[] bytes = "hello".getBytes(StandardCharsets.UTF_8);
 
+        // when
         assertEquals("68656c6c6f", Hexs.encode(bytes));
         assertArrayEquals(bytes, Hexs.decode("68656c6c6f"));
     }
@@ -29,6 +31,7 @@ class HexsTest {
     /** null 往返返回 null。 */
     @Test
     void nullRoundTrip() {
+        // when
         assertNull(Hexs.encode(null));
         assertNull(Hexs.decode(null));
     }

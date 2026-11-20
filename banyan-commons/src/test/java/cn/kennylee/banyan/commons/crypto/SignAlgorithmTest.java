@@ -29,20 +29,24 @@ class SignAlgorithmTest {
     /** 算法标识固定为 HmacSHA256。 */
     @Test
     void exposesAlgorithmName() {
+        // when
         assertEquals("HmacSHA256", algorithm.name());
     }
 
     /** RFC 4231 known-answer 向量。 */
     @Test
     void matchesRfc4231Vector() {
+        // when
         assertEquals(RFC4231_CASE2, algorithm.sign("what do ya want for nothing?", "Jefe"));
     }
 
     /** 验签成功与失败。 */
     @Test
     void verifiesSignature() {
+        // given
         String signature = algorithm.sign("payload", "secret");
 
+        // when
         assertTrue(algorithm.verify("payload", "secret", signature));
         assertFalse(algorithm.verify("payload", "secret", signature + "0"));
         assertFalse(algorithm.verify("payload", "secret", null));
@@ -51,6 +55,7 @@ class SignAlgorithmTest {
     /** 默认验签是常量时间比较，子类不得覆写为 equals。 */
     @Test
     void verificationIsConstantTimeContract() {
+        // when
         assertThrows(NoSuchMethodException.class, () -> HmacSha256SignAlgorithm.class
                 .getDeclaredMethod("verify", String.class, String.class, String.class));
     }
@@ -58,6 +63,7 @@ class SignAlgorithmTest {
     /** 自定义算法实现可替换默认实现。 */
     @Test
     void supportsCustomAlgorithm() {
+        // given
         SignAlgorithm custom = new SignAlgorithm() {
 
             @Override
@@ -73,9 +79,11 @@ class SignAlgorithmTest {
         UnsignedRequest request = UnsignedRequest.of("GET", "/openapi/ping", Map.of(), null);
         Clock clock = Clock.fixed(Instant.ofEpochMilli(1700000000000L), ZoneOffset.UTC);
 
+        // when
         Map<String, String> params = Signs.sign(request, new SignKey("app1", "secret"),
                 custom, clock);
 
+        // then
         assertEquals("TEST", params.get("alg"));
         assertEquals("deadbeef", params.get("sign"));
     }

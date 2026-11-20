@@ -19,31 +19,55 @@ public class RequestSigner {
     /** 时钟。 */
     private final Clock clock;
 
+    /** HTTP header 名配置。 */
+    private final SignHeaders headersConfig;
+
     /**
-     * 使用默认 HMAC-SHA256 算法与系统时钟。
+     * 使用默认 HMAC-SHA256 算法、系统时钟与默认 header 名。
      */
     public RequestSigner() {
-        this(new HmacSha256SignAlgorithm(), Clock.systemUTC());
+        this(new HmacSha256SignAlgorithm(), Clock.systemUTC(), SignHeaders.DEFAULT);
     }
 
     /**
-     * 使用指定算法与系统时钟。
+     * 使用指定算法、系统时钟与默认 header 名。
      *
      * @param algorithm 签名算法
      */
     public RequestSigner(SignAlgorithm algorithm) {
-        this(algorithm, Clock.systemUTC());
+        this(algorithm, Clock.systemUTC(), SignHeaders.DEFAULT);
     }
 
     /**
-     * 构造签名器。
+     * 使用默认算法、系统时钟与自定义 header 名。
+     *
+     * @param headersConfig header 名配置
+     */
+    public RequestSigner(SignHeaders headersConfig) {
+        this(new HmacSha256SignAlgorithm(), Clock.systemUTC(), headersConfig);
+    }
+
+    /**
+     * 使用指定算法与系统时钟、默认 header 名。
      *
      * @param algorithm 签名算法
      * @param clock     时钟
      */
     public RequestSigner(SignAlgorithm algorithm, Clock clock) {
+        this(algorithm, clock, SignHeaders.DEFAULT);
+    }
+
+    /**
+     * 构造签名器。
+     *
+     * @param algorithm     签名算法
+     * @param clock         时钟
+     * @param headersConfig header 名配置
+     */
+    public RequestSigner(SignAlgorithm algorithm, Clock clock, SignHeaders headersConfig) {
         this.algorithm = Objects.requireNonNull(algorithm, "algorithm");
         this.clock = Objects.requireNonNull(clock, "clock");
+        this.headersConfig = Objects.requireNonNull(headersConfig, "headersConfig");
     }
 
     /**
@@ -64,6 +88,7 @@ public class RequestSigner {
                 algorithm.name(), null);
         String signature = algorithm.sign(Signs.canonicalize(prepared), key.secret());
         return new SignedRequest(request,
-                Signs.authParams(algorithm.name(), key.keyId(), timestamp, nonce, signature));
+                Signs.authParams(algorithm.name(), key.keyId(), timestamp, nonce, signature),
+                headersConfig);
     }
 }

@@ -17,6 +17,7 @@ class MasksTest {
     /** 手机号脱敏。 */
     @Test
     void maskMobile() {
+        // when
         assertEquals("138****5678", Masks.maskMobile("13812345678"));
         assertEquals("123", Masks.maskMobile("123"));
         assertNull(Masks.maskMobile(null));
@@ -25,6 +26,7 @@ class MasksTest {
     /** 邮箱脱敏。 */
     @Test
     void maskEmail() {
+        // when
         assertEquals("a***@example.com", Masks.maskEmail("abc@example.com"));
         assertEquals("a***@b.com", Masks.maskEmail("a@b.com"));
         assertNull(Masks.maskEmail(null));

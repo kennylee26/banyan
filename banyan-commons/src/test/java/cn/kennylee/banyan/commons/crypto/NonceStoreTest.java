@@ -32,6 +32,7 @@ class NonceStoreTest {
     /** 同一 nonce 第二次被拒。 */
     @Test
     void rejectsDuplicateNonce() {
+        // when
         assertTrue(store.putIfAbsent("app1:abc", TTL));
         assertFalse(store.putIfAbsent("app1:abc", TTL));
     }
@@ -39,6 +40,7 @@ class NonceStoreTest {
     /** 不同 nonce 互不影响。 */
     @Test
     void acceptsDifferentNonces() {
+        // when
         assertTrue(store.putIfAbsent("app1:abc", TTL));
         assertTrue(store.putIfAbsent("app1:def", TTL));
     }
@@ -46,6 +48,7 @@ class NonceStoreTest {
     /** 过期后同一 nonce 可再次使用。 */
     @Test
     void expiresEntries() {
+        // when
         assertTrue(store.putIfAbsent("app1:abc", TTL));
 
         clock.advance(Duration.ofMillis(TTL + 1));
@@ -56,6 +59,7 @@ class NonceStoreTest {
     /** 恰好到达 TTL 即视为过期。 */
     @Test
     void expiresExactlyAtTtl() {
+        // when
         assertTrue(store.putIfAbsent("app1:edge", TTL));
 
         clock.advance(Duration.ofMillis(TTL));
@@ -66,11 +70,14 @@ class NonceStoreTest {
     /** 并发提交同一 nonce 至多一个成功。 */
     @Test
     void allowsOnlyOneConcurrentWinner() throws InterruptedException {
+        // given
         int threads = 8;
         CountDownLatch start = new CountDownLatch(1);
         CountDownLatch done = new CountDownLatch(threads);
         AtomicInteger winners = new AtomicInteger();
         ExecutorService pool = Executors.newFixedThreadPool(threads);
+
+        // when
         try {
             for (int i = 0; i < threads; i++) {
                 pool.submit(() -> {
@@ -92,6 +99,7 @@ class NonceStoreTest {
             pool.shutdownNow();
         }
 
+        // then
         assertEquals(1, winners.get());
     }
 }
