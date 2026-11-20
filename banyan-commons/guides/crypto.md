@@ -126,6 +126,8 @@ HttpRequest httpRequest = builder.build();
 如果只需要签名参数、不需要完整的 `SignedRequest`，也可以用
 `Signs.sign(request, key)`。
 
+需要同时加密请求体、并且希望调用方只处理一个入口时，用第九节的 `OpenApiSigner`。
+
 ## 三、提供方：验签并防止重放
 
 把收到的 HTTP 请求组装为 `SignRequest`，再交给 `ReplayGuard`：
@@ -160,6 +162,19 @@ if (result != VerifyResult.SUCCESS) {
 只有请求本身格式不合法时才抛出 `IllegalArgumentException`。
 
 默认时间窗口是 **5 分钟**，达到边界即视为过期。
+
+排障时可以用 `verifyDetailed` 拿到失败原因，**默认不要把它返回给外部**：
+
+```java
+VerifyOutcome outcome = guard.verifyDetailed(request, keys);
+if (!outcome.isSuccess()) {
+    log.warn("验签失败: {}", outcome.reason());
+}
+```
+
+`FailureReason` 取值：`MALFORMED` / `UNKNOWN_KEY` / `ALG_MISMATCH` /
+`EXPIRED` / `REPLAY` / `SIGNATURE_MISMATCH`，另有 `DECRYPT_FAILED`
+由接入层产生，验签入口不会返回。
 
 ## 四、密钥与可替换实现
 
@@ -286,6 +301,75 @@ public class OpenApiSignFilter implements Filter {
 - 验签使用 `MessageDigest.isEqual` 做常量时间比较。
 - commons 本身不写日志；应用记录失败原因时，也不要记录密钥、完整签名串或 body。
 - 当前只有 HMAC-SHA256，不支持 MD5、国密和算法协商。
-- 签名不加密内容；需要保密时请使用 HTTPS。
+- 签名本身不加密内容；需要 body 保密时使用第九节的 `OpenApiSigner`，传输层仍应使用 HTTPS。
 - 默认 nonce 存储只适合单实例，且过期项在下一次写入时才清理。
 - 尚未签名的请求不能直接规范化：缺少时间戳、nonce、keyId 或算法时会抛出参数异常。
+
+## 九、一步签名并加密（给客户对接）
+
+`OpenApiSigner` 把「加密 body → 用密文签名 → 组装 header」收拢为一步，调用方只需要业务请求和密钥：
+
+```java
+OpenApiSigner signer = OpenApiSigner.builder()
+        .keyId("app1")
+        .secret("secret")
+        .build();
+
+OpenApiSigner.SignedPayload payload = signer.sign(UnsignedRequest.of(
+        "POST",
+        "/openapi/orders",
+        Map.of("page", List.of("1")),
+        "{\"id\":1}"));
+
+payload.headers(); // 五个签名 header
+payload.body();    // 密文，直接作为请求体发送
+```
+
+发送方式与第二节相同：业务 method/path/query 照常发送，`payload.headers()` 逐个附加，body 换成 `payload.body()`，Content-Type 仍为 `application/json`。
+
+### 密文格式
+
+```
+aesKey     = SHA-256("banyan-aes" ‖ secret)   // 32 字节
+iv         = 随机 12 字节
+ciphertext = AES-256-GCM(aesKey, iv, 明文 UTF-8)
+wireBody   = Base64(iv ‖ ciphertext ‖ tag)     // tag 16 字节
+```
+
+- 每次加密使用新的随机 IV，同一明文两次密文不同。
+- `body` 为 `null` 或空串时不加密，也不参与解密。
+- **签名覆盖密文**：提供方先验签，通过后才解密。明文不参与规范化，也不出现在线上传输中。
+
+### 关闭加密或替换实现
+
+```java
+OpenApiSigner plain = OpenApiSigner.builder()
+        .keyId("app1").secret("secret")
+        .plainBody()                 // 只签名，body 保持明文
+        .build();
+
+OpenApiSigner custom = OpenApiSigner.builder()
+        .keyId("app1").secret("secret")
+        .cipher(myPayloadCipher)     // 自定义 PayloadCipher
+        .build();
+```
+
+- `cipher("aes-gcm")` 选择内置实现；未支持的标识抛 `IllegalArgumentException`，不会静默回退。
+- 后续接 SM4 时新增 `PayloadCipher` 实现即可，门面与提供方管线不变。
+- 提供方要让验签通过，必须使用与调用方相同的 `SignHeaders`、加密开关与密钥。
+
+### 提供方如何配合
+
+提供方仍用 `ReplayGuard` 验签，body 取密文；签名通过后再用 `AesGcmPayloadCipher` 解密：
+
+```java
+VerifyOutcome outcome = guard.verifyDetailed(
+        requestWithCipherBody, receivedHeaders, keys);
+if (!outcome.isSuccess()) {
+    // 拒绝，不向外部暴露原因
+}
+String plaintext = new AesGcmPayloadCipher()
+        .decrypt(requestWithCipherBody.body(), key.secret());
+```
+
+如果使用 Spring MVC，直接引入 `banyan-openapi-sign` 并给 Controller 加 `@OpenApiSigned`，上面的流程由拦截器完成，见该模块 README。
