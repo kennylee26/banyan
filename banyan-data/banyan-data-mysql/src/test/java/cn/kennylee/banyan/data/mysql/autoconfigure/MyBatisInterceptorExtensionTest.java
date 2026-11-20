@@ -30,6 +30,7 @@ class MyBatisInterceptorExtensionTest {
     /** 默认插件与自定义插件共存，自定义排在最后。 */
     @Test
     void appendsCustomInterceptorAfterBuiltIn() {
+        // when
         runner.withBean("custom", InnerInterceptor.class, CustomInterceptor::new)
                 .run(context -> {
                     List<InnerInterceptor> interceptors =
@@ -43,6 +44,7 @@ class MyBatisInterceptorExtensionTest {
     /** 关闭全部自带开关后，容器只含自定义插件。 */
     @Test
     void keepsOnlyCustomInterceptorWhenBuiltInsDisabled() {
+        // when
         runner.withPropertyValues(
                         "banyan.data-mysql.pagination.enabled=false",
                         "banyan.data-mysql.like-escape.inner-interceptor.enabled=false",
@@ -59,6 +61,7 @@ class MyBatisInterceptorExtensionTest {
     /** 使用者已有容器时让位，零散插件不被追加。 */
     @Test
     void doesNotAppendWhenUserContainerExists() {
+        // when
         runner.withBean(MybatisPlusInterceptor.class, MybatisPlusInterceptor::new)
                 .withBean("custom", InnerInterceptor.class, CustomInterceptor::new)
                 .run(context -> {
@@ -70,6 +73,7 @@ class MyBatisInterceptorExtensionTest {
     /** 多个自定义插件按 Ordered 升序排列。 */
     @Test
     void ordersCustomInterceptorsByOrder() {
+        // when
         runner.withBean("low", InnerInterceptor.class, LowPriorityInterceptor::new)
                 .withBean("high", InnerInterceptor.class, HighPriorityInterceptor::new)
                 .run(context -> {

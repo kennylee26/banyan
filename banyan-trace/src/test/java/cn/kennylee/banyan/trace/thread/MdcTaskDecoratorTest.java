@@ -29,6 +29,7 @@ class MdcTaskDecoratorTest {
     /** 子线程同时拿到 MDC 与 TraceId。 */
     @Test
     void propagatesMdcAndTraceId() throws Exception {
+        // given
         TraceContext.setTraceId("t-1");
         MDC.put("traceId", "t-1");
         MDC.put("tenant", "h-1");
@@ -42,10 +43,12 @@ class MdcTaskDecoratorTest {
             mdcTenant.set(MDC.get("tenant"));
         });
 
+        // when
         Thread thread = new Thread(wrapped);
         thread.start();
         thread.join();
 
+        // then
         assertThat(context).hasValue("t-1");
         assertThat(mdcTrace).hasValue("t-1");
         assertThat(mdcTenant).hasValue("h-1");
@@ -54,6 +57,7 @@ class MdcTaskDecoratorTest {
     /** 执行结束后恢复子线程原有上下文，不残留父任务的值。 */
     @Test
     void restoresPreviousChildContext() {
+        // given
         TraceContext.setTraceId("parent");
         MDC.put("traceId", "parent");
         Runnable wrapped = decorator.decorate(() -> {
@@ -61,8 +65,11 @@ class MdcTaskDecoratorTest {
 
         TraceContext.setTraceId("child-before");
         MDC.put("traceId", "child-before");
+
+        // when
         wrapped.run();
 
+        // then
         assertThat(TraceContext.getTraceId()).isEqualTo("child-before");
         assertThat(MDC.get("traceId")).isEqualTo("child-before");
     }
@@ -70,11 +77,14 @@ class MdcTaskDecoratorTest {
     /** 上下文为空时仍然包装并执行。 */
     @Test
     void wrapsEvenWhenContextEmpty() {
+        // given
         AtomicBoolean ran = new AtomicBoolean();
         Runnable wrapped = decorator.decorate(() -> ran.set(true));
 
+        // when
         wrapped.run();
 
+        // then
         assertThat(ran).isTrue();
         assertThat(TraceContext.getTraceId()).isNull();
     }
@@ -82,12 +92,15 @@ class MdcTaskDecoratorTest {
     /** 不污染父线程的宿主 MDC。 */
     @Test
     void keepsParentHostMdc() {
+        // given
         MDC.put("tenant", "h-1");
         Runnable wrapped = decorator.decorate(() -> {
         });
 
+        // when
         wrapped.run();
 
+        // then
         assertThat(MDC.get("tenant")).isEqualTo("h-1");
     }
 }

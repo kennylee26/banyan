@@ -25,8 +25,10 @@ class PaginationProbeIntegrationTest {
     /** 默认装配后，纯业务 SQL 无需手写分页。 */
     @Test
     void paginatesCustomXmlQueryWithoutManualLimit() {
+        // when
         IPage<UserEo> page = pagingProbeMapper.selectByMinAge(new Page<>(1, 1), 0);
 
+        // then
         assertThat(page.getTotal()).isEqualTo(2);
         assertThat(page.getRecords()).hasSize(1);
     }
@@ -34,8 +36,10 @@ class PaginationProbeIntegrationTest {
     /** 第二页取到剩余记录。 */
     @Test
     void returnsSecondPage() {
+        // when
         IPage<UserEo> page = pagingProbeMapper.selectByMinAge(new Page<>(2, 1), 0);
 
+        // then
         assertThat(page.getTotal()).isEqualTo(2);
         assertThat(page.getRecords()).hasSize(1);
         assertThat(page.getRecords().get(0).getUserName()).isEqualTo("bob");

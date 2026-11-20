@@ -25,14 +25,17 @@ class EnvironmentInfoProviderTest {
     /** 采集运行时信息。 */
     @Test
     void collectsRuntimeInfo() {
+        // given
         MockEnvironment environment = new MockEnvironment()
                 .withProperty("spring.application.name", "order");
         environment.setActiveProfiles("dev", "prod");
         GenericApplicationContext context = new GenericApplicationContext();
         context.setEnvironment(environment);
 
+        // when
         EnvironmentInfo info = provider.collect(context);
 
+        // then
         assertThat(info.applicationName()).isEqualTo("order");
         assertThat(info.profiles()).isEqualTo("dev,prod");
         assertThat(info.cpuCores()).isPositive();
@@ -51,59 +54,71 @@ class EnvironmentInfoProviderTest {
     /** 没有应用名时不报错。 */
     @Test
     void toleratesMissingApplicationName() {
+        // given
         GenericApplicationContext context = new GenericApplicationContext();
         context.setEnvironment(new MockEnvironment());
 
+        // when
         assertThat(provider.collect(context).applicationName()).isNull();
     }
 
     /** 单个 profile 原样输出。 */
     @Test
     void keepsSingleProfile() {
+        // given
         MockEnvironment environment = new MockEnvironment();
         environment.setActiveProfiles("dev");
         GenericApplicationContext context = new GenericApplicationContext();
         context.setEnvironment(environment);
 
+        // when
         assertThat(provider.collect(context).profiles()).isEqualTo("dev");
     }
 
     /** 探测类不存在时版本为 null。 */
     @Test
     void detectVersionReturnsNullWhenProbeMissing() {
+        // given
         JdkEnvironmentInfoProvider custom = new JdkEnvironmentInfoProvider(
                 Map.of("Tomcat", "does.not.Exist"));
 
+        // when
         assertThat(custom.detectVersion("Tomcat")).isNull();
     }
 
     /** 容器名不在探测表时版本为 null。 */
     @Test
     void detectVersionReturnsNullForUnknownContainer() {
+        // when
         assertThat(provider.detectVersion("Unknown")).isNull();
     }
 
     /** 探测类存在但未声明实现版本时为 null。 */
     @Test
     void detectVersionReturnsNullWhenPackageHasNoVersion() {
+        // given
         JdkEnvironmentInfoProvider custom = new JdkEnvironmentInfoProvider(
                 Map.of("Demo", "java.lang.String"));
 
+        // when
         assertThat(custom.detectVersion("Demo")).isNull();
     }
 
     /** 探测类存在且声明版本时返回版本。 */
     @Test
     void detectVersionReadsImplementationVersion() {
+        // given
         JdkEnvironmentInfoProvider custom = new JdkEnvironmentInfoProvider(
                 Map.of("Demo", "ch.qos.logback.classic.Logger"));
 
+        // when
         assertThat(custom.detectVersion("Demo")).isNotBlank();
     }
 
     /** 使用当前线程上下文类加载器探测；它加载不到时不回退到其它加载器。 */
     @Test
     void detectVersionUsesContextClassLoader() {
+        // given
         Thread thread = Thread.currentThread();
         ClassLoader original = thread.getContextClassLoader();
         try {
@@ -112,6 +127,7 @@ class EnvironmentInfoProviderTest {
             JdkEnvironmentInfoProvider custom = new JdkEnvironmentInfoProvider(
                     Map.of("Demo", "ch.qos.logback.classic.Logger"));
 
+            // when
             assertThat(custom.detectVersion("Demo")).isNull();
         } finally {
             thread.setContextClassLoader(original);
@@ -121,6 +137,7 @@ class EnvironmentInfoProviderTest {
     /** 上下文类加载器为空时回退到本类加载器。 */
     @Test
     void detectVersionFallsBackWhenContextClassLoaderMissing() {
+        // given
         Thread thread = Thread.currentThread();
         ClassLoader original = thread.getContextClassLoader();
         try {
@@ -128,6 +145,7 @@ class EnvironmentInfoProviderTest {
             JdkEnvironmentInfoProvider custom = new JdkEnvironmentInfoProvider(
                     Map.of("Demo", "ch.qos.logback.classic.Logger"));
 
+            // when
             assertThat(custom.detectVersion("Demo")).isNotBlank();
         } finally {
             thread.setContextClassLoader(original);
@@ -137,50 +155,61 @@ class EnvironmentInfoProviderTest {
     /** 探测时不初始化目标类。 */
     @Test
     void detectVersionDoesNotInitializeProbeClass() {
+        // given
         ProbeWithInitializer.INITIALIZED = false;
         JdkEnvironmentInfoProvider custom = new JdkEnvironmentInfoProvider(Map.of(
                 "Demo", "cn.kennylee.banyan.log.lifecycle.EnvironmentInfoProviderTest$ProbeWithInitializer"));
 
+        // when
         custom.detectVersion("Demo");
 
+        // then
         assertThat(ProbeWithInitializer.INITIALIZED).isFalse();
     }
 
     /** Web 上下文输出容器类型。 */
     @Test
     void describesContainerFromWebContext() {
+        // given
         WebServerApplicationContext context = mock(WebServerApplicationContext.class);
         when(context.getEnvironment()).thenReturn(new MockEnvironment()
                 .withProperty("spring.application.name", "order"));
         when(context.getWebServer()).thenReturn(new FakeWebServer());
 
+        // when
         assertThat(provider.collect(context).webContainer()).isEqualTo("Fake");
     }
 
     /** Servlet 环境读取规范版本。 */
     @Test
     void readsServletVersion() {
+        // given
         FakeServletWebContext context = new FakeServletWebContext();
         context.setEnvironment(new MockEnvironment());
 
+        // when
         assertThat(provider.servletVersion(context)).isEqualTo("6.0");
     }
 
     /** 没有 getServletContext 方法时返回 null。 */
     @Test
     void servletVersionReturnsNullWithoutMethod() {
+        // given
         GenericApplicationContext context = new GenericApplicationContext();
         context.setEnvironment(new MockEnvironment());
 
+        // when
         assertThat(provider.servletVersion(context)).isNull();
     }
 
     /** getServletContext 返回 null 时返回 null。 */
     @Test
     void servletVersionReturnsNullWhenContextAbsent() {
+        // given
         NullServletWebContext context = new NullServletWebContext();
         context.setEnvironment(new MockEnvironment());
 
+        // when
         assertThat(provider.servletVersion(context)).isNull();
     }
 

@@ -15,6 +15,7 @@ class LikeEscaperTest {
     /** 转义符本身与 SQL 标准通配符。 */
     @Test
     void escapesPercentUnderscoreAndBackslash() {
+        // when
         assertThat(LikeEscaper.escape("50%")).isEqualTo("50\\%");
         assertThat(LikeEscaper.escape("a_b")).isEqualTo("a\\_b");
         assertThat(LikeEscaper.escape("a\\b")).isEqualTo("a\\\\b");
@@ -24,6 +25,7 @@ class LikeEscaperTest {
     /** 用户输入本身含反斜杠时，反斜杠作为字面量保留。 */
     @Test
     void keepsUserBackslashAsLiteral() {
+        // when
         assertThat(LikeEscaper.escape("50\\%")).isEqualTo("50\\\\\\%");
         assertThat(LikeEscaper.escape("\\%")).isEqualTo("\\\\\\%");
     }
@@ -31,6 +33,7 @@ class LikeEscaperTest {
     /** 空值与 null 原样返回。 */
     @Test
     void returnsEmptyAndNullUnchanged() {
+        // when
         assertThat(LikeEscaper.escape("")).isEqualTo("");
         assertThat(LikeEscaper.escape(null)).isNull();
     }
@@ -38,9 +41,11 @@ class LikeEscaperTest {
     /** 标准转义不是幂等的：重复转义会改变结果，因此两层必须保证只调用一次。 */
     @Test
     void escapingTwiceChangesTheValue() {
+        // when
         String once = LikeEscaper.escape("50%");
         String twice = LikeEscaper.escape(once);
 
+        // then
         assertThat(once).isEqualTo("50\\%");
         assertThat(twice).isEqualTo("50\\\\\\%");
         assertThat(twice).isNotEqualTo(once);
@@ -49,6 +54,7 @@ class LikeEscaperTest {
     /** 不含特殊字符的值不改变。 */
     @Test
     void keepsPlainValueUnchanged() {
+        // when
         assertThat(LikeEscaper.escape("alice")).isEqualTo("alice");
     }
 }

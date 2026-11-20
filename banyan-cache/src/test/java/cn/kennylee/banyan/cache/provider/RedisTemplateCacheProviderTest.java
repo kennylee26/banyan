@@ -38,8 +38,10 @@ class RedisTemplateCacheProviderTest extends CacheIntegrationTestBase {
     /** 写入后直接读 Redis 是可读字符串。 */
     @Test
     void storesReadableString() {
+        // given
         provider.set("k1", "{\"name\":\"alice\"}", Duration.ofSeconds(30));
 
+        // when
         assertThat(provider.get("k1")).isEqualTo("{\"name\":\"alice\"}");
         assertThat(stringRedisTemplate.opsForValue().get("k1")).isEqualTo("{\"name\":\"alice\"}");
     }
@@ -47,8 +49,10 @@ class RedisTemplateCacheProviderTest extends CacheIntegrationTestBase {
     /** 存在性与过期。 */
     @Test
     void supportsExistsAndExpire() {
+        // given
         provider.set("k2", "v", null);
 
+        // when
         assertThat(provider.exists("k2")).isTrue();
         assertThat(provider.expire("k2", Duration.ofSeconds(30))).isTrue();
         assertThat(stringRedisTemplate.getExpire("k2")).isPositive();
@@ -59,8 +63,10 @@ class RedisTemplateCacheProviderTest extends CacheIntegrationTestBase {
     /** 批量读写删。 */
     @Test
     void supportsBatchOperations() {
+        // given
         provider.batchSet(Map.of("k3", "a", "k4", "b"), null);
 
+        // when
         assertThat(provider.batchGet(List.of("k3", "k4"))).containsExactly("a", "b");
         assertThat(provider.batchDelete(List.of("k3", "k4"))).isEqualTo(2);
     }
@@ -68,6 +74,7 @@ class RedisTemplateCacheProviderTest extends CacheIntegrationTestBase {
     /** 结构与计数。 */
     @Test
     void supportsStructuresAndCounters() {
+        // when
         assertThat(provider.increment("c1", 2)).isEqualTo(2L);
 
         provider.hashPut("h1", "f1", "v1");
@@ -88,8 +95,10 @@ class RedisTemplateCacheProviderTest extends CacheIntegrationTestBase {
     /** 追加过期时间：持久 key 不能被凭空加上 TTL。 */
     @Test
     void addExpireTimeRequiresExistingTtl() {
+        // given
         provider.set("persist", "v", null);
 
+        // when
         assertThat(provider.addExpireTime("persist", Duration.ofSeconds(30))).isFalse();
         assertThat(stringRedisTemplate.getExpire("persist")).isEqualTo(-1L);
 
@@ -101,19 +110,23 @@ class RedisTemplateCacheProviderTest extends CacheIntegrationTestBase {
     /** SCAN 前缀查询。 */
     @Test
     void scansKeysByPattern() {
+        // given
         provider.set("scan:a", "1", null);
         provider.set("scan:b", "2", null);
 
+        // when
         assertThat(provider.scanKeys("scan:*", 100)).containsExactlyInAnyOrder("scan:a", "scan:b");
     }
 
     /** SCAN 返回数量受上限约束。 */
     @Test
     void scanKeysHonorsMaxKeys() {
+        // given
         provider.set("cap:a", "1", null);
         provider.set("cap:b", "2", null);
         provider.set("cap:c", "3", null);
 
+        // when
         assertThat(provider.scanKeys("cap:*", 100, 2)).hasSize(2);
     }
 }

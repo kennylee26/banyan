@@ -24,47 +24,59 @@ class MongodbDasQueryStrategyTest {
     /** 各类模糊查询构造正则。 */
     @Test
     void buildsRegexForLikeVariants() {
+        // given
         UserQuery query = new UserQuery();
         query.setUserNameLike("ali");
         query.setUserNamePreLike("al");
         query.setUserNameSufLike("ce");
 
+        // when
         Document document = parse(query).getQueryObject();
 
+        // then
         assertThat(document.toJson()).contains("$regularExpression");
     }
 
     /** 构造 $in 与 $nin。 */
     @Test
     void buildsInAndNin() {
+        // given
         UserQuery query = new UserQuery();
         query.setEmailIn(List.of("a@x.com", "b@x.com"));
         query.setEmailNotIn(List.of("c@x.com"));
 
+        // when
         Document document = parse(query).getQueryObject();
 
+        // then
         assertThat(document.toJson()).contains("$in").contains("$nin");
     }
 
     /** 多条件以 $and 合并。 */
     @Test
     void combinesMultipleConditionsWithAnd() {
+        // given
         UserQuery query = new UserQuery();
         query.setAgeGt(18);
         query.setUserNameLike("ali");
 
+        // when
         Document document = parse(query).getQueryObject();
 
+        // then
         assertThat(document.containsKey("$and")).isTrue();
     }
 
     /** LocalDateTime 转 epoch 毫秒。 */
     @Test
     void convertsLocalDateTimeToEpochMilli() {
+        // given
         LocalDateTime time = LocalDateTime.of(2024, 1, 2, 3, 4, 5);
 
+        // when
         Object converted = MongoDbDasHelper.toEpochMilliIfNecessary(time);
 
+        // then
         assertThat(converted).isInstanceOf(Long.class);
         assertThat(converted).isEqualTo(time.toInstant(java.time.ZoneOffset.ofHours(8)).toEpochMilli());
     }

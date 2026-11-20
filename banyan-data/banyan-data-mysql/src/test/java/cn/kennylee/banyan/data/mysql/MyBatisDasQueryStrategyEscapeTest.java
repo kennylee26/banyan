@@ -19,8 +19,10 @@ class MyBatisDasQueryStrategyEscapeTest {
     /** 开关开启：值被转义。 */
     @Test
     void escapesWhenEnabled() {
+        // when
         BanyanQueryWrapper<UserEo> wrapper = parseWithEscape(true, "50%");
 
+        // then
         assertThat(wrapper.getParamNameValuePairs().values())
                 .anySatisfy(value -> assertThat(String.valueOf(value)).contains("\\%"));
     }
@@ -28,8 +30,10 @@ class MyBatisDasQueryStrategyEscapeTest {
     /** 开关关闭：值原样透传，% 仍按通配符处理。 */
     @Test
     void keepsValueRawWhenDisabled() {
+        // when
         BanyanQueryWrapper<UserEo> wrapper = parseWithEscape(false, "50%");
 
+        // then
         assertThat(wrapper.getParamNameValuePairs().values())
                 .anySatisfy(value -> assertThat(String.valueOf(value)).isEqualTo("%50%%"));
         assertThat(wrapper.getParamNameValuePairs().values())

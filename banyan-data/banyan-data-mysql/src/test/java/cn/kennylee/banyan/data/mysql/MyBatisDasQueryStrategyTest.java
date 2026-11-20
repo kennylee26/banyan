@@ -21,30 +21,37 @@ class MyBatisDasQueryStrategyTest {
     /** 驼峰属性转下划线列名。 */
     @Test
     void convertsCamelCasePropertyToUnderlineColumn() {
+        // given
         UserQuery query = new UserQuery();
         query.setUserNameLike("ali");
 
+        // when
         BanyanQueryWrapper<UserEo> wrapper = parse(query);
 
+        // then
         assertThat(wrapper.getSqlSegment()).contains("user_name").doesNotContain("userName");
     }
 
     /** 跳过分页字段。 */
     @Test
     void skipsPagingFields() {
+        // given
         UserQuery query = new UserQuery();
         query.setUserNameLike("ali");
         query.setPageNo(3);
         query.setPageSize(20);
 
+        // when
         BanyanQueryWrapper<UserEo> wrapper = parse(query);
 
+        // then
         assertThat(wrapper.getSqlSegment()).doesNotContain("page_no").doesNotContain("page_size");
     }
 
     /** 落地全部 14 个操作符。 */
     @Test
     void landsAllFourteenOperators() {
+        // given
         AllOperatorsQuery query = new AllOperatorsQuery();
         query.setUserName("eq");
         query.setUserNameNe("ne");
@@ -61,9 +68,11 @@ class MyBatisDasQueryStrategyTest {
         query.setEmailIsNull(Boolean.TRUE);
         query.setEmailIsNotNull(Boolean.TRUE);
 
+        // when
         BanyanQueryWrapper<UserEo> wrapper = parse(query, AllOperatorsQuery.class);
         String sql = wrapper.getSqlSegment();
 
+        // then
         assertThat(sql).contains("user_name =");
         assertThat(sql).contains("user_name <>");
         assertThat(sql).contains("age >");

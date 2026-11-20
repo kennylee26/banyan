@@ -57,65 +57,82 @@ class LifecycleLoggerTest {
     /** 启动完成输出横幅与环境快照。 */
     @Test
     void logsStartupBannerAndSnapshot(CapturedOutput output) {
+        // when
         logger.onReady(readyEvent());
 
+        // then
         assertThat(output).contains("order").contains("运行环境").contains("CPU");
     }
 
     /** 停机日志只输出一次。 */
     @Test
     void logsShutdownOnce(CapturedOutput output) {
+        // when
         logger.onClosed(closedEvent());
         logger.onClosed(closedEvent());
 
+        // then
         assertThat(countOccurrences(output.getOut(), "优雅停机")).isEqualTo(1);
     }
 
     /** 启动失败输出 ERROR 与异常。 */
     @Test
     void logsFailure(CapturedOutput output) {
+        // given
         ApplicationFailedEvent event = mock(ApplicationFailedEvent.class);
         when(event.getApplicationContext()).thenReturn(context);
         when(event.getException()).thenReturn(new IllegalStateException("boom"));
 
+        // when
         logger.onFailure(event);
 
+        // then
         assertThat(output).contains("启动失败").contains("boom");
     }
 
     /** 关闭环境快照后只剩横幅。 */
     @Test
     void skipsSnapshotWhenEnvironmentDisabled(CapturedOutput output) {
+        // given
         properties.getLifecycle().setEnvironmentEnabled(false);
 
+        // when
         logger.onReady(readyEvent());
 
+        // then
         assertThat(output).contains("order").doesNotContain("运行环境");
     }
 
     /** 自定义横幅覆盖消息资源。 */
     @Test
     void usesCustomBannerWhenConfigured(CapturedOutput output) {
+        // given
         properties.getLifecycle().setBanner("custom {0} at {1}");
 
+        // when
         logger.onReady(readyEvent());
 
+        // then
         assertThat(output).contains("custom order at dev");
     }
 
     /** 字节按 1024 进制换算为 MB。 */
     @Test
     void convertsBytesToMegabytes() {
+        // when
         assertThat(logger.toMegabytes(2L * 1024 * 1024)).isEqualTo(2L);
     }
 
     /** 自定义横幅中的单引号需双写才能保留为字面量。 */
     @Test
     void doublesSingleQuoteInCustomBanner(CapturedOutput output) {
+        // given
         properties.getLifecycle().setBanner("It''s {0}");
 
+        // when
         logger.onReady(readyEvent());
 
+        // then
         assertThat(output).contains("It's order");
     }
 

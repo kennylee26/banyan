@@ -21,8 +21,10 @@ class CachePropertiesTest {
     /** 默认值。 */
     @Test
     void hasSensibleDefaults() {
+        // given
         CacheProperties properties = new CacheProperties();
 
+        // when
         assertThat(properties.isEnabled()).isTrue();
         assertThat(properties.isReadWriteEnabled()).isTrue();
         assertThat(properties.getMaxKeyLength()).isEqualTo(512);
@@ -36,6 +38,7 @@ class CachePropertiesTest {
     /** 属性可绑定。 */
     @Test
     void bindsCustomValues() {
+        // given
         Map<String, String> values = Map.ofEntries(
                 Map.entry("banyan.cache.enabled", "false"),
                 Map.entry("banyan.cache.read-write-enabled", "false"),
@@ -46,10 +49,12 @@ class CachePropertiesTest {
                 Map.entry("banyan.cache.scan.batch-size", "100"),
                 Map.entry("banyan.cache.scan.max-deletions", "200"));
 
+        // when
         CacheProperties properties = new Binder(new MapConfigurationPropertySource(values))
                 .bind("banyan.cache", Bindable.of(CacheProperties.class))
                 .get();
 
+        // then
         assertThat(properties.isEnabled()).isFalse();
         assertThat(properties.isReadWriteEnabled()).isFalse();
         assertThat(properties.getMaxKeyLength()).isEqualTo(64);

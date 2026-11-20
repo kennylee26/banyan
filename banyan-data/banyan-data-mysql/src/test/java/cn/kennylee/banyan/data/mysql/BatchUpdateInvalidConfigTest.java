@@ -38,6 +38,7 @@ class BatchUpdateInvalidConfigTest {
     /** 方言被判为不支持时，非法配置仍要回退 6 并输出 WARN。 */
     @Test
     void warnsInvalidConfigEvenWhenDialectUnsupported(CapturedOutput output) {
+        // given
         DialectControlledUserDas das = new DialectControlledUserDas(userMapper, registry, false);
         das.setApplicationContext(applicationContext);
         UserEo user = new UserEo();
@@ -46,7 +47,10 @@ class BatchUpdateInvalidConfigTest {
         das.save(user);
         user.setAge(71);
 
+        // when
         assertThat(das.updateBatchById(List.of(user))).isEqualTo(-1);
+
+        // then
         assertThat(output).contains("非法");
     }
 }

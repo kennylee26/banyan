@@ -31,6 +31,7 @@ class TraceExecutorBeanPostProcessorTest {
     /** 自建线程池被补设装饰器。 */
     @Test
     void decoratesExecutorWithoutCustomDecorator() throws Exception {
+        // given
         TraceProperties properties = new TraceProperties();
         @SuppressWarnings("unchecked")
         ObjectProvider<TaskDecorator> provider = mock(ObjectProvider.class);
@@ -42,7 +43,11 @@ class TraceExecutorBeanPostProcessorTest {
             processor.postProcessAfterInitialization(executor, "executor");
             TraceContext.setTraceId("b-1");
             AtomicReference<String> seen = new AtomicReference<>();
+
+            // when
             executor.submit(() -> seen.set(TraceContext.getTraceId())).get();
+
+            // then
             assertThat(seen).hasValue("b-1");
         } finally {
             executor.shutdown();
@@ -52,6 +57,7 @@ class TraceExecutorBeanPostProcessorTest {
     /** 使用方已有装饰器 bean 时整体跳过。 */
     @Test
     void skipsWhenCustomDecoratorExists() throws Exception {
+        // given
         TraceProperties properties = new TraceProperties();
         @SuppressWarnings("unchecked")
         ObjectProvider<TaskDecorator> provider = mock(ObjectProvider.class);
@@ -63,7 +69,11 @@ class TraceExecutorBeanPostProcessorTest {
             processor.postProcessAfterInitialization(executor, "executor");
             TraceContext.setTraceId("b-2");
             AtomicReference<String> seen = new AtomicReference<>();
+
+            // when
             executor.submit(() -> seen.set(TraceContext.getTraceId())).get();
+
+            // then
             assertThat(seen.get()).isNull();
         } finally {
             executor.shutdown();
@@ -73,6 +83,7 @@ class TraceExecutorBeanPostProcessorTest {
     /** 兜底开关关闭时不修改线程池。 */
     @Test
     void skipsWhenDisabled() throws Exception {
+        // given
         TraceProperties properties = new TraceProperties();
         properties.getAsync().setDecorateExecutors(false);
         @SuppressWarnings("unchecked")
@@ -85,7 +96,11 @@ class TraceExecutorBeanPostProcessorTest {
             processor.postProcessAfterInitialization(executor, "executor");
             TraceContext.setTraceId("b-3");
             AtomicReference<String> seen = new AtomicReference<>();
+
+            // when
             executor.submit(() -> seen.set(TraceContext.getTraceId())).get();
+
+            // then
             assertThat(seen.get()).isNull();
         } finally {
             executor.shutdown();

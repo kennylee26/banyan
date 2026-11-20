@@ -34,6 +34,7 @@ class TraceAutoConfigurationTest {
     /** 默认 Servlet 装配。 */
     @Test
     void loadsServletByDefault() {
+        // when
         servletRunner.run(context -> {
             assertThat(context).hasSingleBean(TraceProperties.class);
             assertThat(context).hasSingleBean(ServletTraceFilter.class);
@@ -46,6 +47,7 @@ class TraceAutoConfigurationTest {
     /** 关闭总开关。 */
     @Test
     void skipsEverythingWhenDisabled() {
+        // when
         servletRunner.withPropertyValues("banyan.trace.enabled=false")
                 .run(context -> {
                     assertThat(context).doesNotHaveBean(ServletTraceFilter.class);
@@ -56,6 +58,7 @@ class TraceAutoConfigurationTest {
     /** 关闭 Servlet 子开关。 */
     @Test
     void skipsServletWhenDisabled() {
+        // when
         servletRunner.withPropertyValues("banyan.trace.servlet.enabled=false")
                 .run(context -> {
                     assertThat(context).doesNotHaveBean(ServletTraceFilter.class);
@@ -66,6 +69,7 @@ class TraceAutoConfigurationTest {
     /** 响应式装配。 */
     @Test
     void loadsReactiveWhenReactiveApplication() {
+        // when
         new ReactiveWebApplicationContextRunner()
                 .withConfiguration(AutoConfigurations.of(
                         TraceAutoConfiguration.class,
@@ -80,6 +84,7 @@ class TraceAutoConfigurationTest {
     /** 关闭 WebFlux 子开关。 */
     @Test
     void skipsReactiveWhenDisabled() {
+        // when
         new ReactiveWebApplicationContextRunner()
                 .withConfiguration(AutoConfigurations.of(
                         TraceAutoConfiguration.class,
@@ -91,6 +96,7 @@ class TraceAutoConfigurationTest {
     /** 缺少 Feign 时跳过出向拦截器。 */
     @Test
     void skipsFeignWhenClassMissing() {
+        // when
         servletRunner.withClassLoader(new FilteredClassLoader("feign.RequestInterceptor"))
                 .run(context -> {
                     assertThat(context).hasNotFailed();
@@ -101,6 +107,7 @@ class TraceAutoConfigurationTest {
     /** 使用方已有自定义过滤器时让位。 */
     @Test
     void backsOffWhenCustomFilterExists() {
+        // when
         servletRunner.withBean(ServletTraceFilter.class,
                         () -> new ServletTraceFilter(new TraceProperties()))
                 .run(context -> assertThat(context.getBeansOfType(ServletTraceFilter.class)).hasSize(1));
@@ -109,17 +116,21 @@ class TraceAutoConfigurationTest {
     /** 缺少 Spring Boot 配置属性能力时只告警。 */
     @Test
     void warnsWhenSpringBootConfigClassMissing(CapturedOutput output) {
+        // when
         new ApplicationContextRunner()
                 .withClassLoader(new FilteredClassLoader(
                         "org.springframework.boot.context.properties.ConfigurationProperties"))
                 .withConfiguration(AutoConfigurations.of(TraceMissingClassAutoConfiguration.class))
                 .run(context -> assertThat(context).hasNotFailed());
+
+        // then
         assertThat(output).contains("banyan-trace");
     }
 
     /** 默认开启响应式上下文传播。 */
     @Test
     void enablesContextPropagationByDefault() {
+        // when
         servletRunner.run(context -> {
             assertThat(context.getBeansOfType(
                     TraceContextPropagationAutoConfiguration.WebfluxEnabled.class)).hasSize(1);
@@ -131,6 +142,7 @@ class TraceAutoConfigurationTest {
     /** 关闭传播开关。 */
     @Test
     void skipsContextPropagationWhenSwitchDisabled() {
+        // when
         servletRunner.withPropertyValues("banyan.trace.webflux.context-propagation.enabled=false")
                 .run(context -> assertThat(context.getBeansOfType(
                         TraceContextPropagationAutoConfiguration.WebfluxEnabled.Enabled.class)).isEmpty());
@@ -139,6 +151,7 @@ class TraceAutoConfigurationTest {
     /** 关闭 WebFlux 时传播也关闭。 */
     @Test
     void skipsContextPropagationWhenWebfluxDisabled() {
+        // when
         servletRunner.withPropertyValues("banyan.trace.webflux.enabled=false")
                 .run(context -> assertThat(context.getBeansOfType(
                         TraceContextPropagationAutoConfiguration.WebfluxEnabled.class)).isEmpty());
@@ -147,6 +160,7 @@ class TraceAutoConfigurationTest {
     /** 缺少 context-propagation 类时整块跳过。 */
     @Test
     void skipsContextPropagationWhenClassMissing() {
+        // when
         servletRunner.withClassLoader(new FilteredClassLoader("io.micrometer.context.ContextRegistry"))
                 .run(context -> {
                     assertThat(context).hasNotFailed();
@@ -158,18 +172,24 @@ class TraceAutoConfigurationTest {
     /** 缺少 Servlet 能力时告警。 */
     @Test
     void warnsWhenServletMissing(CapturedOutput output) {
+        // when
         new ApplicationContextRunner()
                 .withClassLoader(new FilteredClassLoader("jakarta.servlet.Filter"))
                 .withConfiguration(AutoConfigurations.of(TraceMissingClassAutoConfiguration.class))
                 .run(context -> assertThat(context).hasNotFailed());
+
+        // then
         assertThat(output).contains("Servlet");
     }
 
     /** 缺少 Dubbo 能力时告警。 */
     @Test
     void warnsWhenDubboMissing(CapturedOutput output) {
+        // when
         servletRunner.withClassLoader(new FilteredClassLoader("org.apache.dubbo.rpc.Filter"))
                 .run(context -> assertThat(context).hasNotFailed());
+
+        // then
         assertThat(output).contains("Dubbo");
     }
 }

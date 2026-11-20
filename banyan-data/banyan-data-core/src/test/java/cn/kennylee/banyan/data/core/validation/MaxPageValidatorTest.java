@@ -19,30 +19,35 @@ class MaxPageValidatorTest {
     /** 超过最大页码被拒绝。 */
     @Test
     void rejectsPageBeyondMaxAllowed() {
+        // given
         MaxPageValidator validator = validator(100000);
 
         PageDto page = new PageDto();
         page.setPageNo(10001);
         page.setPageSize(10);
 
+        // when
         assertFalse(validator.isValid(page, null));
     }
 
     /** 最大页码被接受。 */
     @Test
     void acceptsPageAtMaxAllowed() {
+        // given
         MaxPageValidator validator = validator(100000);
 
         PageDto page = new PageDto();
         page.setPageNo(10000);
         page.setPageSize(10);
 
+        // when
         assertTrue(validator.isValid(page, null));
     }
 
     /** null 值通过校验。 */
     @Test
     void acceptsNullValue() {
+        // when
         assertTrue(validator(100000).isValid(null, null));
     }
 

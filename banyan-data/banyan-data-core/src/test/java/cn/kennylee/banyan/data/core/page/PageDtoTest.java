@@ -19,8 +19,10 @@ class PageDtoTest {
     /** 默认第一页每页 10 条。 */
     @Test
     void defaultsToFirstPageOfTen() {
+        // given
         PageDto page = new PageDto();
 
+        // when
         assertEquals(1, page.getPageNo());
         assertEquals(10, page.getPageSize());
         assertNull(page.getSearchCount());
@@ -29,7 +31,10 @@ class PageDtoTest {
     /** searchCount 保持三态。 */
     @Test
     void searchCountKeepsThreeStates() {
+        // given
         PageDto page = new PageDto();
+
+        // when
         assertNull(page.getSearchCount());
 
         page.setSearchCount(Boolean.TRUE);
@@ -42,8 +47,10 @@ class PageDtoTest {
     /** 排序项携带字段与方向。 */
     @Test
     void sortItemCarriesFieldAndDirection() {
+        // given
         SortDto sort = SortDto.of("create_time", SortDirection.DESC);
 
+        // when
         assertEquals("create_time", sort.getField());
         assertEquals(SortDirection.DESC, sort.getDirection());
     }
@@ -51,9 +58,11 @@ class PageDtoTest {
     /** 分页入参携带排序项。 */
     @Test
     void pageCarriesSorts() {
+        // given
         PageDto page = new PageDto();
         page.setSorts(List.of(SortDto.of("id", SortDirection.ASC)));
 
+        // when
         assertEquals(1, page.getSorts().size());
     }
 }

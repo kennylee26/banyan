@@ -29,46 +29,58 @@ class TraceIdFeignInterceptorTest {
     /** 当前上下文有值时写入请求头。 */
     @Test
     void addsHeaderFromContext() {
+        // given
         TraceContext.setTraceId("t-1");
         RequestTemplate template = new RequestTemplate();
 
+        // when
         interceptor.apply(template);
 
+        // then
         assertThat(template.headers().get("X-Trace-Id")).containsExactly("t-1");
     }
 
     /** 线程上下文为空时回退到 MDC。 */
     @Test
     void fallsBackToMdc() {
+        // given
         MDC.put("traceId", "t-2");
         RequestTemplate template = new RequestTemplate();
 
+        // when
         interceptor.apply(template);
 
+        // then
         assertThat(template.headers().get("X-Trace-Id")).containsExactly("t-2");
     }
 
     /** 已存在的头不覆盖。 */
     @Test
     void keepsExistingHeader() {
+        // given
         TraceContext.setTraceId("t-3");
         RequestTemplate template = new RequestTemplate();
         template.header("X-Trace-Id", "upstream");
 
+        // when
         interceptor.apply(template);
 
+        // then
         assertThat(template.headers().get("X-Trace-Id")).containsExactly("upstream");
     }
 
     /** 已有 header 大小写不同也不覆盖。 */
     @Test
     void keepsExistingHeaderIgnoringCase() {
+        // given
         TraceContext.setTraceId("t-4");
         RequestTemplate template = new RequestTemplate();
         template.header("x-trace-id", "upstream");
 
+        // when
         interceptor.apply(template);
 
+        // then
         assertThat(template.headers()).hasSize(1);
         assertThat(template.headers().get("x-trace-id")).containsExactly("upstream");
     }
@@ -76,10 +88,13 @@ class TraceIdFeignInterceptorTest {
     /** 没有 TraceId 时不写头。 */
     @Test
     void skipsWhenNoTraceId() {
+        // given
         RequestTemplate template = new RequestTemplate();
 
+        // when
         interceptor.apply(template);
 
+        // then
         assertThat(template.headers()).doesNotContainKey("X-Trace-Id");
     }
 }

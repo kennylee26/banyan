@@ -20,6 +20,7 @@ class AbstractCacheProviderTest {
     /** 未实现的方法抛出明确异常。 */
     @Test
     void throwsUnsupportedForUnimplementedMethods() {
+        // when
         assertThatThrownBy(() -> provider.get("k")).isInstanceOf(UnsupportedOperationException.class);
         assertThatThrownBy(() -> provider.set("k", "v", Duration.ofSeconds(1)))
                 .isInstanceOf(UnsupportedOperationException.class);

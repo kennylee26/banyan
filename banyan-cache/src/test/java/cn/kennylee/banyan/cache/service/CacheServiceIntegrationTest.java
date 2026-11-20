@@ -47,8 +47,10 @@ class CacheServiceIntegrationTest extends CacheIntegrationTestBase {
     /** 对象读写。 */
     @Test
     void putsAndGetsObject() {
+        // given
         cacheService.put("cart", "u1", new User("alice", 30), Duration.ofMinutes(5));
 
+        // when
         assertThat(cacheService.get("cart", "u1", User.class).getUserName()).isEqualTo("alice");
         // Redis 中是可读 JSON
         assertThat(stringRedisTemplate.opsForValue().get("banyan-test:cart:u1")).contains("alice");
@@ -57,6 +59,7 @@ class CacheServiceIntegrationTest extends CacheIntegrationTestBase {
     /** 泛型容器按 Type 还原元素类型。 */
     @Test
     void restoresGenericContainers() {
+        // given
         List<User> users = List.of(new User("alice", 30), new User("bob", 20));
         Map<String, User> byName = Map.of("a", new User("alice", 30));
         Set<User> unique = Set.of(new User("bob", 20));
@@ -65,6 +68,7 @@ class CacheServiceIntegrationTest extends CacheIntegrationTestBase {
         cacheService.put("gen", "map", byName, Duration.ofMinutes(5));
         cacheService.put("gen", "set", unique, Duration.ofMinutes(5));
 
+        // when
         assertThat(cacheService.get("gen", "list", new ParameterizedTypeReference<List<User>>() {
         })).extracting(User::getUserName).containsExactly("alice", "bob");
         assertThat(cacheService.get("gen", "map", new ParameterizedTypeReference<Map<String, User>>() {
@@ -89,10 +93,12 @@ class CacheServiceIntegrationTest extends CacheIntegrationTestBase {
     /** getOrLoad 泛型重载能还原容器元素类型，且只加载一次。 */
     @Test
     void getOrLoadRestoresGenericContainers() {
+        // given
         AtomicInteger loads = new AtomicInteger();
         ParameterizedTypeReference<List<User>> type = new ParameterizedTypeReference<List<User>>() {
         };
 
+        // when
         List<User> first = cacheService.getOrLoad("gen", "lazy", type, () -> {
             loads.incrementAndGet();
             return List.of(new User("alice", 30), new User("bob", 20));
@@ -102,6 +108,7 @@ class CacheServiceIntegrationTest extends CacheIntegrationTestBase {
             return List.of();
         }, Duration.ofMinutes(5));
 
+        // then
         assertThat(first).extracting(User::getUserName).containsExactly("alice", "bob");
         assertThat(second).extracting(User::getUserName).containsExactly("alice", "bob");
         assertThat(loads).hasValue(1);
@@ -110,12 +117,14 @@ class CacheServiceIntegrationTest extends CacheIntegrationTestBase {
     /** 便捷方法无需匿名类即可还原容器元素类型。 */
     @Test
     void getsContainersWithoutTypeReference() {
+        // given
         List<User> users = List.of(new User("alice", 30), new User("bob", 20));
         cacheService.put("easy", "list", users, Duration.ofMinutes(5));
         cacheService.put("easy", "set", Set.of(new User("bob", 20)), Duration.ofMinutes(5));
         cacheService.put("easy", "map", Map.of("a", new User("alice", 30)),
                 Duration.ofMinutes(5));
 
+        // when
         assertThat(cacheService.getForList("easy", "list", User.class))
                 .extracting(User::getUserName).containsExactly("alice", "bob");
         assertThat(cacheService.getForSet("easy", "set", User.class))
@@ -127,6 +136,7 @@ class CacheServiceIntegrationTest extends CacheIntegrationTestBase {
     /** key 不存在时便捷方法返回空容器而不是 null。 */
     @Test
     void convenienceGettersReturnEmptyContainersWhenMissing() {
+        // when
         assertThat(cacheService.getForList("missing", "k", User.class)).isEmpty();
         assertThat(cacheService.getForSet("missing", "k", User.class)).isEmpty();
         assertThat(cacheService.getForMap("missing", "k", User.class)).isEmpty();
@@ -135,6 +145,7 @@ class CacheServiceIntegrationTest extends CacheIntegrationTestBase {
     /** 读写开关关闭时便捷方法返回空容器而不是 null，且不访问 Redis。 */
     @Test
     void convenienceGettersReturnEmptyContainersWhenDisabled() {
+        // given
         CacheProperties properties = new CacheProperties();
         properties.setReadWriteEnabled(false);
         CacheService disabled = new CacheServiceImpl(
@@ -144,6 +155,7 @@ class CacheServiceIntegrationTest extends CacheIntegrationTestBase {
                 new JacksonJsonCodec(),
                 new NoOpCachePenetrationGuard());
 
+        // when
         assertThat(disabled.getForList("g", "k", User.class)).isEmpty();
         assertThat(disabled.getForSet("g", "k", User.class)).isEmpty();
         assertThat(disabled.getForMap("g", "k", User.class)).isEmpty();
@@ -153,8 +165,10 @@ class CacheServiceIntegrationTest extends CacheIntegrationTestBase {
     /** Raw 与 Object 混用报错。 */
     @Test
     void rejectsMixedUsage() {
+        // given
         cacheService.put("cart", "u2", new User("bob", 20), Duration.ofMinutes(5));
 
+        // when
         assertThatThrownBy(() -> cacheService.getRaw("cart", "u2"))
                 .isInstanceOf(IllegalArgumentException.class);
     }
@@ -162,17 +176,21 @@ class CacheServiceIntegrationTest extends CacheIntegrationTestBase {
     /** Raw 读写。 */
     @Test
     void putsAndGetsRaw() {
+        // given
         cacheService.putRaw("cart", "u3", "plain", Duration.ofMinutes(5));
 
+        // when
         assertThat(cacheService.getRaw("cart", "u3")).isEqualTo("plain");
     }
 
     /** 批量与过期。 */
     @Test
     void supportsBatchAndExpire() {
+        // given
         cacheService.batchPut("cart", Map.of("a", new User("a", 1), "b", new User("b", 2)),
                 Duration.ofMinutes(5));
 
+        // when
         assertThat(cacheService.batchGet("cart", List.of("a", "b"), User.class))
                 .extracting(User::getUserName)
                 .containsExactly("a", "b");
@@ -185,6 +203,7 @@ class CacheServiceIntegrationTest extends CacheIntegrationTestBase {
     /** expire / addExpireTime 拒绝 null TTL。 */
     @Test
     void rejectsNullTtl() {
+        // when
         assertThatThrownBy(() -> cacheService.expire("cart", "u1", null))
                 .isInstanceOf(IllegalArgumentException.class);
         assertThatThrownBy(() -> cacheService.addExpireTime("cart", "u1", null))
@@ -194,6 +213,7 @@ class CacheServiceIntegrationTest extends CacheIntegrationTestBase {
     /** 读写开关关闭后不访问 Redis。 */
     @Test
     void readWriteSwitchShortCircuits() {
+        // given
         CacheProperties properties = new CacheProperties();
         properties.setReadWriteEnabled(false);
         CacheService disabled = new CacheServiceImpl(
@@ -205,6 +225,7 @@ class CacheServiceIntegrationTest extends CacheIntegrationTestBase {
 
         disabled.put("cart", "off", new User("x", 1), Duration.ofMinutes(5));
 
+        // when
         assertThat(disabled.get("cart", "off", User.class)).isNull();
         assertThat(disabled.increment("cart", "counter", 1)).isZero();
         assertThat(stringRedisTemplate.hasKey("banyan-test:cart:off")).isFalse();
@@ -213,8 +234,10 @@ class CacheServiceIntegrationTest extends CacheIntegrationTestBase {
     /** getOrLoad 只加载一次。 */
     @Test
     void loadsOnceThenCaches() {
+        // given
         AtomicInteger loads = new AtomicInteger();
 
+        // when
         User first = cacheService.getOrLoad("cart", "load", User.class, () -> {
             loads.incrementAndGet();
             return new User("loaded", 1);
@@ -224,6 +247,7 @@ class CacheServiceIntegrationTest extends CacheIntegrationTestBase {
             return new User("loaded", 1);
         }, Duration.ofMinutes(5));
 
+        // then
         assertThat(first.getUserName()).isEqualTo("loaded");
         assertThat(second.getUserName()).isEqualTo("loaded");
         assertThat(loads).hasValue(1);

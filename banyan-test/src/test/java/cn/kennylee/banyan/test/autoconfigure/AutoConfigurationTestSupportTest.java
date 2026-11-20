@@ -23,6 +23,7 @@ class AutoConfigurationTestSupportTest {
     /** 默认加载。 */
     @Test
     void loadsByDefault() {
+        // when
         AutoConfigurationTestSupport.runner(DemoAutoConfiguration.class)
                 .run(context -> assertThat(context).hasSingleBean(DemoService.class));
     }
@@ -30,6 +31,7 @@ class AutoConfigurationTestSupportTest {
     /** 关闭开关后不加载。 */
     @Test
     void honorsEnabledFalse() {
+        // when
         AutoConfigurationTestSupport.runner(DemoAutoConfiguration.class)
                 .withPropertyValues("banyan.demo.enabled=false")
                 .run(context -> assertThat(context).doesNotHaveBean(DemoService.class));
@@ -38,6 +40,7 @@ class AutoConfigurationTestSupportTest {
     /** 缺类时跳过且正常启动。 */
     @Test
     void skipsWhenRequiredClassMissingAndStartsNormally() {
+        // when
         AutoConfigurationTestSupport.runner(DemoAutoConfiguration.class)
                 .withClassLoader(new FilteredClassLoader(DemoRequiredClass.class))
                 .run(context -> {
@@ -49,6 +52,7 @@ class AutoConfigurationTestSupportTest {
     /** 使用者自定义 bean 时让位。 */
     @Test
     void backsOffWhenUserDefinesBean() {
+        // when
         AutoConfigurationTestSupport.runner(DemoAutoConfiguration.class)
                 .withUserConfiguration(UserConfig.class)
                 .run(context -> assertThat(context.getBean(DemoService.class).name()).isEqualTo("user"));

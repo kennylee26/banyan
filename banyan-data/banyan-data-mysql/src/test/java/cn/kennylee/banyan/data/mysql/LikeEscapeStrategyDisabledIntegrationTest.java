@@ -24,6 +24,7 @@ class LikeEscapeStrategyDisabledIntegrationTest extends LikeEscapeTestSupport {
     /** 关闭后 % 按通配符匹配。 */
     @Test
     void treatsPercentAsWildcardWhenDisabled() {
+        // when
         assertThat(userDas.findPage(query("50%")).data())
                 .extracting(UserEo::getUserName)
                 .containsExactlyInAnyOrder("pg-50%off", "pg-50xoff");
@@ -32,6 +33,7 @@ class LikeEscapeStrategyDisabledIntegrationTest extends LikeEscapeTestSupport {
     /** 关闭策略层后，XML 的 like 值同样按通配符匹配。 */
     @Test
     void keepsXmlLikeAsWildcardWhenDisabled() {
+        // when
         assertThat(pagingProbeMapper.selectByNameLike("50%"))
                 .extracting(UserEo::getUserName)
                 .containsExactlyInAnyOrder("pg-50%off", "pg-50xoff");

@@ -29,6 +29,7 @@ class BatchUpdateTransactionTest {
     /** 非事务模式：第一片成功、第二片失败时，已执行分片必须回滚。 */
     @Test
     void rollsBackAllChunksWhenOneChunkFails() {
+        // given
         UserEo first = newUser("zed");
         UserEo second = newUser("abe");
         userDas.save(first);
@@ -39,8 +40,11 @@ class BatchUpdateTransactionTest {
         // 超过列宽，第二个分片执行时报错
         second.setNickName("x".repeat(100));
 
+        // when
         assertThatThrownBy(() -> userDas.updateBatchById(List.of(first, second), 1))
                 .isInstanceOf(BanyanException.class);
+
+        // then
         // 第一片已执行，但整体回滚后必须回到更新前的值
         assertThat(userDas.findById(first.getId()).getAge()).isEqualTo(20);
     }
@@ -48,6 +52,7 @@ class BatchUpdateTransactionTest {
     /** 非事务模式：全部分片成功后统一提交。 */
     @Test
     void commitsAllChunksWhenAllSucceed() {
+        // given
         UserEo first = newUser("bob2");
         UserEo second = newUser("cat2");
         userDas.save(first);
@@ -57,7 +62,10 @@ class BatchUpdateTransactionTest {
         first.setAge(81);
         second.setAge(82);
 
+        // when
         assertThat(userDas.updateBatchById(List.of(first, second), 1)).isEqualTo(2);
+
+        // then
         assertThat(userDas.findById(first.getId()).getAge()).isEqualTo(81);
         assertThat(userDas.findById(second.getId()).getAge()).isEqualTo(82);
     }

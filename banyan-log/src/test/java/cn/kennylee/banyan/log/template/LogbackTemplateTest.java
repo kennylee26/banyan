@@ -46,6 +46,7 @@ class LogbackTemplateTest {
     /** 所有片段都是合法 XML。 */
     @Test
     void allFragmentsAreWellFormedXml() throws Exception {
+        // when
         for (String resource : allResources()) {
             DocumentBuilderFactory.newInstance().newDocumentBuilder()
                     .parse(new ByteArrayInputStream(read(resource).getBytes(StandardCharsets.UTF_8)));
@@ -55,6 +56,7 @@ class LogbackTemplateTest {
     /** 主片段与 appender 片段不越权接管 root / logger / contextName。 */
     @Test
     void fragmentsDoNotOwnHostConfiguration() throws IOException {
+        // when
         for (String resource : List.of(MAIN, APPENDERS.get(0), APPENDERS.get(1), APPENDERS.get(2))) {
             String text = read(resource);
             assertThat(text).as(resource)
@@ -65,6 +67,7 @@ class LogbackTemplateTest {
     /** 不夹带公司命名、APM 占位与 janino 条件。 */
     @Test
     void fragmentsCarryNoCompanyContent() throws IOException {
+        // when
         for (String resource : allResources()) {
             String text = read(resource);
             assertThat(text).as(resource)
@@ -78,8 +81,10 @@ class LogbackTemplateTest {
     /** 主片段使用 banyan 属性前缀并保留可配置的 traceId 占位。 */
     @Test
     void mainFragmentUsesBanyanPrefixAndTracePlaceholder() throws IOException {
+        // when
         String text = read(MAIN);
 
+        // then
         assertThat(text).contains("banyan.log.logback.").contains("TRACE_ID_KEY")
                 .contains("[traceId=%X{").contains("N/A");
     }
@@ -87,8 +92,10 @@ class LogbackTemplateTest {
     /** 主片段不重定义宿主的 pattern 与 LOG_FILE 变量。 */
     @Test
     void mainFragmentDoesNotRedefineHostVariables() throws IOException {
+        // when
         String text = read(MAIN);
 
+        // then
         assertThat(text)
                 .doesNotContain("<property name=\"CONSOLE_LOG_PATTERN\"")
                 .doesNotContain("<property name=\"FILE_LOG_PATTERN\"")
@@ -99,6 +106,7 @@ class LogbackTemplateTest {
     /** appender 片段可被 Joran 解析。 */
     @Test
     void appenderFragmentsParseWithJoran() throws Exception {
+        // when
         for (String resource : APPENDERS) {
             configure(wrapForJoran(read(resource)));
         }
@@ -107,6 +115,7 @@ class LogbackTemplateTest {
     /** 主片段去掉 Spring 专属标签后可被 Joran 解析。 */
     @Test
     void mainFragmentParsesWithJoranAfterConvertingSpringProperties() throws Exception {
+        // when
         configure(convertSpringProperties(read(MAIN)));
     }
 

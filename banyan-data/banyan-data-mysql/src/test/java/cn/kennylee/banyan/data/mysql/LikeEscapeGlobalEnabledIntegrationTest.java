@@ -33,6 +33,7 @@ class LikeEscapeGlobalEnabledIntegrationTest extends LikeEscapeTestSupport {
     /** 全局层开启时 %, _ 仍按字面量匹配，且没有双重转义。 */
     @Test
     void escapesExactlyOnce() {
+        // when
         assertThat(userDas.findPage(query("50%")).data())
                 .extracting(UserEo::getUserName)
                 .containsExactly("pg-50%off");
@@ -44,6 +45,7 @@ class LikeEscapeGlobalEnabledIntegrationTest extends LikeEscapeTestSupport {
     /** 手写 XML 由全局层转义。 */
     @Test
     void escapesXmlLikeByGlobalLayer() {
+        // when
         assertThat(pagingProbeMapper.selectByNameLike("50%"))
                 .extracting(UserEo::getUserName)
                 .containsExactly("pg-50%off");
@@ -52,7 +54,10 @@ class LikeEscapeGlobalEnabledIntegrationTest extends LikeEscapeTestSupport {
     /** 容器顺序：LIKE 转义在分页之前。 */
     @Test
     void registersLikeEscapeBeforePagination() {
+        // given
         List<InnerInterceptor> interceptors = mybatisPlusInterceptor.getInterceptors();
+
+        // then
         assertThat(interceptors.get(0)).isInstanceOf(LikeEscapeInnerInterceptor.class);
         assertThat(interceptors.get(1)).isInstanceOf(PaginationInnerInterceptor.class);
     }

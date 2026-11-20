@@ -27,6 +27,7 @@ class ServletTraceFilterTest {
     /** 沿用上游 TraceId，写入上下文、MDC 与响应头。 */
     @Test
     void reusesIncomingTraceId() throws Exception {
+        // when
         mockMvc.perform(get("/trace").header("X-Trace-Id", "upstream-1"))
                 .andExpect(status().isOk())
                 .andExpect(header().string("X-Trace-Id", "upstream-1"))
@@ -37,6 +38,7 @@ class ServletTraceFilterTest {
     /** 没有上游值时生成新值。 */
     @Test
     void generatesTraceIdWhenMissing() throws Exception {
+        // when
         mockMvc.perform(get("/trace"))
                 .andExpect(status().isOk())
                 .andExpect(header().string("X-Trace-Id", org.hamcrest.Matchers.matchesPattern("[0-9a-f]{32}")))

@@ -31,8 +31,10 @@ class JsonCodecContractTest extends JsonCodecContract {
     /** 忽略未知字段。 */
     @Test
     void ignoresUnknownFields() {
+        // when
         Foo foo = codec.fromJson("{\"a\":1,\"b\":2}", Foo.class);
 
+        // then
         assertEquals(1, foo.getA());
     }
 
@@ -40,10 +42,12 @@ class JsonCodecContractTest extends JsonCodecContract {
     @Test
     @SuppressWarnings("unchecked")
     void deserializesGenericList() {
+        // when
         Object result = codec.fromJson("[{\"a\":1},{\"a\":2}]",
                 new com.fasterxml.jackson.core.type.TypeReference<List<Foo>>() {
                 }.getType());
 
+        // then
         List<Foo> list = (List<Foo>) result;
         assertEquals(2, list.size());
         assertEquals(2, list.get(1).getA());

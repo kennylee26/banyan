@@ -24,6 +24,7 @@ class ReactiveTraceFilterTest {
     /** 沿用上游 TraceId，写入响应头、exchange 属性与 Reactor 上下文。 */
     @Test
     void reusesIncomingTraceId() {
+        // when
         webTestClient.get().uri("/reactive-trace").header("X-Trace-Id", "upstream-2").exchange()
                 .expectStatus().isOk()
                 .expectHeader().valueEquals("X-Trace-Id", "upstream-2")
@@ -36,6 +37,7 @@ class ReactiveTraceFilterTest {
     /** 没有上游值时生成新值，并在 Reactor 上下文中可见。 */
     @Test
     void generatesTraceIdWhenMissing() {
+        // when
         webTestClient.get().uri("/reactive-trace").exchange()
                 .expectStatus().isOk()
                 .expectHeader().valueMatches("X-Trace-Id", "[0-9a-f]{32}")

@@ -23,6 +23,7 @@ class BlockAttackDisabledIntegrationTest {
     /** 默认关闭时无 WHERE 的 UPDATE 能执行。 */
     @Test
     void allowsFullTableUpdateByDefault() {
+        // when
         assertThat(writeProbeMapper.bumpAllAges()).isEqualTo(2);
     }
 }

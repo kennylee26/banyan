@@ -20,8 +20,10 @@ class LogPropertiesTest {
     /** 默认值。 */
     @Test
     void hasSensibleDefaults() {
+        // given
         LogProperties properties = new LogProperties();
 
+        // when
         assertThat(properties.isEnabled()).isTrue();
         assertThat(properties.getLifecycle().isEnabled()).isTrue();
         assertThat(properties.getLifecycle().isEnvironmentEnabled()).isTrue();
@@ -31,16 +33,19 @@ class LogPropertiesTest {
     /** 属性可绑定。 */
     @Test
     void bindsCustomValues() {
+        // given
         Map<String, String> values = Map.of(
                 "banyan.log.enabled", "false",
                 "banyan.log.lifecycle.enabled", "false",
                 "banyan.log.lifecycle.environment-enabled", "false",
                 "banyan.log.lifecycle.banner", "custom {0} banner");
 
+        // when
         LogProperties properties = new Binder(new MapConfigurationPropertySource(values))
                 .bind("banyan.log", Bindable.of(LogProperties.class))
                 .get();
 
+        // then
         assertThat(properties.isEnabled()).isFalse();
         assertThat(properties.getLifecycle().isEnabled()).isFalse();
         assertThat(properties.getLifecycle().isEnvironmentEnabled()).isFalse();

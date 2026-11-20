@@ -23,6 +23,7 @@ class LikeEscapeIntegrationTest extends LikeEscapeTestSupport {
     /** % 按字面量匹配。 */
     @Test
     void treatsPercentAsLiteral() {
+        // when
         assertThat(userDas.findPage(query("50%")).data())
                 .extracting(UserEo::getUserName)
                 .containsExactly("pg-50%off");
@@ -31,6 +32,7 @@ class LikeEscapeIntegrationTest extends LikeEscapeTestSupport {
     /** _ 按字面量匹配。 */
     @Test
     void treatsUnderscoreAsLiteral() {
+        // when
         assertThat(userDas.findPage(query("51_a")).data())
                 .extracting(UserEo::getUserName)
                 .containsExactly("pg-51_a");
@@ -39,6 +41,7 @@ class LikeEscapeIntegrationTest extends LikeEscapeTestSupport {
     /** 策略层只覆盖查询 DTO；手写 XML 在全局层关闭时保持原生通配语义。 */
     @Test
     void keepsXmlLikeAsWildcardWhenGlobalLayerDisabled() {
+        // when
         assertThat(pagingProbeMapper.selectByNameLike("50%"))
                 .extracting(UserEo::getUserName)
                 .containsExactlyInAnyOrder("pg-50%off", "pg-50xoff");

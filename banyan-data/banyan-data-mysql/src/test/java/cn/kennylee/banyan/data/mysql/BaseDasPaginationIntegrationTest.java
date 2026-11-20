@@ -53,8 +53,11 @@ class BaseDasPaginationIntegrationTest {
     /** 逐页遍历：不重不漏，顺序按排序项稳定。 */
     @Test
     void paginatesAllRowsWithoutDuplicatesOrGaps() {
+        // given
         List<Long> ids = new ArrayList<>(SEED_SIZE);
         List<Integer> ages = new ArrayList<>(SEED_SIZE);
+
+        // when
         for (int pageNo = 1; pageNo <= 3; pageNo++) {
             PaginationQuery query = baseQuery();
             query.setPageNo(pageNo);
@@ -71,6 +74,7 @@ class BaseDasPaginationIntegrationTest {
             });
         }
 
+        // then
         assertThat(ids).hasSize(SEED_SIZE).doesNotHaveDuplicates();
         assertThat(ages).isSortedAccordingTo(Comparator.naturalOrder());
     }
@@ -78,14 +82,17 @@ class BaseDasPaginationIntegrationTest {
     /** 条件组合 + 排序 + 单页取全量。 */
     @Test
     void combinesConditionsWithSorting() {
+        // given
         PaginationQuery query = baseQuery();
         query.setAgeGe(30);
         query.setCity("gz");
         query.setPageSize(100);
         query.setSorts(List.of(SortDto.of("age", "desc")));
 
+        // when
         PageResult<UserEo> page = userDas.findPage(query);
 
+        // then
         // gz 为偶数行（i=0,2,...,24），age=20+i ≥ 30 即 i ≥ 10，共 8 条
         assertThat(page.total()).isEqualTo(8);
         assertThat(page.data()).extracting(UserEo::getAge)
@@ -95,12 +102,15 @@ class BaseDasPaginationIntegrationTest {
     /** 多字段排序：先按城市升序，同城内按年龄降序。 */
     @Test
     void appliesMultiFieldSorting() {
+        // given
         PaginationQuery query = baseQuery();
         query.setPageSize(100);
         query.setSorts(List.of(SortDto.of("city", "asc"), SortDto.of("age", "desc")));
 
+        // when
         PageResult<UserEo> page = userDas.findPage(query);
 
+        // then
         List<String> cities = page.data().stream().map(UserEo::getCity).toList();
         assertThat(cities).hasSize(SEED_SIZE);
         assertThat(cities.subList(0, 13)).containsOnly("gz");
@@ -113,6 +123,7 @@ class BaseDasPaginationIntegrationTest {
     /** searchCount 三态：null 查总数与数据，true 仅查总数，false 仅查数据。 */
     @Test
     void honorsSearchCountTriState() {
+        // when
         PaginationQuery both = baseQuery();
         PageResult<UserEo> full = userDas.findPage(both);
         assertThat(full.total()).isEqualTo(SEED_SIZE);
@@ -134,12 +145,15 @@ class BaseDasPaginationIntegrationTest {
     /** pageNo / pageSize 显式为 null 时使用默认值。 */
     @Test
     void appliesDefaultPagingWhenPageFieldsAreNull() {
+        // given
         PaginationQuery query = baseQuery();
         query.setPageNo(null);
         query.setPageSize(null);
 
+        // when
         PageResult<UserEo> page = userDas.findPage(query);
 
+        // then
         assertThat(page.pageNo()).isEqualTo(PageDto.DEFAULT_PAGE_NO);
         assertThat(page.pageSize()).isEqualTo(PageDto.DEFAULT_PAGE_SIZE);
         assertThat(page.data()).hasSize(PageDto.DEFAULT_PAGE_SIZE);
@@ -148,12 +162,15 @@ class BaseDasPaginationIntegrationTest {
     /** 超出末页：总数正确、数据为空。 */
     @Test
     void returnsEmptyDataBeyondLastPage() {
+        // given
         PaginationQuery query = baseQuery();
         query.setPageNo(4);
         query.setPageSize(10);
 
+        // when
         PageResult<UserEo> page = userDas.findPage(query);
 
+        // then
         assertThat(page.total()).isEqualTo(SEED_SIZE);
         assertThat(page.data()).isEmpty();
     }
@@ -161,11 +178,14 @@ class BaseDasPaginationIntegrationTest {
     /** 条件不命中：总数为 0、数据为空、总页数为 0。 */
     @Test
     void returnsEmptyResultWhenNoMatch() {
+        // given
         PaginationQuery query = baseQuery();
         query.setUserNameLike("no-such-prefix-");
 
+        // when
         PageResult<UserEo> page = userDas.findPage(query);
 
+        // then
         assertThat(page.total()).isZero();
         assertThat(page.data()).isEmpty();
         assertThat(page.totalPage()).isZero();
@@ -174,11 +194,14 @@ class BaseDasPaginationIntegrationTest {
     /** 未指定排序时回退到主键降序，保证分页顺序可重复。 */
     @Test
     void fallsBackToPrimaryKeyDescendingWhenNoSorts() {
+        // given
         PaginationQuery query = baseQuery();
         query.setPageSize(5);
 
+        // when
         PageResult<UserEo> page = userDas.findPage(query);
 
+        // then
         assertThat(page.data()).extracting(UserEo::getId)
                 .isSortedAccordingTo(Comparator.reverseOrder());
     }
@@ -186,12 +209,15 @@ class BaseDasPaginationIntegrationTest {
     /** 集合条件（IN）与分页组合。 */
     @Test
     void filtersByCollectionCondition() {
+        // given
         PaginationQuery query = baseQuery();
         query.setCityIn(List.of("sz"));
         query.setPageSize(100);
 
+        // when
         PageResult<UserEo> page = userDas.findPage(query);
 
+        // then
         assertThat(page.total()).isEqualTo(12);
         assertThat(page.data()).allMatch(user -> "sz".equals(user.getCity()));
     }
@@ -199,11 +225,14 @@ class BaseDasPaginationIntegrationTest {
     /** 空集合的 IN 条件返回 0 行，不是全表或报错。 */
     @Test
     void emptyInConditionReturnsNoRows() {
+        // given
         PaginationQuery query = baseQuery();
         query.setCityIn(List.of());
 
+        // when
         PageResult<UserEo> page = userDas.findPage(query);
 
+        // then
         assertThat(page.total()).isZero();
         assertThat(page.data()).isEmpty();
     }
@@ -211,12 +240,15 @@ class BaseDasPaginationIntegrationTest {
     /** 排序字段支持实体属性名（驼峰），内部映射为数据库列名。 */
     @Test
     void acceptsCamelCaseSortField() {
+        // given
         PaginationQuery query = baseQuery();
         query.setPageSize(100);
         query.setSorts(List.of(SortDto.of("userName", "asc")));
 
+        // when
         PageResult<UserEo> page = userDas.findPage(query);
 
+        // then
         assertThat(page.data()).extracting(UserEo::getUserName)
                 .isSortedAccordingTo(Comparator.naturalOrder());
     }
@@ -224,12 +256,14 @@ class BaseDasPaginationIntegrationTest {
     /** LIKE 中的 % 与 _ 按字面量匹配，不被当作通配符。 */
     @Test
     void treatsLikeWildcardsAsLiterals() {
+        // given
         userDas.saveBatch(List.of(
                 newUser("pg-50%off"),
                 newUser("pg-50xoff"),
                 newUser("pg-51_a"),
                 newUser("pg-51xa")));
 
+        // when
         PaginationQuery percentQuery = baseQuery();
         percentQuery.setUserNameLike("50%");
         assertThat(userDas.findPage(percentQuery).data())

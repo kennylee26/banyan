@@ -51,6 +51,7 @@ class DubboTraceFilterTest {
     /** 两个过滤器都通过 @Activate 默认激活。 */
     @Test
     void filtersAreActivated() {
+        // when
         assertThat(DubboTraceConsumerFilter.class
                 .isAnnotationPresent(org.apache.dubbo.common.extension.Activate.class)).isTrue();
         assertThat(DubboTraceProviderFilter.class
@@ -60,16 +61,20 @@ class DubboTraceFilterTest {
     /** 消费端把当前 TraceId 写入 attachment。 */
     @Test
     void consumerWritesAttachment() {
+        // given
         TraceContext.setTraceId("d-1");
 
+        // when
         new DubboTraceConsumerFilter().invoke(invoker, invocation);
 
+        // then
         verify(invocation).setAttachment("X-Trace-Id", "d-1");
     }
 
     /** 提供端读取 attachment 并写入线程上下文，结束后清理。 */
     @Test
     void providerReadsAttachmentAndRestoresContext() {
+        // given
         when(invocation.getAttachment("X-Trace-Id")).thenReturn("d-2");
         AtomicReference<String> seen = new AtomicReference<>();
         when(invoker.invoke(any())).thenAnswer(call -> {
@@ -77,8 +82,10 @@ class DubboTraceFilterTest {
             return result;
         });
 
+        // when
         new DubboTraceProviderFilter().invoke(invoker, invocation);
 
+        // then
         assertThat(seen).hasValue("d-2");
         assertThat(TraceContext.getTraceId()).isNull();
     }
@@ -86,6 +93,7 @@ class DubboTraceFilterTest {
     /** 提供端在上游无值时补生成。 */
     @Test
     void providerGeneratesWhenMissing() {
+        // given
         when(invocation.getAttachment("X-Trace-Id")).thenReturn(null);
         AtomicReference<String> seen = new AtomicReference<>();
         when(invoker.invoke(any())).thenAnswer(call -> {
@@ -93,22 +101,27 @@ class DubboTraceFilterTest {
             return result;
         });
 
+        // when
         new DubboTraceProviderFilter().invoke(invoker, invocation);
 
+        // then
         assertThat(seen.get()).matches("[0-9a-f]{32}");
     }
 
     /** 开关关闭时两端完全放行。 */
     @Test
     void disabledSkipsBothSides() {
+        // given
         TraceProperties properties = new TraceProperties();
         properties.getDubbo().setEnabled(false);
         TraceSettings.init(properties);
         TraceContext.setTraceId("d-3");
 
+        // when
         new DubboTraceConsumerFilter().invoke(invoker, invocation);
         new DubboTraceProviderFilter().invoke(invoker, invocation);
 
+        // then
         verify(invocation, never()).setAttachment(any(), any());
         assertThat(TraceContext.getTraceId()).isEqualTo("d-3");
     }

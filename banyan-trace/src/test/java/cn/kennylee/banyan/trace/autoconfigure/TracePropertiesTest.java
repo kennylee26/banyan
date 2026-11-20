@@ -21,8 +21,10 @@ class TracePropertiesTest {
     /** 默认值。 */
     @Test
     void hasSensibleDefaults() {
+        // given
         TraceProperties properties = new TraceProperties();
 
+        // when
         assertThat(properties.isEnabled()).isTrue();
         assertThat(properties.getHeaderName()).isEqualTo("X-Trace-Id");
         assertThat(properties.getMdcKey()).isEqualTo("traceId");
@@ -42,6 +44,7 @@ class TracePropertiesTest {
     /** 属性可绑定。 */
     @Test
     void bindsCustomValues() {
+        // given
         Map<String, String> values = Map.ofEntries(
                 Map.entry("banyan.trace.enabled", "false"),
                 Map.entry("banyan.trace.header-name", "X-Request-Id"),
@@ -56,10 +59,12 @@ class TracePropertiesTest {
                 Map.entry("banyan.trace.async.decorate-executors", "false"),
                 Map.entry("banyan.trace.servlet.filter-order", "5"));
 
+        // when
         TraceProperties properties = new Binder(new MapConfigurationPropertySource(values))
                 .bind("banyan.trace", Bindable.of(TraceProperties.class))
                 .get();
 
+        // then
         assertThat(properties.isEnabled()).isFalse();
         assertThat(properties.getHeaderName()).isEqualTo("X-Request-Id");
         assertThat(properties.getMdcKey()).isEqualTo("trace");

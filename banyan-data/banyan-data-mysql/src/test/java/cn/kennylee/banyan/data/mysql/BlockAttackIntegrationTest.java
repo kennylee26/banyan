@@ -30,11 +30,13 @@ class BlockAttackIntegrationTest {
     /** 无 WHERE 的 UPDATE 被拦截，数据不变。 */
     @Test
     void blocksUpdateWithoutWhere() {
+        // when
         assertThatThrownBy(() -> writeProbeMapper.bumpAllAges())
                 .isInstanceOf(MyBatisSystemException.class)
                 .hasRootCauseInstanceOf(MybatisPlusException.class)
                 .hasRootCauseMessage("Prohibition of table update operation");
 
+        // then
         assertThat(userDas.findAll()).extracting(UserEo::getAge)
                 .containsExactlyInAnyOrder(20, 30);
     }
@@ -42,17 +44,20 @@ class BlockAttackIntegrationTest {
     /** 无 WHERE 的 DELETE 被拦截，数据不变。 */
     @Test
     void blocksDeleteWithoutWhere() {
+        // when
         assertThatThrownBy(() -> writeProbeMapper.deleteAll())
                 .isInstanceOf(MyBatisSystemException.class)
                 .hasRootCauseInstanceOf(MybatisPlusException.class)
                 .hasRootCauseMessage("Prohibition of full table deletion");
 
+        // then
         assertThat(userDas.count()).isEqualTo(2);
     }
 
     /** 带 WHERE 的写操作正常执行。 */
     @Test
     void allowsWriteWithWhere() {
+        // when
         assertThat(writeProbeMapper.bumpAgesFrom(25)).isEqualTo(1);
         assertThat(writeProbeMapper.deleteFrom(25)).isEqualTo(1);
     }

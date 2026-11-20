@@ -18,8 +18,10 @@ class DasOperationsContractTest {
     /** 批量按主键更新属于公共契约，返回数据库报告的影响行数。 */
     @Test
     void declaresBatchUpdateReturningInt() throws NoSuchMethodException {
+        // when
         Method method = DasOperations.class.getMethod("updateBatchById", Collection.class);
 
+        // then
         assertThat(method.getReturnType()).isEqualTo(int.class);
     }
 }

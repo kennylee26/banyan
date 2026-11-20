@@ -41,6 +41,7 @@ class LifecycleAutoConfigurationTest {
     /** 默认装配。 */
     @Test
     void loadsByDefault() {
+        // when
         runner.run(context -> {
             assertThat(context).hasSingleBean(LogProperties.class);
             assertThat(context).hasSingleBean(EnvironmentInfoProvider.class);
@@ -51,6 +52,7 @@ class LifecycleAutoConfigurationTest {
     /** 关闭总开关。 */
     @Test
     void skipsWhenDisabled() {
+        // when
         runner.withPropertyValues("banyan.log.enabled=false")
                 .run(context -> {
                     assertThat(context).doesNotHaveBean(LifecycleLogger.class);
@@ -61,6 +63,7 @@ class LifecycleAutoConfigurationTest {
     /** 关闭生命周期子开关。 */
     @Test
     void skipsLifecycleWhenDisabled() {
+        // when
         runner.withPropertyValues("banyan.log.lifecycle.enabled=false")
                 .run(context -> assertThat(context).doesNotHaveBean(LifecycleLogger.class));
     }
@@ -68,8 +71,10 @@ class LifecycleAutoConfigurationTest {
     /** 自定义 Provider 让位。 */
     @Test
     void backsOffWhenCustomProviderExists() {
+        // given
         EnvironmentInfoProvider custom = new JdkEnvironmentInfoProvider();
 
+        // when
         runner.withBean(EnvironmentInfoProvider.class, () -> custom)
                 .run(context -> {
                     assertThat(context).hasSingleBean(EnvironmentInfoProvider.class);
@@ -80,7 +85,10 @@ class LifecycleAutoConfigurationTest {
     /** 缺 Spring Boot 配置属性类时只告警不崩。 */
     @Test
     void warnsWhenSpringBootConfigClassMissing(CapturedOutput output) {
+        // given
         Messages.setLocale(Locale.SIMPLIFIED_CHINESE);
+
+        // when
         new ApplicationContextRunner()
                 .withClassLoader(new FilteredClassLoader(
                         "org.springframework.boot.context.properties.ConfigurationProperties"))
@@ -90,6 +98,7 @@ class LifecycleAutoConfigurationTest {
                     assertThat(context).doesNotHaveBean(LifecycleLogger.class);
                 });
 
+        // then
         assertThat(output).contains(Messages.get(ErrorCode.AUTO_CONFIG_SKIPPED,
                 "Spring Boot 配置属性", "banyan-log"));
     }
@@ -97,10 +106,13 @@ class LifecycleAutoConfigurationTest {
     /** 缺 Spring 事件类时提示使用 Spring 事件能力不可用。 */
     @Test
     void warnsWhenSpringEventClassMissing(CapturedOutput output) {
+        // given
         Messages.setLocale(Locale.SIMPLIFIED_CHINESE);
 
+        // when
         new LogMissingClassAutoConfiguration.SpringEventMissing();
 
+        // then
         assertThat(output).contains(Messages.get(ErrorCode.AUTO_CONFIG_SKIPPED,
                 "Spring 事件", "banyan-log"));
     }

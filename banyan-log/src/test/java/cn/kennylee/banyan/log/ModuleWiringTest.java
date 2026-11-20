@@ -23,18 +23,21 @@ class ModuleWiringTest {
     /** 根 pom 的 modules 列表。 */
     @Test
     void rootPomListsModule() throws IOException {
+        // when
         assertThat(readRoot("pom.xml")).contains("<module>banyan-log</module>");
     }
 
     /** BOM 的 dependencyManagement。 */
     @Test
     void bomManagesModule() throws IOException {
+        // when
         assertThat(readRoot("banyan-bom/pom.xml")).contains("<artifactId>banyan-log</artifactId>");
     }
 
     /** 两份 README 的模块表。 */
     @Test
     void readmesListModule() throws IOException {
+        // when
         assertThat(readRoot("README.md")).contains("`banyan-log`");
         assertThat(readRoot("README.zh-CN.md")).contains("`banyan-log`");
     }

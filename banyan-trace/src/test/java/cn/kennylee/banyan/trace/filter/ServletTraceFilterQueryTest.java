@@ -29,6 +29,7 @@ class ServletTraceFilterQueryTest {
     /** query 兜底生效，响应头关闭后不回写。 */
     @Test
     void acceptsQueryAndSkipsResponseHeader() throws Exception {
+        // when
         mockMvc.perform(get("/trace").param("traceId", "query-1"))
                 .andExpect(status().isOk())
                 .andExpect(header().doesNotExist("X-Trace-Id"))

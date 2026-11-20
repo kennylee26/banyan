@@ -28,9 +28,12 @@ class LogMessagesTest {
     /** 新增的日志错误码在中英文下都有消息。 */
     @Test
     void allLogCodesResolveInBothLocales() {
+        // given
         List<ErrorCode> logCodes = Arrays.stream(ErrorCode.values())
                 .filter(code -> code.name().startsWith("LOG_"))
                 .toList();
+
+        // when
         assertThat(logCodes).isNotEmpty();
 
         for (ErrorCode code : logCodes) {

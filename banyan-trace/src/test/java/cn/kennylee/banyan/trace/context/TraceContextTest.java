@@ -25,9 +25,11 @@ class TraceContextTest {
     /** 生成 32 位无横线且互不相同的标识。 */
     @Test
     void generatesUniqueUuidWithoutHyphen() {
+        // when
         String first = TraceContext.generateTraceId();
         String second = TraceContext.generateTraceId();
 
+        // then
         assertThat(first).hasSize(32).doesNotContain("-");
         assertThat(second).isNotEqualTo(first);
     }
@@ -35,8 +37,10 @@ class TraceContextTest {
     /** start 写入线程上下文与 MDC，stop 恢复入口前的 MDC 快照。 */
     @Test
     void startAndStopRestoreHostMdc() {
+        // given
         MDC.put("tenant", "t1");
 
+        // when
         Map<String, String> snapshot = TraceContext.start("trace-1", "traceId");
 
         assertThat(TraceContext.getTraceId()).isEqualTo("trace-1");
@@ -45,6 +49,7 @@ class TraceContextTest {
 
         TraceContext.stop(snapshot);
 
+        // then
         assertThat(TraceContext.getTraceId()).isNull();
         assertThat(MDC.get("traceId")).isNull();
         assertThat(MDC.get("tenant")).isEqualTo("t1");
@@ -53,10 +58,12 @@ class TraceContextTest {
     /** 入口前没有 MDC 时，stop 后 MDC 为空。 */
     @Test
     void stopClearsMdcWhenNoPreviousSnapshot() {
+        // when
         Map<String, String> snapshot = TraceContext.start("trace-2", "traceId");
 
         TraceContext.stop(snapshot);
 
+        // then
         assertThat(TraceContext.getTraceId()).isNull();
         assertThat(MDC.getCopyOfContextMap()).isNullOrEmpty();
     }
@@ -64,6 +71,7 @@ class TraceContextTest {
     /** 可替换生成策略。 */
     @Test
     void supportsCustomIdProvider() {
+        // given
         TraceContext.setIdProvider(new cn.kennylee.banyan.commons.id.IdProvider() {
             @Override
             public String nextId() {
@@ -76,6 +84,7 @@ class TraceContextTest {
             }
         });
 
+        // when
         assertThat(TraceContext.generateTraceId()).isEqualTo("custom-id");
         TraceContext.setIdProvider(new cn.kennylee.banyan.commons.id.UuidIdProvider());
     }
@@ -83,8 +92,10 @@ class TraceContextTest {
     /** 直接设置与读取。 */
     @Test
     void setsAndGetsTraceId() {
+        // given
         TraceContext.setTraceId("trace-3");
 
+        // when
         assertThat(TraceContext.getTraceId()).isEqualTo("trace-3");
     }
 }

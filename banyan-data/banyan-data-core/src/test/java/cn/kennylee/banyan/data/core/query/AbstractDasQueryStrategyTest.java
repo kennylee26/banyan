@@ -26,13 +26,16 @@ class AbstractDasQueryStrategyTest {
     /** 解析 Bean 非空属性并跳过忽略字段。 */
     @Test
     void parsesBeanNonBlankPropertiesAndSkipsIgnoredProps() {
+        // given
         DemoQuery query = new DemoQuery();
         query.setName("alice");
         query.setAgeGt(18);
         query.setPageNo(2);
 
+        // when
         List<String> criteria = new RecordingStrategy().parse(query);
 
+        // then
         assertTrue(criteria.contains("EQ:db_name=alice"));
         assertTrue(criteria.contains("GT:db_age=18"));
         assertTrue(criteria.stream().noneMatch(c -> c.contains("pageNo")));
@@ -41,26 +44,33 @@ class AbstractDasQueryStrategyTest {
     /** 解析下划线键的 Map 入参。 */
     @Test
     void parsesMapInputWithSnakeCaseKey() {
+        // when
         List<String> criteria = new RecordingStrategy()
                 .parse(Map.of("user_name", "alice"), Demo.class);
 
+        // then
         assertTrue(criteria.contains("EQ:db_userName=alice"));
     }
 
     /** 未知实体属性报错。 */
     @Test
     void rejectsUnknownEntityProperty() {
+        // given
         DemoQuery query = new DemoQuery();
         query.setUnknownLike("x");
 
+        // when
         BanyanException ex = assertThrows(BanyanException.class,
                 () -> new RecordingStrategy().parse(query));
+
+        // then
         assertTrue(ex.getMessage().contains("unknown"));
     }
 
     /** 分派全部 14 个操作符。 */
     @Test
     void dispatchesAllFourteenOperators() {
+        // given
         DemoQuery query = new DemoQuery();
         query.setName("eq");
         query.setNameNe("ne");
@@ -77,8 +87,10 @@ class AbstractDasQueryStrategyTest {
         query.setEmailIsNull(Boolean.TRUE);
         query.setEmailIsNotNull(Boolean.TRUE);
 
+        // when
         List<String> criteria = new RecordingStrategy().parse(query);
 
+        // then
         for (String op : new String[]{"EQ", "NE", "GT", "GE", "LT", "LE", "LIKE",
                 "PRE_LIKE", "SUF_LIKE", "NOT_LIKE", "IN", "NOT_IN", "IS_NULL", "IS_NOT_NULL"}) {
             assertTrue(criteria.stream().anyMatch(c -> c.startsWith(op + ":")), "missing " + op);

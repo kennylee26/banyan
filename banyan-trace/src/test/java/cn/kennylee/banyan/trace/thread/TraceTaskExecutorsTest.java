@@ -26,11 +26,16 @@ class TraceTaskExecutorsTest {
     /** 工厂创建的线程池自动带装饰器。 */
     @Test
     void factoryPropagatesTraceId() throws Exception {
+        // given
         TraceContext.setTraceId("e-1");
         ThreadPoolTaskExecutor executor = TraceTaskExecutors.create("trace-test-");
         try {
             AtomicReference<String> seen = new AtomicReference<>();
+
+            // when
             executor.submit(() -> seen.set(TraceContext.getTraceId())).get();
+
+            // then
             assertThat(seen).hasValue("e-1");
         } finally {
             executor.shutdown();
@@ -40,12 +45,17 @@ class TraceTaskExecutorsTest {
     /** 就地包装已有线程池。 */
     @Test
     void decoratesExistingExecutor() throws Exception {
+        // given
         TraceContext.setTraceId("e-2");
         ThreadPoolTaskExecutor executor = TraceTaskExecutors.decorate(
                 TaskExecutors.newPool("trace-test-"));
         try {
             AtomicReference<String> seen = new AtomicReference<>();
+
+            // when
             executor.submit(() -> seen.set(TraceContext.getTraceId())).get();
+
+            // then
             assertThat(seen).hasValue("e-2");
         } finally {
             executor.shutdown();

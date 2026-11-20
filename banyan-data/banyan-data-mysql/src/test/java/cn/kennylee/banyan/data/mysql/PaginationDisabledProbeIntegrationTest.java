@@ -26,8 +26,10 @@ class PaginationDisabledProbeIntegrationTest {
     /** 关闭分页后返回全部记录，Page 不再生效。 */
     @Test
     void returnsAllRecordsWhenPaginationDisabled() {
+        // when
         IPage<UserEo> page = pagingProbeMapper.selectByMinAge(new Page<>(1, 1), 0);
 
+        // then
         assertThat(page.getRecords()).hasSize(2);
         assertThat(page.getTotal()).isZero();
     }

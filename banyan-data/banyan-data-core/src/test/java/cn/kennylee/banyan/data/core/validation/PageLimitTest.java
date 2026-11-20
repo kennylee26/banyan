@@ -20,21 +20,27 @@ class PageLimitTest {
     /** 子类 DTO 继承注解后同样生效。 */
     @Test
     void rejectsPageBeyondMaxOnSubclass() {
+        // given
         PageDto page = new PageDto();
         page.setPageNo(10001);
         page.setPageSize(10);
 
+        // when
         BanyanException exception = assertThrows(BanyanException.class, () -> PageLimit.validate(page));
+
+        // then
         assertEquals(ErrorCode.MAX_PAGE_EXCEEDED, exception.getErrorCode());
     }
 
     /** 正常页码放行。 */
     @Test
     void acceptsNormalPage() {
+        // given
         PageDto page = new PageDto();
         page.setPageNo(1);
         page.setPageSize(10);
 
+        // when
         assertDoesNotThrow(() -> PageLimit.validate(page));
     }
 }

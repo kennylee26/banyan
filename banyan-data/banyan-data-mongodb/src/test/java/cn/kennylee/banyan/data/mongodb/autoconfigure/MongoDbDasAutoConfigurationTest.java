@@ -31,12 +31,14 @@ class MongoDbDasAutoConfigurationTest {
     /** 默认加载。 */
     @Test
     void loadsByDefault() {
+        // when
         runner.run(context -> assertThat(context).hasSingleBean(DasQueryStrategyRegistry.class));
     }
 
     /** 关闭开关后不加载。 */
     @Test
     void honorsEnabledFalse() {
+        // when
         runner.withPropertyValues("banyan.data-mongodb.enabled=false")
                 .run(context -> assertThat(context).doesNotHaveBean(DasQueryStrategyRegistry.class));
     }
@@ -44,17 +46,21 @@ class MongoDbDasAutoConfigurationTest {
     /** 缺类时跳过并告警。 */
     @Test
     void skipsAndWarnsWhenRequiredClassMissing(CapturedOutput output) {
+        // when
         runner.withClassLoader(new FilteredClassLoader("org.springframework.data.mongodb.core.MongoTemplate"))
                 .run(context -> {
                     assertThat(context).hasNotFailed();
                     assertThat(context).doesNotHaveBean(DasQueryStrategyRegistry.class);
                 });
+
+        // then
         assertThat(output).contains("Spring Data MongoDB");
     }
 
     /** 使用者已有 bean 时让位。 */
     @Test
     void backsOffWhenUserBeanExists() {
+        // when
         runner.withBean(DasQueryStrategyRegistry.class,
                         () -> new DefaultDasQueryStrategyRegistry(Map.of()))
                 .run(context -> assertThat(context.getBeansOfType(DasQueryStrategyRegistry.class)).hasSize(1));

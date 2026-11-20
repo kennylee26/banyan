@@ -26,6 +26,7 @@ class BatchUpdatePropertyTest {
     /** 配置为 2 时，3 列字段并集整批降级到框架批量。 */
     @Test
     void configuredLimitTakesEffect() {
+        // given
         UserEo user = new UserEo();
         user.setUserName("yuri");
         user.setAge(75);
@@ -34,7 +35,10 @@ class BatchUpdatePropertyTest {
         user.setAge(76);
         user.setCity("foshan");
 
+        // when
         assertThat(userDas.updateBatchById(List.of(user))).isEqualTo(-1);
+
+        // then
         assertThat(userDas.findById(user.getId()).getAge()).isEqualTo(76);
     }
 }

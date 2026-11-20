@@ -25,6 +25,7 @@ class LikeEscapeGlobalOnlyIntegrationTest extends LikeEscapeTestSupport {
     /** 策略层关闭后，全局层仍保证 DTO 的字面量匹配。 */
     @Test
     void globalLayerEscapesDtoQuery() {
+        // when
         assertThat(userDas.findPage(query("50%")).data())
                 .extracting(UserEo::getUserName)
                 .containsExactly("pg-50%off");
@@ -33,6 +34,7 @@ class LikeEscapeGlobalOnlyIntegrationTest extends LikeEscapeTestSupport {
     /** XML 同样由全局层转义。 */
     @Test
     void globalLayerEscapesXmlQuery() {
+        // when
         assertThat(pagingProbeMapper.selectByNameLike("50%"))
                 .extracting(UserEo::getUserName)
                 .containsExactly("pg-50%off");
