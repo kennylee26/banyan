@@ -43,6 +43,7 @@
         <module>banyan-cache</module>
         <module>banyan-trace</module>
         <module>banyan-log</module>
+        <module>banyan-openapi-sign</module>
         <module>banyan-data</module>
     </modules>
 

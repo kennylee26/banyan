@@ -17,6 +17,7 @@
 | `banyan-cache` | 统一缓存接口，Provider 可插拔，内置可扩展的穿透防护占位 |
 | `banyan-trace` | Trace ID 生成、传播与日志集成，兼容 servlet、reactive、dubbo、feign |
 | `banyan-log` | 应用生命周期日志、可选 logback 输出片段与纯 JDK 日志值工具 |
+| `banyan-openapi-sign` | OpenAPI 请求验签与解密：注解驱动、可重复读 body、统一 401 |
 | `banyan-data` | 数据访问层（Das）父模块 |
 | `banyan-data-core` | 公共契约：分页、排序、查询条件、查询策略、校验 |
 | `banyan-data-mysql` | 基于 MyBatis-Plus 的 MySQL 数据访问层 |
@@ -60,6 +61,7 @@
 | [`banyan-cache/README.md`](banyan-cache/README.md) | `put` 与 `putRaw`、泛型容器读取、Provider 替换、`banyan.cache.*` 配置 |
 | [`banyan-log/README.md`](banyan-log/README.md) | 生命周期事件、`banyan.log.*`、logback 宿主 include 与 pattern 覆盖 |
 | [`banyan-trace/README.md`](banyan-trace/README.md) | MDC 任务装饰器与线程池工厂 |
+| [`banyan-openapi-sign/README.md`](banyan-openapi-sign/README.md) | `@OpenApiSigned`、配置项、401 错误体、可替换密钥与加密实现 |
 | [`banyan-data-mysql/README.md`](banyan-data/banyan-data-mysql/README.md) | `BanyanQueryWrapper`、LIKE 转义边界 |
 
 ## 坐标

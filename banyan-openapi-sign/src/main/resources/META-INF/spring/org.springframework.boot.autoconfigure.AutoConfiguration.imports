@@ -1,0 +1,2 @@
+cn.kennylee.banyan.openapi.sign.autoconfigure.OpenApiSignAutoConfiguration
+cn.kennylee.banyan.openapi.sign.autoconfigure.OpenApiSignMissingClassAutoConfiguration

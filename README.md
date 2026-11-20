@@ -17,6 +17,7 @@ An infrastructure toolkit for Spring Boot.
 | `banyan-cache` | Unified cache API with pluggable providers and an extensible cache-penetration guard placeholder |
 | `banyan-trace` | Trace ID generation, propagation and log integration for servlet, reactive, dubbo and feign |
 | `banyan-log` | Application lifecycle logging, optional logback snippets and pure-JDK log value tools |
+| `banyan-openapi-sign` | OpenAPI request verification and decryption: annotation driven, repeatable body, unified 401 |
 | `banyan-data` | Parent module of the data access layer (Das) |
 | `banyan-data-core` | Shared contracts: paging, sorting, query criteria, query strategy, validation |
 | `banyan-data-mysql` | MySQL data access layer built on MyBatis-Plus |
@@ -60,6 +61,7 @@ Some modules have their own `README.md` with usage examples and gotchas (Java pa
 | [`banyan-cache/README.md`](banyan-cache/README.md) | `put` vs `putRaw`, generic container reads, provider replacement, `banyan.cache.*` properties |
 | [`banyan-log/README.md`](banyan-log/README.md) | Lifecycle events, `banyan.log.*`, logback host include and pattern override |
 | [`banyan-trace/README.md`](banyan-trace/README.md) | MDC task decorator and executor factories |
+| [`banyan-openapi-sign/README.md`](banyan-openapi-sign/README.md) | `@OpenApiSigned`, configuration, 401 body, replaceable key and cipher |
 | [`banyan-data-mysql/README.md`](banyan-data/banyan-data-mysql/README.md) | `BanyanQueryWrapper`, LIKE escaping boundary |
 
 ## Coordinates
