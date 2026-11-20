@@ -102,6 +102,22 @@ public class ReplayGuard {
      */
     public VerifyResult verify(UnsignedRequest request, Map<String, String> headers,
                                Map<String, SignKey> keys) {
+        return verifyDetailed(request, headers, keys).result();
+    }
+
+    /**
+     * 按配置从 HTTP headers 组装入站请求并返回详细验签结果。
+     *
+     * <p>缺 header、时间戳无法解析等请求级问题统一返回格式非法，
+     * 不抛异常、不泄漏具体原因。</p>
+     *
+     * @param request 原始业务请求数据
+     * @param headers 接收到的 HTTP header，按 {@link SignHeaders} 命名
+     * @param keys    keyId 到密钥的映射
+     * @return 详细验签结果
+     */
+    public VerifyOutcome verifyDetailed(UnsignedRequest request, Map<String, String> headers,
+                                        Map<String, SignKey> keys) {
         Objects.requireNonNull(request, "request");
         Objects.requireNonNull(headers, "headers");
         try {
@@ -112,9 +128,9 @@ public class ReplayGuard {
                     headers.get(headersConfig.keyId()),
                     headers.get(headersConfig.alg()),
                     headers.get(headersConfig.sign()));
-            return verify(signed, keys);
+            return verifyDetailed(signed, keys);
         } catch (IllegalArgumentException e) {
-            return VerifyResult.INVALID;
+            return VerifyOutcome.failure(FailureReason.MALFORMED);
         }
     }
 
@@ -129,27 +145,41 @@ public class ReplayGuard {
      * @return 验签结果
      */
     public VerifyResult verify(SignRequest request, Map<String, SignKey> keys) {
+        return verifyDetailed(request, keys).result();
+    }
+
+    /**
+     * 验签并防重放，返回带失败原因的详细结果。
+     *
+     * <p>校验顺序与副作用与 {@link #verify(SignRequest, Map)} 完全一致：
+     * 时间窗口先于签名计算，nonce 只在签名通过后登记。</p>
+     *
+     * @param request 完整入站请求
+     * @param keys    keyId 到密钥的映射
+     * @return 详细验签结果
+     */
+    public VerifyOutcome verifyDetailed(SignRequest request, Map<String, SignKey> keys) {
         Objects.requireNonNull(request, "request");
         if (!isSigned(request)) {
-            return VerifyResult.INVALID;
+            return VerifyOutcome.failure(FailureReason.MALFORMED);
         }
 
         SignKey key = keys == null ? null : keys.get(request.keyId());
         if (key == null) {
-            return VerifyResult.INVALID;
+            return VerifyOutcome.failure(FailureReason.UNKNOWN_KEY);
         }
         if (!algorithm.name().equals(request.alg())) {
-            return VerifyResult.INVALID;
+            return VerifyOutcome.failure(FailureReason.ALG_MISMATCH);
         }
         if (Math.abs(clock.millis() - request.timestamp()) >= windowMillis) {
-            return VerifyResult.INVALID;
+            return VerifyOutcome.failure(FailureReason.EXPIRED);
         }
         if (!algorithm.verify(Signs.canonicalize(request), key.secret(), request.signature())) {
-            return VerifyResult.INVALID;
+            return VerifyOutcome.failure(FailureReason.SIGNATURE_MISMATCH);
         }
         String nonceKey = request.keyId() + ":" + request.nonce();
         return nonceStore.putIfAbsent(nonceKey, windowMillis)
-                ? VerifyResult.SUCCESS : VerifyResult.INVALID;
+                ? VerifyOutcome.success() : VerifyOutcome.failure(FailureReason.REPLAY);
     }
 
     /**

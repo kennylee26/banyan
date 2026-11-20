@@ -177,7 +177,37 @@ public enum ErrorCode {
     SIGN_REQUEST_INVALID("banyan.sign.request-invalid"),
 
     /** 签名密钥本身非法（keyId 或 secret 为空）。 */
-    SIGN_KEY_INVALID("banyan.sign.key-invalid");
+    SIGN_KEY_INVALID("banyan.sign.key-invalid"),
+
+    /** 请求体解密失败。 */
+    PAYLOAD_DECRYPT_FAILED("banyan.openapi-sign.decrypt-failed"),
+
+    /** OpenAPI 请求验签失败（对外统一文案）。 */
+    OPENAPI_SIGN_INVALID("banyan.openapi-sign.invalid"),
+
+    /** 请求签名格式非法。 */
+    OPENAPI_SIGN_MALFORMED("banyan.openapi-sign.malformed"),
+
+    /** 未知 keyId。 */
+    OPENAPI_SIGN_UNKNOWN_KEY("banyan.openapi-sign.unknown-key"),
+
+    /** 签名算法不匹配。 */
+    OPENAPI_SIGN_ALG_MISMATCH("banyan.openapi-sign.alg-mismatch"),
+
+    /** 请求已过期。 */
+    OPENAPI_SIGN_EXPIRED("banyan.openapi-sign.expired"),
+
+    /** 请求重放。 */
+    OPENAPI_SIGN_REPLAY("banyan.openapi-sign.replay"),
+
+    /** 签名不匹配。 */
+    OPENAPI_SIGN_SIGNATURE_MISMATCH("banyan.openapi-sign.signature-mismatch"),
+
+    /** 验签失败日志模板，参数为原因、方法、路径、keyId。 */
+    OPENAPI_SIGN_VERIFY_FAILED("banyan.openapi-sign.verify-failed"),
+
+    /** 请求体包装器不支持异步读取。 */
+    OPENAPI_SIGN_ASYNC_UNSUPPORTED("banyan.openapi-sign.async-unsupported");
 
     /** 资源文件中的消息 key。 */
     private final String messageKey;
