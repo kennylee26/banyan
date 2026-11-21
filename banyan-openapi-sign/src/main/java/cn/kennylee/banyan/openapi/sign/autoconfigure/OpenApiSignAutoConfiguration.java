@@ -44,6 +44,12 @@ import java.time.Clock;
 @EnableConfigurationProperties(OpenApiSignProperties.class)
 public class OpenApiSignAutoConfiguration {
 
+    /** 参数名：签名算法。 */
+    private static final String FIELD_ALGORITHM = "algorithm";
+
+    /** 参数名：加密算法。 */
+    private static final String FIELD_CIPHER = "cipher";
+
     /**
      * 签名 header 名配置。
      *
@@ -66,10 +72,8 @@ public class OpenApiSignAutoConfiguration {
     @Bean
     @ConditionalOnMissingBean
     public SignAlgorithm openApiSignAlgorithm(OpenApiSignProperties properties) {
-        if (!HmacSha256SignAlgorithm.NAME.equals(properties.getSignAlgorithm())) {
-            throw new IllegalArgumentException(
-                    Messages.get(ErrorCode.SIGN_REQUEST_INVALID, "algorithm"));
-        }
+        requireSupported(FIELD_ALGORITHM, HmacSha256SignAlgorithm.NAME,
+                properties.getSignAlgorithm());
         return new HmacSha256SignAlgorithm();
     }
 
@@ -94,10 +98,7 @@ public class OpenApiSignAutoConfiguration {
     @Bean
     @ConditionalOnMissingBean
     public PayloadCipher openApiSignCipher(OpenApiSignProperties properties) {
-        if (!AesGcmPayloadCipher.NAME.equals(properties.getCipher())) {
-            throw new IllegalArgumentException(
-                    Messages.get(ErrorCode.SIGN_REQUEST_INVALID, "cipher"));
-        }
+        requireSupported(FIELD_CIPHER, AesGcmPayloadCipher.NAME, properties.getCipher());
         return new AesGcmPayloadCipher();
     }
 
@@ -176,5 +177,13 @@ public class OpenApiSignAutoConfiguration {
                 registry.addInterceptor(interceptor);
             }
         };
+    }
+
+    /** 校验算法标识受支持，否则抛带字段名的参数异常。 */
+    private static void requireSupported(String field, String expected, String actual) {
+        if (!expected.equals(actual)) {
+            throw new IllegalArgumentException(
+                    Messages.get(ErrorCode.SIGN_REQUEST_INVALID, field));
+        }
     }
 }

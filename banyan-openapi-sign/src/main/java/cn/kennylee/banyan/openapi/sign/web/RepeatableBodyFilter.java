@@ -4,6 +4,7 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
@@ -17,6 +18,7 @@ import java.util.Locale;
  * @author kennylee
  * @since 0.1.0
  */
+@Slf4j
 public class RepeatableBodyFilter extends OncePerRequestFilter {
 
     /** multipart 前缀：文件上传不缓存，避免把大文件读进内存。 */
@@ -30,6 +32,8 @@ public class RepeatableBodyFilter extends OncePerRequestFilter {
             filterChain.doFilter(request, response);
             return;
         }
+        log.trace("包装请求体以支持重复读取: method={}, path={}",
+                request.getMethod(), request.getRequestURI());
         filterChain.doFilter(new CachedBodyRequestWrapper(request), response);
     }
 

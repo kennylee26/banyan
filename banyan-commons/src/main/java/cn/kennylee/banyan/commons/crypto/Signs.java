@@ -188,6 +188,27 @@ public final class Signs {
     }
 
     /**
+     * 判断请求是否带齐验签所需字段（协议字段加签名串）。
+     *
+     * <p>与 {@link #requireProtocolFields(SignRequest)} 共用同一套规则，
+     * 验签入口据此把缺字段统一归为格式非法。</p>
+     *
+     * @param request 请求
+     * @return 字段齐全返回 true
+     */
+    static boolean hasSignatureFields(SignRequest request) {
+        if (Strings.isBlank(request.signature())) {
+            return false;
+        }
+        try {
+            requireProtocolFields(request);
+            return true;
+        } catch (IllegalArgumentException e) {
+            return false;
+        }
+    }
+
+    /**
      * 校验规范化/验签共用的协议字段，供同包内的验签复用。
      *
      * @param request 请求

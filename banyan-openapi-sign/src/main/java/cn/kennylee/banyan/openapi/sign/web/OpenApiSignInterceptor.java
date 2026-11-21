@@ -5,7 +5,8 @@ import cn.kennylee.banyan.commons.crypto.PayloadCipher;
 import cn.kennylee.banyan.commons.crypto.ReplayGuard;
 import cn.kennylee.banyan.commons.crypto.SignHeaders;
 import cn.kennylee.banyan.commons.crypto.SignKey;
-import cn.kennylee.banyan.commons.crypto.UnsignedRequest;
+import cn.kennylee.banyan.commons.crypto.SignRequest;
+import cn.kennylee.banyan.commons.crypto.Signs;
 import cn.kennylee.banyan.commons.crypto.VerifyOutcome;
 import cn.kennylee.banyan.commons.error.ErrorCode;
 import cn.kennylee.banyan.commons.error.Messages;
@@ -23,7 +24,6 @@ import org.springframework.web.servlet.HandlerInterceptor;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -86,24 +86,46 @@ public class OpenApiSignInterceptor implements HandlerInterceptor {
             return true;
         }
 
+        String path = pathOf(request);
+        log.debug("OpenAPI 验签开始: method={}, path={}", request.getMethod(), path);
+
         String keyId = request.getHeader(headersConfig.keyId());
         SignKey key = Strings.isBlank(keyId) ? null : keyResolver.resolve(keyId);
-        Map<String, SignKey> keys = key == null ? Map.of() : Map.of(key.keyId(), key);
+        if (key == null) {
+            log.debug("未解析到密钥: keyId={}", safeKeyId(keyId));
+        }
+        // 映射键用请求 keyId：secret 来自扩展点返回值，其 keyId 不参与查找
+        Map<String, SignKey> keys = key == null ? Map.of() : Map.of(keyId, key);
         byte[] body = cachedBody(request);
         if (body == null) {
+            log.warn("OpenAPI 验签跳过：请求体未被过滤器缓存，method={}, path={}",
+                    request.getMethod(), path);
             reject(request, response, FailureReason.MALFORMED, keyId);
             return false;
         }
-        String bodyText = new String(body, StandardCharsets.UTF_8);
-        VerifyOutcome outcome = guard.verifyDetailed(
-                UnsignedRequest.of(request.getMethod(), pathOf(request),
-                        queryParams(request), bodyText),
-                headers(request), keys);
+        SignRequest signed;
+        try {
+            signed = new SignRequest(request.getMethod(), path, queryParams(request),
+                    new String(body, StandardCharsets.UTF_8),
+                    Signs.parseTimestamp(request.getHeader(headersConfig.timestamp())),
+                    request.getHeader(headersConfig.nonce()),
+                    keyId,
+                    request.getHeader(headersConfig.alg()),
+                    request.getHeader(headersConfig.sign()));
+        } catch (IllegalArgumentException e) {
+            log.debug("OpenAPI 签名参数格式非法: path={}, cause={}", path, e.getMessage());
+            reject(request, response, FailureReason.MALFORMED, keyId);
+            return false;
+        }
+        String bodyText = signed.body();
+        VerifyOutcome outcome = guard.verifyDetailed(signed, keys);
         if (!outcome.isSuccess()) {
             reject(request, response, outcome.reason(), keyId);
             return false;
         }
+        log.debug("验签通过: path={}, keyId={}", path, safeKeyId(keyId));
         if (!properties.isEncrypted() || body.length == 0) {
+            log.debug("跳过解密: encrypted={}, bodyLength={}", properties.isEncrypted(), body.length);
             return true;
         }
         return decrypt(request, response, bodyText, key, keyId);
@@ -116,8 +138,10 @@ public class OpenApiSignInterceptor implements HandlerInterceptor {
             String plaintext = cipher.decrypt(bodyText, key.secret());
             request.setAttribute(CachedBodyRequestWrapper.PLAIN_BODY_ATTRIBUTE,
                     plaintext.getBytes(StandardCharsets.UTF_8));
+            log.debug("请求体解密完成: path={}", pathOf(request));
             return true;
         } catch (RuntimeException e) {
+            log.debug("请求体解密失败: path={}, cause={}", pathOf(request), e.getMessage());
             reject(request, response, FailureReason.DECRYPT_FAILED, keyId);
             return false;
         }
@@ -167,17 +191,6 @@ public class OpenApiSignInterceptor implements HandlerInterceptor {
     private static String pathOf(HttpServletRequest request) {
         String contextPath = request.getContextPath();
         return request.getRequestURI().substring(contextPath.length());
-    }
-
-    /** 读取五个签名 header。 */
-    private Map<String, String> headers(HttpServletRequest request) {
-        Map<String, String> headers = new HashMap<>(5);
-        headers.put(headersConfig.alg(), request.getHeader(headersConfig.alg()));
-        headers.put(headersConfig.keyId(), request.getHeader(headersConfig.keyId()));
-        headers.put(headersConfig.timestamp(), request.getHeader(headersConfig.timestamp()));
-        headers.put(headersConfig.nonce(), request.getHeader(headersConfig.nonce()));
-        headers.put(headersConfig.sign(), request.getHeader(headersConfig.sign()));
-        return headers;
     }
 
     /** 把 Servlet 参数表转换为协议需要的结构。 */

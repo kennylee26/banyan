@@ -40,6 +40,8 @@ public record SignHeaders(String alg, String keyId, String timestamp,
 
     /**
      * 校验五个名字：非空且互不相同（HTTP header 名不区分大小写）。
+     *
+     * @throws IllegalArgumentException 存在空名、非法字符或重名
      */
     public SignHeaders {
         requireText(alg);

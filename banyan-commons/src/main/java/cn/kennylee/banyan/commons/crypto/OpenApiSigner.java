@@ -31,6 +31,12 @@ import java.util.Objects;
  */
 public final class OpenApiSigner {
 
+    /** 参数名：签名算法。 */
+    private static final String FIELD_ALGORITHM = "algorithm";
+
+    /** 参数名：加密算法。 */
+    private static final String FIELD_CIPHER = "cipher";
+
     /** 密钥。 */
     private final SignKey key;
 
@@ -116,6 +122,8 @@ public final class OpenApiSigner {
 
         /**
          * 拷贝 header，保证不可修改。
+         *
+         * @throws NullPointerException headers 为 null
          */
         public SignedPayload {
             headers = Collections.unmodifiableMap(
@@ -215,10 +223,7 @@ public final class OpenApiSigner {
          * @throws IllegalArgumentException 标识未支持
          */
         public Builder cipher(String identifier) {
-            if (!AesGcmPayloadCipher.NAME.equals(identifier)) {
-                throw new IllegalArgumentException(
-                        Messages.get(ErrorCode.SIGN_REQUEST_INVALID, "cipher"));
-            }
+            requireSupported(FIELD_CIPHER, AesGcmPayloadCipher.NAME, identifier);
             this.cipher = new AesGcmPayloadCipher();
             return this;
         }
@@ -258,11 +263,16 @@ public final class OpenApiSigner {
 
         /** 解析签名算法标识。 */
         private SignAlgorithm resolveAlgorithm() {
-            if (HmacSha256SignAlgorithm.NAME.equals(algorithm)) {
-                return new HmacSha256SignAlgorithm();
+            requireSupported(FIELD_ALGORITHM, HmacSha256SignAlgorithm.NAME, algorithm);
+            return new HmacSha256SignAlgorithm();
+        }
+
+        /** 校验标识受支持，否则抛带字段名的参数异常。 */
+        private static void requireSupported(String field, String expected, String actual) {
+            if (!expected.equals(actual)) {
+                throw new IllegalArgumentException(
+                        Messages.get(ErrorCode.SIGN_REQUEST_INVALID, field));
             }
-            throw new IllegalArgumentException(
-                    Messages.get(ErrorCode.SIGN_REQUEST_INVALID, "algorithm"));
         }
     }
 }

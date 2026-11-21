@@ -2,7 +2,6 @@ package cn.kennylee.banyan.commons.crypto;
 
 import cn.kennylee.banyan.commons.error.ErrorCode;
 import cn.kennylee.banyan.commons.error.Messages;
-import cn.kennylee.banyan.commons.util.Strings;
 
 import java.time.Clock;
 import java.util.Map;
@@ -130,6 +129,7 @@ public class ReplayGuard {
                     headers.get(headersConfig.sign()));
             return verifyDetailed(signed, keys);
         } catch (IllegalArgumentException e) {
+            // 请求格式问题统一映射为格式非法；不记录 cause，避免把解析细节泄漏到日志
             return VerifyOutcome.failure(FailureReason.MALFORMED);
         }
     }
@@ -160,7 +160,7 @@ public class ReplayGuard {
      */
     public VerifyOutcome verifyDetailed(SignRequest request, Map<String, SignKey> keys) {
         Objects.requireNonNull(request, "request");
-        if (!isSigned(request)) {
+        if (!Signs.hasSignatureFields(request)) {
             return VerifyOutcome.failure(FailureReason.MALFORMED);
         }
 
@@ -182,17 +182,4 @@ public class ReplayGuard {
                 ? VerifyOutcome.success() : VerifyOutcome.failure(FailureReason.REPLAY);
     }
 
-    /**
-     * 判断请求是否带齐验签所需字段。
-     *
-     * @param request 入站请求
-     * @return 字段齐全返回 true
-     */
-    private boolean isSigned(SignRequest request) {
-        return request.timestamp() > 0
-                && Strings.isNotBlank(request.nonce())
-                && Strings.isNotBlank(request.keyId())
-                && Strings.isNotBlank(request.alg())
-                && Strings.isNotBlank(request.signature());
-    }
 }
