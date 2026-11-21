@@ -46,7 +46,7 @@ class OpenApiSignEndToEndTest {
     void deliversPlaintextToController() throws Exception {
         // given
         MockMvc mvc = mvc(new OpenApiSignProperties());
-        OpenApiSigner.SignedPayload payload = signer(true, SignHeaders.DEFAULT)
+        OpenApiSigner.SignedPayload payload = SignTestSupport.signer(true, SignHeaders.DEFAULT)
                 .sign(UnsignedRequest.of("POST", PATH, Map.of(), PLAIN_BODY));
 
         // when
@@ -54,7 +54,7 @@ class OpenApiSignEndToEndTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .characterEncoding(StandardCharsets.UTF_8.name())
                         .content(payload.body())
-                        .headers(headers(payload)))
+                        .headers(SignTestSupport.headers(payload)))
                 // then
                 .andExpect(status().isOk())
                 .andExpect(content().string(PLAIN_BODY));
@@ -65,7 +65,7 @@ class OpenApiSignEndToEndTest {
     void rejectsTamperedPayload() throws Exception {
         // given
         MockMvc mvc = mvc(new OpenApiSignProperties());
-        OpenApiSigner.SignedPayload payload = signer(true, SignHeaders.DEFAULT)
+        OpenApiSigner.SignedPayload payload = SignTestSupport.signer(true, SignHeaders.DEFAULT)
                 .sign(UnsignedRequest.of("POST", PATH, Map.of(), PLAIN_BODY));
         var request = post(PATH)
                 .contentType(MediaType.APPLICATION_JSON)
@@ -94,14 +94,14 @@ class OpenApiSignEndToEndTest {
         properties.getHeaders().setSign("X-Acme-Sign");
         MockMvc mvc = mvc(properties);
         SignHeaders headersConfig = properties.toSignHeaders();
-        OpenApiSigner.SignedPayload payload = signer(true, headersConfig)
+        OpenApiSigner.SignedPayload payload = SignTestSupport.signer(true, headersConfig)
                 .sign(UnsignedRequest.of("POST", PATH, Map.of(), PLAIN_BODY));
 
         // when
         mvc.perform(post(PATH)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(payload.body())
-                        .headers(headers(payload)))
+                        .headers(SignTestSupport.headers(payload)))
                 // then
                 .andExpect(status().isOk())
                 .andExpect(content().string(PLAIN_BODY));
@@ -114,14 +114,14 @@ class OpenApiSignEndToEndTest {
         OpenApiSignProperties properties = new OpenApiSignProperties();
         properties.setEncrypted(false);
         MockMvc mvc = mvc(properties);
-        OpenApiSigner.SignedPayload payload = signer(false, SignHeaders.DEFAULT)
+        OpenApiSigner.SignedPayload payload = SignTestSupport.signer(false, SignHeaders.DEFAULT)
                 .sign(UnsignedRequest.of("POST", PATH, Map.of(), PLAIN_BODY));
 
         // when
         mvc.perform(post(PATH)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(payload.body())
-                        .headers(headers(payload)))
+                        .headers(SignTestSupport.headers(payload)))
                 // then
                 .andExpect(status().isOk())
                 .andExpect(content().string(PLAIN_BODY));
@@ -139,25 +139,6 @@ class OpenApiSignEndToEndTest {
                 .addFilters(new RepeatableBodyFilter())
                 .addInterceptors(interceptor)
                 .build();
-    }
-
-    /** 构造签名器。 */
-    private OpenApiSigner signer(boolean encrypt, SignHeaders headersConfig) {
-        OpenApiSigner.Builder builder = OpenApiSigner.builder()
-                .keyId("app1")
-                .secret("secret")
-                .headers(headersConfig);
-        if (!encrypt) {
-            builder.plainBody();
-        }
-        return builder.build();
-    }
-
-    /** header 载体。 */
-    private org.springframework.http.HttpHeaders headers(OpenApiSigner.SignedPayload payload) {
-        org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
-        payload.headers().forEach(headers::add);
-        return headers;
     }
 
     /** 测试用 Controller。 */

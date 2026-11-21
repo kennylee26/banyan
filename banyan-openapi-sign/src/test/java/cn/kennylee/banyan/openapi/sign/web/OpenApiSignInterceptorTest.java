@@ -55,6 +55,51 @@ class OpenApiSignInterceptorTest {
     /** 明文请求体。 */
     private static final String PLAIN_BODY = "{\"id\":1}";
 
+    /** 密钥解析返回的 keyId 与请求不同时，仍按请求 keyId 查找并使用返回的密钥。 */
+    @Test
+    void acceptsKeyWhoseIdDiffersFromRequest() throws Exception {
+        // given
+        OpenApiSignProperties properties = new OpenApiSignProperties();
+        SignKeyResolver resolver = keyId -> new SignKey("resolved-" + keyId, SECRET);
+        ReplayGuard guard = new ReplayGuard(new HmacSha256SignAlgorithm(), new InMemoryNonceStore(),
+                Clock.systemUTC(), ReplayGuard.DEFAULT_WINDOW_MILLIS, properties.toSignHeaders());
+        OpenApiSignInterceptor interceptor = new OpenApiSignInterceptor(properties, guard, resolver,
+                properties.toSignHeaders(), new AesGcmPayloadCipher());
+        CachedBodyRequestWrapper request = signedRequest(PATH, PLAIN_BODY, "app1", true);
+
+        // when
+        boolean allowed = interceptor.preHandle(request, new MockHttpServletResponse(),
+                handler(new TestController(), "signed"));
+
+        // then
+        assertTrue(allowed);
+    }
+
+    /** 拦截器按自身 header 配置解析，不依赖被替换的 ReplayGuard 内部配置。 */
+    @Test
+    void doesNotDependOnGuardHeaderConfig() throws Exception {
+        // given
+        SignHeaders custom = new SignHeaders("X-Acme-Alg", "X-Acme-Key", "X-Acme-Time",
+                "X-Acme-Nonce", "X-Acme-Sign");
+        OpenApiSignProperties properties = new OpenApiSignProperties();
+        ReplayGuard guard = new ReplayGuard(new HmacSha256SignAlgorithm(), new InMemoryNonceStore(),
+                Clock.systemUTC(), ReplayGuard.DEFAULT_WINDOW_MILLIS, SignHeaders.DEFAULT);
+        OpenApiSignInterceptor interceptor = new OpenApiSignInterceptor(properties, guard,
+                new ConfiguredSignKeyResolver(Map.of("app1", SECRET)), custom,
+                new AesGcmPayloadCipher());
+        OpenApiSigner.SignedPayload payload = OpenApiSigner.builder()
+                .keyId("app1").secret(SECRET).headers(custom).build()
+                .sign(UnsignedRequest.of("POST", PATH, Map.of(), PLAIN_BODY));
+        CachedBodyRequestWrapper request = wrap(payload, PATH);
+
+        // when
+        boolean allowed = interceptor.preHandle(request, new MockHttpServletResponse(),
+                handler(new TestController(), "signed"));
+
+        // then
+        assertTrue(allowed);
+    }
+
     /** 未标注方法直接放行。 */
     @Test
     void passesUnannotatedHandler() throws Exception {

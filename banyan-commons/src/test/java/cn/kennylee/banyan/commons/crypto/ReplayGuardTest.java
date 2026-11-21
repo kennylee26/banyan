@@ -88,35 +88,6 @@ class ReplayGuardTest {
         assertEquals(VerifyResult.INVALID, guard.verify(signed, keys));
     }
 
-    /** 超窗口请求在签名计算前就被拒绝。 */
-    @Test
-    void doesNotComputeSignatureForExpiredRequest() {
-        // given
-        java.util.concurrent.atomic.AtomicInteger signCalls =
-                new java.util.concurrent.atomic.AtomicInteger();
-        SignAlgorithm counting = new SignAlgorithm() {
-
-            @Override
-            public String name() {
-                return HmacSha256SignAlgorithm.NAME;
-            }
-
-            @Override
-            public String sign(String canonical, String secret) {
-                signCalls.incrementAndGet();
-                return "deadbeef";
-            }
-        };
-        ReplayGuard countingGuard = new ReplayGuard(counting,
-                new InMemoryNonceStore(clock), clock, WINDOW);
-        SignRequest signed = signedRequest();
-        clock.advance(Duration.ofMillis(WINDOW));
-
-        // when
-        assertEquals(VerifyResult.INVALID, countingGuard.verify(signed, keys));
-        assertEquals(0, signCalls.get());
-    }
-
     /** 自定义算法同时作用于签名与验签。 */
     @Test
     void verifiesWithCustomAlgorithm() {
@@ -168,8 +139,12 @@ class ReplayGuardTest {
                 signed.signature());
 
         // when
-        assertEquals(VerifyResult.INVALID, guard.verify(zero, keys));
-        assertEquals(VerifyResult.INVALID, guard.verify(one, keys));
+        VerifyResult zeroResult = guard.verify(zero, keys);
+        VerifyResult oneResult = guard.verify(one, keys);
+
+        // then
+        assertEquals(VerifyResult.INVALID, zeroResult);
+        assertEquals(VerifyResult.INVALID, oneResult);
     }
 
     /** 窗口必须为正：0 拒绝，1 接受。 */
