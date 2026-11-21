@@ -61,12 +61,12 @@
             </dependency>
             <dependency>
                 <groupId>cn.kennylee.banyan</groupId>
-                <artifactId>banyan-data-mysql</artifactId>
+                <artifactId>banyan-data-mysql-mybatis</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>cn.kennylee.banyan</groupId>
-                <artifactId>banyan-data-mongodb</artifactId>
+                <artifactId>banyan-data-mongodb-springdata</artifactId>
                 <version>${project.version}</version>
             </dependency>
         </dependencies>

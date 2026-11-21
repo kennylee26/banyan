@@ -1,4 +1,0 @@
-cn.kennylee.banyan.data.mysql.autoconfigure.MyBatisDasAutoConfiguration
-cn.kennylee.banyan.data.mysql.autoconfigure.MyBatisDasMissingClassAutoConfiguration
-cn.kennylee.banyan.data.mysql.autoconfigure.MyBatisInterceptorAutoConfiguration
-cn.kennylee.banyan.data.mysql.autoconfigure.MyBatisInterceptorMissingClassAutoConfiguration

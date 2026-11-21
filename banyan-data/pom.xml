@@ -19,7 +19,7 @@
 
     <modules>
         <module>banyan-data-core</module>
-        <module>banyan-data-mysql</module>
-        <module>banyan-data-mongodb</module>
+        <module>banyan-data-mysql-mybatis</module>
+        <module>banyan-data-mongodb-springdata</module>
     </modules>
 </project>

@@ -20,8 +20,8 @@ An infrastructure toolkit for Spring Boot.
 | `banyan-openapi-sign` | OpenAPI request verification and decryption: annotation driven, repeatable body, unified 401 |
 | `banyan-data` | Parent module of the data access layer (Das) |
 | `banyan-data-core` | Shared contracts: paging, sorting, query criteria, query strategy, validation |
-| `banyan-data-mysql` | MySQL data access layer built on MyBatis-Plus |
-| `banyan-data-mongodb` | MongoDB data access layer built on Spring Data MongoDB |
+| `banyan-data-mysql-mybatis` | MySQL data access layer built on MyBatis-Plus |
+| `banyan-data-mongodb-springdata` | MongoDB data access layer built on Spring Data MongoDB |
 
 ## Logging
 
@@ -62,14 +62,14 @@ Some modules have their own `README.md` with usage examples and gotchas (Java pa
 | [`banyan-log/README.md`](banyan-log/README.md) | Lifecycle events, `banyan.log.*`, logback host include and pattern override |
 | [`banyan-trace/README.md`](banyan-trace/README.md) | MDC task decorator and executor factories |
 | [`banyan-openapi-sign/README.md`](banyan-openapi-sign/README.md) | `@OpenApiSigned`, configuration, 401 body, replaceable key and cipher |
-| [`banyan-data-mysql/README.md`](banyan-data/banyan-data-mysql/README.md) | `BanyanQueryWrapper`, LIKE escaping boundary |
+| [`banyan-data-mysql-mybatis/README.md`](banyan-data/banyan-data-mysql-mybatis/README.md) | `BanyanQueryWrapper`, LIKE escaping boundary |
 
 ## Coordinates
 
 ```xml
 <dependency>
     <groupId>cn.kennylee.banyan</groupId>
-    <artifactId>banyan-data-mongodb</artifactId>
+    <artifactId>banyan-data-mongodb-springdata</artifactId>
     <version>0.1.0-SNAPSHOT</version>
 </dependency>
 ```
@@ -104,7 +104,7 @@ mvn clean install -DskipTests
 Build a single module together with the modules it depends on:
 
 ```bash
-mvn -pl banyan-data/banyan-data-mysql -am clean install -DskipTests
+mvn -pl banyan-data/banyan-data-mysql-mybatis -am clean install -DskipTests
 ```
 
 ## Status

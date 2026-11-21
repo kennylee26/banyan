@@ -20,8 +20,8 @@
 | `banyan-openapi-sign` | OpenAPI 请求验签与解密：注解驱动、可重复读 body、统一 401 |
 | `banyan-data` | 数据访问层（Das）父模块 |
 | `banyan-data-core` | 公共契约：分页、排序、查询条件、查询策略、校验 |
-| `banyan-data-mysql` | 基于 MyBatis-Plus 的 MySQL 数据访问层 |
-| `banyan-data-mongodb` | 基于 Spring Data MongoDB 的数据访问层 |
+| `banyan-data-mysql-mybatis` | 基于 MyBatis-Plus 的 MySQL 数据访问层 |
+| `banyan-data-mongodb-springdata` | 基于 Spring Data MongoDB 的数据访问层 |
 
 ## 日志
 
@@ -62,14 +62,14 @@
 | [`banyan-log/README.md`](banyan-log/README.md) | 生命周期事件、`banyan.log.*`、logback 宿主 include 与 pattern 覆盖 |
 | [`banyan-trace/README.md`](banyan-trace/README.md) | MDC 任务装饰器与线程池工厂 |
 | [`banyan-openapi-sign/README.md`](banyan-openapi-sign/README.md) | `@OpenApiSigned`、配置项、401 错误体、可替换密钥与加密实现 |
-| [`banyan-data-mysql/README.md`](banyan-data/banyan-data-mysql/README.md) | `BanyanQueryWrapper`、LIKE 转义边界 |
+| [`banyan-data-mysql-mybatis/README.md`](banyan-data/banyan-data-mysql-mybatis/README.md) | `BanyanQueryWrapper`、LIKE 转义边界 |
 
 ## 坐标
 
 ```xml
 <dependency>
     <groupId>cn.kennylee.banyan</groupId>
-    <artifactId>banyan-data-mongodb</artifactId>
+    <artifactId>banyan-data-mongodb-springdata</artifactId>
     <version>0.1.0-SNAPSHOT</version>
 </dependency>
 ```
@@ -104,7 +104,7 @@ mvn clean install -DskipTests
 只构建单个模块（含其依赖的模块）：
 
 ```bash
-mvn -pl banyan-data/banyan-data-mysql -am clean install -DskipTests
+mvn -pl banyan-data/banyan-data-mysql-mybatis -am clean install -DskipTests
 ```
 
 ## 状态
