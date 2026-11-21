@@ -62,6 +62,7 @@
 | [`banyan-log/README.md`](banyan-log/README.md) | 生命周期事件、`banyan.log.*`、logback 宿主 include 与 pattern 覆盖 |
 | [`banyan-trace/README.md`](banyan-trace/README.md) | MDC 任务装饰器与线程池工厂 |
 | [`banyan-openapi-sign/README.md`](banyan-openapi-sign/README.md) | `@OpenApiSigned`、配置项、401 错误体、可替换密钥与加密实现 |
+| [`banyan-data/README.md`](banyan-data/README.md) | 数据访问层公共契约、MySQL 与 MongoDB 快速接入、模块依赖方向 |
 | [`banyan-data-mysql-mybatis/README.md`](banyan-data/banyan-data-mysql-mybatis/README.md) | `BanyanQueryWrapper`、LIKE 转义边界 |
 
 ## 坐标

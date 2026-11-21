@@ -62,6 +62,7 @@ Some modules have their own `README.md` with usage examples and gotchas (Java pa
 | [`banyan-log/README.md`](banyan-log/README.md) | Lifecycle events, `banyan.log.*`, logback host include and pattern override |
 | [`banyan-trace/README.md`](banyan-trace/README.md) | MDC task decorator and executor factories |
 | [`banyan-openapi-sign/README.md`](banyan-openapi-sign/README.md) | `@OpenApiSigned`, configuration, 401 body, replaceable key and cipher |
+| [`banyan-data/README.md`](banyan-data/README.md) | Data access layer contracts, MySQL and MongoDB quick start, module dependency direction |
 | [`banyan-data-mysql-mybatis/README.md`](banyan-data/banyan-data-mysql-mybatis/README.md) | `BanyanQueryWrapper`, LIKE escaping boundary |
 
 ## Coordinates
