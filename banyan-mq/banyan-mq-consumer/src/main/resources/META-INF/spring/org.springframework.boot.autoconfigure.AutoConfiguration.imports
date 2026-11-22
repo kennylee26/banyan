@@ -1,0 +1,2 @@
+cn.kennylee.banyan.mq.consumer.autoconfigure.MqConsumerAutoConfiguration
+cn.kennylee.banyan.mq.consumer.autoconfigure.MqConsumerMissingClassAutoConfiguration

@@ -1,0 +1,2 @@
+cn.kennylee.banyan.mq.producer.autoconfigure.MqProducerAutoConfiguration
+cn.kennylee.banyan.mq.producer.autoconfigure.MqProducerMissingClassAutoConfiguration

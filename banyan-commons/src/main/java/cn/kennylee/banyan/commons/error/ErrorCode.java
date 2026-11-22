@@ -207,7 +207,58 @@ public enum ErrorCode {
     OPENAPI_SIGN_VERIFY_FAILED("banyan.openapi-sign.verify-failed"),
 
     /** 请求体包装器不支持异步读取。 */
-    OPENAPI_SIGN_ASYNC_UNSUPPORTED("banyan.openapi-sign.async-unsupported");
+    OPENAPI_SIGN_ASYNC_UNSUPPORTED("banyan.openapi-sign.async-unsupported"),
+
+    /** 消息配置错误。 */
+    MQ_CONFIGURATION_INVALID("banyan.mq.configuration-invalid"),
+
+    /** topic 为空。 */
+    MQ_TOPIC_REQUIRED("banyan.mq.topic-required"),
+
+    /** payload 为空。 */
+    MQ_PAYLOAD_REQUIRED("banyan.mq.payload-required"),
+
+    /** 编解码器不支持的类型。 */
+    MQ_CODEC_UNSUPPORTED("banyan.mq.codec-unsupported"),
+
+    /** 消息发送失败。 */
+    MQ_SEND_FAILED("banyan.mq.send-failed"),
+
+    /** 消息消费失败。 */
+    MQ_CONSUME_FAILED("banyan.mq.consume-failed"),
+
+    /** 实例装配完成。 */
+    MQ_INSTANCE_ASSEMBLED("banyan.mq.instance-assembled"),
+
+    /** 生产者已装配。 */
+    MQ_PRODUCER_ASSEMBLED("banyan.mq.producer-assembled"),
+
+    /** 消费者扫描开始。 */
+    MQ_CONSUMER_SCAN_START("banyan.mq.consumer-scan-start"),
+
+    /** 消费者已注册。 */
+    MQ_CONSUMER_REGISTERED("banyan.mq.consumer-registered"),
+
+    /** 消费者扫描完成。 */
+    MQ_CONSUMER_SCAN_END("banyan.mq.consumer-scan-end"),
+
+    /** Kafka 不支持消费者级重试。 */
+    MQ_KAFKA_RETRY_UNSUPPORTED("banyan.mq.kafka-retry-unsupported"),
+
+    /** Kafka 消费者容器启动。 */
+    MQ_KAFKA_CONSUMER_STARTED("banyan.mq.kafka-consumer-started"),
+
+    /** RocketMQ 消费者容器启动。 */
+    MQ_ROCKETMQ_CONSUMER_STARTED("banyan.mq.rocketmq-consumer-started"),
+
+    /** 发送消息日志。 */
+    MQ_SEND_DEBUG("banyan.mq.send-debug"),
+
+    /** Kafka 发送日志。 */
+    MQ_KAFKA_SEND_DEBUG("banyan.mq.kafka-send-debug"),
+
+    /** RocketMQ 发送日志。 */
+    MQ_ROCKETMQ_SEND_DEBUG("banyan.mq.rocketmq-send-debug");
 
     /** 资源文件中的消息 key。 */
     private final String messageKey;

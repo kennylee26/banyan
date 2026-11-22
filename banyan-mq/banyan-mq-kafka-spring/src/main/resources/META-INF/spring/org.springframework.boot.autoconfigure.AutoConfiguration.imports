@@ -1,0 +1,2 @@
+cn.kennylee.banyan.mq.kafka.spring.autoconfigure.KafkaMqAutoConfiguration
+cn.kennylee.banyan.mq.kafka.spring.autoconfigure.KafkaMqMissingClassAutoConfiguration

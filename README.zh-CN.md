@@ -22,6 +22,13 @@
 | `banyan-data-core` | 公共契约：分页、排序、查询条件、查询策略、校验 |
 | `banyan-data-mysql-mybatis` | 基于 MyBatis-Plus 的 MySQL 数据访问层 |
 | `banyan-data-mongodb-springdata` | 基于 Spring Data MongoDB 的数据访问层 |
+| `banyan-mq` | 消息中间件父模块 |
+| `banyan-mq-core` | 消息公共契约：消息模型、发送与消费契约、逻辑实例路由、后端 SPI 与能力声明 |
+| `banyan-mq-commons-spring` | Spring 共享基础设施：统一配置、默认 JSON 编解码、逻辑实例路由 |
+| `banyan-mq-producer` | 生产者门面：同步发送、事务提交后发送、延迟消息、实例路由 |
+| `banyan-mq-consumer` | 方法级 `@MqConsumer`、一类多消费者、环境后缀隔离、重试语义 |
+| `banyan-mq-kafka-spring` | 基于 spring-kafka 的 Kafka 后端 |
+| `banyan-mq-rocketmq-apache` | 基于 rocketmq-spring-boot-starter 的 RocketMQ 后端 |
 
 ## 日志
 
@@ -64,6 +71,7 @@
 | [`banyan-openapi-sign/README.md`](banyan-openapi-sign/README.md) | `@OpenApiSigned`、配置项、401 错误体、可替换密钥与加密实现 |
 | [`banyan-data/README.md`](banyan-data/README.md) | 数据访问层公共契约、MySQL 与 MongoDB 快速接入、模块依赖方向 |
 | [`banyan-data-mysql-mybatis/README.md`](banyan-data/banyan-data-mysql-mybatis/README.md) | `BanyanQueryWrapper`、LIKE 转义边界 |
+| [`banyan-mq/README.md`](banyan-mq/README.md) | `@MqConsumer`、生产者/消费者拆分、实例路由、能力差异 |
 
 ## 坐标
 

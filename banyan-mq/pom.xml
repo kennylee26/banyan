@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>cn.kennylee.banyan</groupId>
+        <artifactId>banyan</artifactId>
+        <version>0.1.0-SNAPSHOT</version>
+        <relativePath>../pom.xml</relativePath>
+    </parent>
+
+    <artifactId>banyan-mq</artifactId>
+    <packaging>pom</packaging>
+
+    <name>banyan-mq</name>
+    <description>消息中间件抽象：统一发送与消费契约，后端可切换，生产者与消费者可单独引入</description>
+
+    <modules>
+        <module>banyan-mq-core</module>
+        <module>banyan-mq-commons-spring</module>
+        <module>banyan-mq-producer</module>
+        <module>banyan-mq-consumer</module>
+        <module>banyan-mq-kafka-spring</module>
+        <module>banyan-mq-rocketmq-apache</module>
+    </modules>
+</project>

@@ -1,0 +1,2 @@
+cn.kennylee.banyan.mq.rocketmq.apache.autoconfigure.RocketMqAutoConfiguration
+cn.kennylee.banyan.mq.rocketmq.apache.autoconfigure.RocketMqMissingClassAutoConfiguration

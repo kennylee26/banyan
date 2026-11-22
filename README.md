@@ -22,6 +22,13 @@ An infrastructure toolkit for Spring Boot.
 | `banyan-data-core` | Shared contracts: paging, sorting, query criteria, query strategy, validation |
 | `banyan-data-mysql-mybatis` | MySQL data access layer built on MyBatis-Plus |
 | `banyan-data-mongodb-springdata` | MongoDB data access layer built on Spring Data MongoDB |
+| `banyan-mq` | Parent module of the messaging layer |
+| `banyan-mq-core` | Shared messaging contracts: message model, send/consume contracts, instance routing, backend SPI and capabilities |
+| `banyan-mq-commons-spring` | Spring shared infrastructure: unified properties, default JSON codec, instance registry |
+| `banyan-mq-producer` | Producer facade: sync send, send after commit, delay message, instance routing |
+| `banyan-mq-consumer` | Method-level `@MqConsumer`, multiple consumers per class, env suffix isolation, retry semantics |
+| `banyan-mq-kafka-spring` | Kafka backend built on spring-kafka |
+| `banyan-mq-rocketmq-apache` | RocketMQ backend built on rocketmq-spring-boot-starter |
 
 ## Logging
 
@@ -64,6 +71,7 @@ Some modules have their own `README.md` with usage examples and gotchas (Java pa
 | [`banyan-openapi-sign/README.md`](banyan-openapi-sign/README.md) | `@OpenApiSigned`, configuration, 401 body, replaceable key and cipher |
 | [`banyan-data/README.md`](banyan-data/README.md) | Data access layer contracts, MySQL and MongoDB quick start, module dependency direction |
 | [`banyan-data-mysql-mybatis/README.md`](banyan-data/banyan-data-mysql-mybatis/README.md) | `BanyanQueryWrapper`, LIKE escaping boundary |
+| [`banyan-mq/README.md`](banyan-mq/README.md) | `@MqConsumer`, producer/consumer split, instance routing, capability differences |
 
 ## Coordinates
 

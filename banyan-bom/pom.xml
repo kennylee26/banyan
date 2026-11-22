@@ -69,6 +69,36 @@
                 <artifactId>banyan-data-mongodb-springdata</artifactId>
                 <version>${project.version}</version>
             </dependency>
+            <dependency>
+                <groupId>cn.kennylee.banyan</groupId>
+                <artifactId>banyan-mq-core</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>cn.kennylee.banyan</groupId>
+                <artifactId>banyan-mq-commons-spring</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>cn.kennylee.banyan</groupId>
+                <artifactId>banyan-mq-producer</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>cn.kennylee.banyan</groupId>
+                <artifactId>banyan-mq-consumer</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>cn.kennylee.banyan</groupId>
+                <artifactId>banyan-mq-kafka-spring</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>cn.kennylee.banyan</groupId>
+                <artifactId>banyan-mq-rocketmq-apache</artifactId>
+                <version>${project.version}</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 </project>
