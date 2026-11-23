@@ -71,7 +71,7 @@ final class AesGcmCipher {
             System.arraycopy(encrypted, 0, payload, IV_BYTES, encrypted.length);
             return Base64.getEncoder().encodeToString(payload);
         } catch (GeneralSecurityException e) {
-            throw new IllegalStateException("JDK 必须提供 AES-256-GCM", e);
+            throw new IllegalStateException(SignMessages.AES_UNAVAILABLE, e);
         }
     }
 
@@ -105,14 +105,14 @@ final class AesGcmCipher {
     /** 派生 32 字节 AES 密钥。 */
     private static byte[] deriveKey(String secret) {
         if (secret == null || secret.isBlank()) {
-            throw new IllegalArgumentException("请求缺少 secret");
+            throw new IllegalArgumentException(SignMessages.SECRET_MISSING);
         }
         try {
             MessageDigest digest = MessageDigest.getInstance(SHA_256);
             digest.update(KEY_LABEL.getBytes(StandardCharsets.UTF_8));
             return digest.digest(secret.getBytes(StandardCharsets.UTF_8));
         } catch (NoSuchAlgorithmException e) {
-            throw new IllegalStateException("JDK 必须提供 SHA-256", e);
+            throw new IllegalStateException(SignMessages.SHA256_UNAVAILABLE, e);
         }
     }
 
@@ -127,6 +127,6 @@ final class AesGcmCipher {
 
     /** 构造不暴露细节的解密失败异常。 */
     private static IllegalArgumentException invalid(Throwable cause) {
-        return new IllegalArgumentException("请求体解密失败", cause);
+        return new IllegalArgumentException(SignMessages.BODY_DECRYPT_FAILED, cause);
     }
 }

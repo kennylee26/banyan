@@ -119,7 +119,7 @@ public final class OpenApiRequestSigner {
         }
         if (!path.startsWith(basePath + "/")) {
             LOG.warn("OpenAPI 签名路径不匹配 basePath: basePath={}, path={}", basePath, path);
-            throw new IllegalArgumentException("请求路径不包含 basePath: " + basePath);
+            throw new IllegalArgumentException(SignMessages.basePathMismatch(basePath));
         }
         return path.substring(basePath.length());
     }
@@ -250,7 +250,7 @@ public final class OpenApiRequestSigner {
             Signs.require(secret, "secret");
             if (!basePath.isEmpty()
                     && (!basePath.startsWith("/") || basePath.endsWith("/"))) {
-                throw new IllegalArgumentException("basePath 必须以 / 开头且不以 / 结尾");
+                throw new IllegalArgumentException(SignMessages.BASE_PATH_INVALID);
             }
             return new OpenApiRequestSigner(this);
         }

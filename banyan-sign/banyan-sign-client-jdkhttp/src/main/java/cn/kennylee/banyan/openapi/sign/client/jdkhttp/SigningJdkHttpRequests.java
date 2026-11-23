@@ -1,6 +1,7 @@
 package cn.kennylee.banyan.openapi.sign.client.jdkhttp;
 
 import cn.kennylee.banyan.openapi.sign.client.OpenApiRequestSigner;
+import cn.kennylee.banyan.openapi.sign.client.SignMessages;
 import cn.kennylee.banyan.openapi.sign.client.QueryParams;
 import cn.kennylee.banyan.openapi.sign.client.SignedRequest;
 import cn.kennylee.banyan.openapi.sign.client.UnsignedRequest;
@@ -47,7 +48,7 @@ public final class SigningJdkHttpRequests {
         Objects.requireNonNull(signer, "signer");
         Objects.requireNonNull(request, "request");
         if (isMultipart(request)) {
-            throw new IllegalArgumentException("JDK HttpClient 适配器不支持 multipart 请求");
+            throw new IllegalArgumentException(SignMessages.JDK_MULTIPART_UNSUPPORTED);
         }
         URI uri = request.uri();
         SignedRequest signed = signer.sign(new UnsignedRequest(request.method(),

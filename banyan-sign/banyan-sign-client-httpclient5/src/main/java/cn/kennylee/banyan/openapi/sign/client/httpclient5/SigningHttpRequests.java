@@ -1,6 +1,7 @@
 package cn.kennylee.banyan.openapi.sign.client.httpclient5;
 
 import cn.kennylee.banyan.openapi.sign.client.OpenApiRequestSigner;
+import cn.kennylee.banyan.openapi.sign.client.SignMessages;
 import cn.kennylee.banyan.openapi.sign.client.QueryParams;
 import cn.kennylee.banyan.openapi.sign.client.SignedRequest;
 import cn.kennylee.banyan.openapi.sign.client.UnsignedRequest;
@@ -70,11 +71,11 @@ public final class SigningHttpRequests {
         try {
             URI uri = request.getUri();
             if (uri == null) {
-                throw new IllegalArgumentException("请求缺少 URI");
+                throw new IllegalArgumentException(SignMessages.URI_MISSING);
             }
             return uri;
         } catch (URISyntaxException e) {
-            throw new IllegalArgumentException("请求 URI 非法", e);
+            throw new IllegalArgumentException(SignMessages.URI_INVALID, e);
         }
     }
 
@@ -84,8 +85,7 @@ public final class SigningHttpRequests {
             return null;
         }
         if (!(entity instanceof StringEntity) && !(entity instanceof ByteArrayEntity)) {
-            throw new IllegalArgumentException(
-                    "HttpClient5 只支持 StringEntity 或 ByteArrayEntity，流式、文件与 multipart entity 不受支持");
+            throw new IllegalArgumentException(SignMessages.HTTPCLIENT_ENTITY_UNSUPPORTED);
         }
         return new String(EntityUtils.toByteArray(entity), StandardCharsets.UTF_8);
     }

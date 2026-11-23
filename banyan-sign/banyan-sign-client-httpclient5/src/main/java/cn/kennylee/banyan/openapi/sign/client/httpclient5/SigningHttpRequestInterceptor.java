@@ -1,6 +1,7 @@
 package cn.kennylee.banyan.openapi.sign.client.httpclient5;
 
 import cn.kennylee.banyan.openapi.sign.client.OpenApiRequestSigner;
+import cn.kennylee.banyan.openapi.sign.client.SignMessages;
 import org.apache.hc.core5.http.ClassicHttpRequest;
 import org.apache.hc.core5.http.EntityDetails;
 import org.apache.hc.core5.http.HttpException;
@@ -45,7 +46,7 @@ public final class SigningHttpRequestInterceptor implements HttpRequestIntercept
     public void process(HttpRequest request, EntityDetails entity, HttpContext context)
             throws HttpException, IOException {
         if (!(request instanceof ClassicHttpRequest classic)) {
-            throw new IllegalArgumentException("仅支持经典 HttpClient5 请求");
+            throw new IllegalArgumentException(SignMessages.HTTPCLIENT_NOT_CLASSIC);
         }
         SigningHttpRequests.sign(signer, classic);
     }

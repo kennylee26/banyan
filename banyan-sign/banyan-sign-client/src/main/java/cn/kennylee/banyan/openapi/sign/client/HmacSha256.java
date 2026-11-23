@@ -29,14 +29,14 @@ final class HmacSha256 {
      */
     static String sign(String canonical, String secret) {
         if (secret == null || secret.isBlank()) {
-            throw new IllegalArgumentException("请求缺少 secret");
+            throw new IllegalArgumentException(SignMessages.SECRET_MISSING);
         }
         try {
             Mac mac = Mac.getInstance(NAME);
             mac.init(new SecretKeySpec(secret.getBytes(StandardCharsets.UTF_8), NAME));
             return Masks.hex(mac.doFinal(canonical.getBytes(StandardCharsets.UTF_8)));
         } catch (GeneralSecurityException e) {
-            throw new IllegalStateException("JDK 必须提供 HMAC-SHA256", e);
+            throw new IllegalStateException(SignMessages.HMAC_UNAVAILABLE, e);
         }
     }
 }

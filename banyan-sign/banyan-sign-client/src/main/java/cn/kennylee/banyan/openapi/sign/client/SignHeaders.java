@@ -43,10 +43,10 @@ public record SignHeaders(String alg, String keyId, String timestamp,
         Set<String> seen = new HashSet<>(names.size());
         for (String name : names) {
             if (name == null || name.isBlank() || !TOKEN.matcher(name).matches()) {
-                throw new IllegalArgumentException("header 名不合法: " + name);
+                throw new IllegalArgumentException(SignMessages.invalidHeader(name));
             }
             if (!seen.add(name.toLowerCase(Locale.ROOT))) {
-                throw new IllegalArgumentException("header 名重复: " + name);
+                throw new IllegalArgumentException(SignMessages.duplicateHeader(name));
             }
         }
     }

@@ -1,6 +1,8 @@
 package cn.kennylee.banyan.openapi.sign.client.jdkhttp;
 
 import cn.kennylee.banyan.openapi.sign.client.OpenApiRequestSigner;
+import cn.kennylee.banyan.openapi.sign.client.QueryParams;
+import cn.kennylee.banyan.openapi.sign.client.SignTestSupport;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpServer;
 import org.junit.jupiter.api.AfterEach;
@@ -15,14 +17,10 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.util.HexFormat;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
-import javax.crypto.Mac;
-import javax.crypto.spec.SecretKeySpec;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
@@ -149,9 +147,9 @@ class SigningJdkHttpRequestsTest {
 
     /** 按约定重算规范化串。 */
     private String canonicalOf(String path, String query) {
-        return String.join("\n", "BANYAN-SIGN-V1", "POST", path, query,
-                sha256(capturedBody), header("x-banyan-timestamp"),
-                header("x-banyan-nonce"), "app1", "HmacSHA256");
+        return SignTestSupport.canonical("POST", path, QueryParams.parse(query),
+                capturedBody, Long.parseLong(header("x-banyan-timestamp")),
+                header("x-banyan-nonce"), "app1");
     }
 
     /** 大小写无关地取捕获的 header。 */
@@ -193,26 +191,9 @@ class SigningJdkHttpRequestsTest {
         }
     }
 
-    /** SHA-256 小写十六进制。 */
-    private static String sha256(String text) {
-        try {
-            return HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256")
-                    .digest(text.getBytes(StandardCharsets.UTF_8)));
-        } catch (NoSuchAlgorithmException e) {
-            throw new IllegalStateException(e);
-        }
-    }
 
     /** HMAC-SHA256 小写十六进制。 */
     private static String hmac(String canonical, String secret) {
-        try {
-            Mac mac = Mac.getInstance("HmacSHA256");
-            mac.init(new SecretKeySpec(secret.getBytes(StandardCharsets.UTF_8),
-                    "HmacSHA256"));
-            return HexFormat.of().formatHex(
-                    mac.doFinal(canonical.getBytes(StandardCharsets.UTF_8)));
-        } catch (Exception e) {
-            throw new IllegalStateException(e);
-        }
+        return SignTestSupport.hmac(canonical, secret);
     }
 }

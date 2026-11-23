@@ -68,7 +68,7 @@ final class Signs {
         require(request.keyId(), "keyId");
         require(request.alg(), "alg");
         if (request.timestamp() <= 0) {
-            throw new IllegalArgumentException("timestamp 必须为正数");
+            throw new IllegalArgumentException(SignMessages.TIMESTAMP_INVALID);
         }
         return VERSION + '\n'
                 + request.method() + '\n'
@@ -93,7 +93,7 @@ final class Signs {
             String text = body == null ? "" : body;
             return Masks.hex(digest.digest(text.getBytes(StandardCharsets.UTF_8)));
         } catch (NoSuchAlgorithmException e) {
-            throw new IllegalStateException("JDK 必须提供 SHA-256", e);
+            throw new IllegalStateException(SignMessages.SHA256_UNAVAILABLE, e);
         }
     }
 
@@ -134,7 +134,7 @@ final class Signs {
     /** 必填校验，供签名门面复用。 */
     static void require(String value, String field) {
         if (value == null || value.isBlank()) {
-            throw new IllegalArgumentException("请求缺少 " + field);
+            throw new IllegalArgumentException(SignMessages.missing(field));
         }
     }
 }

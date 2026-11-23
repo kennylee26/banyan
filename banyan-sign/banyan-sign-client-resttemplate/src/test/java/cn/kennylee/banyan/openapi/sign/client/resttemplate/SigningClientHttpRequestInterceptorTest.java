@@ -1,6 +1,7 @@
 package cn.kennylee.banyan.openapi.sign.client.resttemplate;
 
 import cn.kennylee.banyan.openapi.sign.client.OpenApiRequestSigner;
+import cn.kennylee.banyan.openapi.sign.client.SignTestSupport;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpServer;
 import org.junit.jupiter.api.AfterEach;
@@ -21,6 +22,7 @@ import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -188,9 +190,9 @@ class SigningClientHttpRequestInterceptorTest {
 
     /** 按约定重算规范化串，验证签名与发出的 body 一致。 */
     private String canonicalOf() {
-        return String.join("\n", "BANYAN-SIGN-V1", "POST", "/openapi/orders", "page=1",
-                sha256(capturedBody), header("x-banyan-timestamp"),
-                header("x-banyan-nonce"), "app1", "HmacSHA256");
+        return SignTestSupport.canonical("POST", "/openapi/orders", Map.of("page", List.of("1")),
+                capturedBody, Long.parseLong(header("x-banyan-timestamp")),
+                header("x-banyan-nonce"), "app1");
     }
 
     /** 大小写无关地取捕获的 header。 */
@@ -201,27 +203,10 @@ class SigningClientHttpRequestInterceptorTest {
                 .findFirst().orElse(null);
     }
 
-    /** SHA-256 小写十六进制。 */
-    private static String sha256(String text) {
-        try {
-            return java.util.HexFormat.of().formatHex(java.security.MessageDigest
-                    .getInstance("SHA-256").digest(text.getBytes(StandardCharsets.UTF_8)));
-        } catch (java.security.NoSuchAlgorithmException e) {
-            throw new IllegalStateException(e);
-        }
-    }
 
     /** HMAC-SHA256 小写十六进制。 */
     private static String hmac(String canonical, String secret) {
-        try {
-            javax.crypto.Mac mac = javax.crypto.Mac.getInstance("HmacSHA256");
-            mac.init(new javax.crypto.spec.SecretKeySpec(
-                    secret.getBytes(StandardCharsets.UTF_8), "HmacSHA256"));
-            return java.util.HexFormat.of().formatHex(
-                    mac.doFinal(canonical.getBytes(StandardCharsets.UTF_8)));
-        } catch (Exception e) {
-            throw new IllegalStateException(e);
-        }
+        return SignTestSupport.hmac(canonical, secret);
     }
 
     /** 只取五个签名 header。 */

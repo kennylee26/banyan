@@ -26,15 +26,15 @@ public record UnsignedRequest(String method, String path,
      */
     public UnsignedRequest {
         if (method == null || method.isBlank()) {
-            throw new IllegalArgumentException("请求缺少 method");
+            throw new IllegalArgumentException(SignMessages.METHOD_MISSING);
         }
         if (path == null) {
-            throw new IllegalArgumentException("请求缺少 path");
+            throw new IllegalArgumentException(SignMessages.PATH_MISSING);
         }
         // URI 没有 path 时 getRawPath() 返回空串；服务端根路径签的是 "/"
         path = path.isEmpty() ? "/" : path;
         if (path.isBlank()) {
-            throw new IllegalArgumentException("请求缺少 path");
+            throw new IllegalArgumentException(SignMessages.PATH_MISSING);
         }
         queryParams = copyParams(queryParams);
     }

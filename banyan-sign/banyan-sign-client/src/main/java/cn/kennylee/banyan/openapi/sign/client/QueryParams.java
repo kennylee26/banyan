@@ -57,7 +57,7 @@ public final class QueryParams {
         try {
             return URLDecoder.decode(value, StandardCharsets.UTF_8);
         } catch (IllegalArgumentException e) {
-            throw new IllegalArgumentException("query 参数编码非法", e);
+            throw new IllegalArgumentException(SignMessages.QUERY_ENCODING_INVALID, e);
         }
     }
 }

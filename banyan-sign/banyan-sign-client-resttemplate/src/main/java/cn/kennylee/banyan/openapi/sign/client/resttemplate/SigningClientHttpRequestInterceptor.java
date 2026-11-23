@@ -1,6 +1,7 @@
 package cn.kennylee.banyan.openapi.sign.client.resttemplate;
 
 import cn.kennylee.banyan.openapi.sign.client.OpenApiRequestSigner;
+import cn.kennylee.banyan.openapi.sign.client.SignMessages;
 import cn.kennylee.banyan.openapi.sign.client.QueryParams;
 import cn.kennylee.banyan.openapi.sign.client.SignedRequest;
 import cn.kennylee.banyan.openapi.sign.client.UnsignedRequest;
@@ -53,7 +54,7 @@ public final class SigningClientHttpRequestInterceptor implements ClientHttpRequ
                                         ClientHttpRequestExecution execution) throws IOException {
         MediaType contentType = request.getHeaders().getContentType();
         if (contentType != null && MediaType.MULTIPART_FORM_DATA.includes(contentType)) {
-            throw new IllegalArgumentException("RestTemplate 适配器不支持 multipart 请求");
+            throw new IllegalArgumentException(SignMessages.RESTTEMPLATE_MULTIPART_UNSUPPORTED);
         }
         URI uri = request.getURI();
         String text = body == null ? null : new String(body, StandardCharsets.UTF_8);
