@@ -17,7 +17,11 @@ An infrastructure toolkit for Spring Boot.
 | `banyan-cache` | Unified cache API with pluggable providers and an extensible cache-penetration guard placeholder |
 | `banyan-trace` | Trace ID generation, propagation and log integration for servlet, reactive, dubbo and feign |
 | `banyan-log` | Application lifecycle logging, optional logback snippets and pure-JDK log value tools |
-| `banyan-openapi-sign` | OpenAPI request verification and decryption: annotation driven, repeatable body, unified 401 |
+| `banyan-sign` | Parent module of the OpenAPI signing family |
+| `banyan-sign-openapi` | Server-side verification and decryption: annotation driven, repeatable body, unified 401 |
+| `banyan-sign-client` | Third-party copyable protocol core: AES-GCM encryption and HMAC-SHA256 signing, no banyan dependency |
+| `banyan-sign-client-httpclient5` | Apache HttpClient 5 adapter: automatic encryption, signing and headers |
+| `banyan-sign-client-resttemplate` | Spring RestTemplate adapter: automatic encryption, signing and headers |
 | `banyan-data` | Parent module of the data access layer (Das) |
 | `banyan-data-core` | Shared contracts: paging, sorting, query criteria, query strategy, validation |
 | `banyan-data-mysql-mybatis` | MySQL data access layer built on MyBatis-Plus |
@@ -68,7 +72,9 @@ Some modules have their own `README.md` with usage examples and gotchas (Java pa
 | [`banyan-cache/README.md`](banyan-cache/README.md) | `put` vs `putRaw`, generic container reads, provider replacement, `banyan.cache.*` properties |
 | [`banyan-log/README.md`](banyan-log/README.md) | Lifecycle events, `banyan.log.*`, logback host include and pattern override |
 | [`banyan-trace/README.md`](banyan-trace/README.md) | MDC task decorator and executor factories |
-| [`banyan-openapi-sign/README.md`](banyan-openapi-sign/README.md) | `@OpenApiSigned`, configuration, 401 body, replaceable key and cipher |
+| [`banyan-sign/README.md`](banyan-sign/README.md) | Signing module family overview and dependency direction |
+| [`banyan-sign/banyan-sign-openapi/README.md`](banyan-sign/banyan-sign-openapi/README.md) | `@OpenApiSigned`, configuration, 401 body, replaceable key and cipher |
+| [`banyan-sign/banyan-sign-client/README.md`](banyan-sign/banyan-sign-client/README.md) | Third-party client: protocol core, HttpClient5 and RestTemplate usage, [integration guide](banyan-sign/banyan-sign-client/THIRD-PARTY-GUIDE.md) |
 | [`banyan-data/README.md`](banyan-data/README.md) | Data access layer contracts, MySQL and MongoDB quick start, module dependency direction |
 | [`banyan-data-mysql-mybatis/README.md`](banyan-data/banyan-data-mysql-mybatis/README.md) | `BanyanQueryWrapper`, LIKE escaping boundary |
 | [`banyan-mq/README.md`](banyan-mq/README.md) | `@MqConsumer`, producer/consumer split, instance routing, capability differences |

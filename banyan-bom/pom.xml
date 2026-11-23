@@ -51,7 +51,22 @@
             </dependency>
             <dependency>
                 <groupId>cn.kennylee.banyan</groupId>
-                <artifactId>banyan-openapi-sign</artifactId>
+                <artifactId>banyan-sign-openapi</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>cn.kennylee.banyan</groupId>
+                <artifactId>banyan-sign-client</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>cn.kennylee.banyan</groupId>
+                <artifactId>banyan-sign-client-httpclient5</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>cn.kennylee.banyan</groupId>
+                <artifactId>banyan-sign-client-resttemplate</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>

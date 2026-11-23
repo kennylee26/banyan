@@ -372,4 +372,4 @@ String plaintext = new AesGcmPayloadCipher()
         .decrypt(requestWithCipherBody.body(), key.secret());
 ```
 
-如果使用 Spring MVC，直接引入 `banyan-openapi-sign` 并给 Controller 加 `@OpenApiSigned`，上面的流程由拦截器完成，见该模块 README。
+如果使用 Spring MVC，直接引入 `banyan-sign-openapi` 并给 Controller 加 `@OpenApiSigned`，上面的流程由拦截器完成，见该模块 README。
