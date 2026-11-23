@@ -1,5 +1,6 @@
 package cn.kennylee.banyan.trace.autoconfigure;
 
+import cn.kennylee.banyan.trace.feign.FeignResponseTraceInterceptor;
 import cn.kennylee.banyan.trace.feign.TraceIdFeignInterceptor;
 import cn.kennylee.banyan.trace.filter.ReactiveTraceFilter;
 import cn.kennylee.banyan.trace.filter.ServletTraceFilter;
@@ -77,6 +78,20 @@ public class TraceAutoConfiguration {
         @ConditionalOnMissingBean
         TraceIdFeignInterceptor traceIdFeignInterceptor(TraceProperties properties) {
             return new TraceIdFeignInterceptor(properties);
+        }
+
+        /**
+         * 注册 Feign 响应侧 TraceId 补全拦截器。
+         *
+         * @param properties 配置
+         * @return 拦截器
+         */
+        @Bean
+        @ConditionalOnProperty(prefix = "banyan.trace.feign", name = "response-enabled",
+                matchIfMissing = true)
+        @ConditionalOnMissingBean
+        FeignResponseTraceInterceptor feignResponseTraceInterceptor(TraceProperties properties) {
+            return new FeignResponseTraceInterceptor(properties);
         }
     }
 

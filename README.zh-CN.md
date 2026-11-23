@@ -34,6 +34,8 @@
 | `banyan-mq-consumer` | 方法级 `@MqConsumer`、一类多消费者、环境后缀隔离、重试语义 |
 | `banyan-mq-kafka-spring` | 基于 spring-kafka 的 Kafka 后端 |
 | `banyan-mq-rocketmq-apache` | 基于 rocketmq-spring-boot-starter 的 RocketMQ 后端 |
+| `banyan-spring` | Spring Boot 应用能力扩展父模块（强依赖 Spring 生态，提供 enabled 开关） |
+| `banyan-spring-feign` | Feign 能力：header 转发、请求/响应日志与自动装配 |
 
 ## 日志
 

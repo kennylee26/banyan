@@ -1,5 +1,6 @@
 package cn.kennylee.banyan.trace.autoconfigure;
 
+import cn.kennylee.banyan.trace.feign.FeignResponseTraceInterceptor;
 import cn.kennylee.banyan.trace.feign.TraceIdFeignInterceptor;
 import cn.kennylee.banyan.trace.filter.ReactiveTraceFilter;
 import cn.kennylee.banyan.trace.filter.ServletTraceFilter;
@@ -101,6 +102,29 @@ class TraceAutoConfigurationTest {
                 .run(context -> {
                     assertThat(context).hasNotFailed();
                     assertThat(context).doesNotHaveBean(TraceIdFeignInterceptor.class);
+                });
+    }
+
+    /** classpath 有 Feign 时注册出向与响应侧拦截器。 */
+    @Test
+    void registersBothFeignInterceptors() {
+        // when
+        servletRunner.run(context -> {
+            // then
+            assertThat(context).hasSingleBean(TraceIdFeignInterceptor.class);
+            assertThat(context).hasSingleBean(FeignResponseTraceInterceptor.class);
+        });
+    }
+
+    /** 响应侧开关关闭时不注册响应拦截器。 */
+    @Test
+    void skipsFeignResponseWhenDisabled() {
+        // when
+        servletRunner.withPropertyValues("banyan.trace.feign.response-enabled=false")
+                .run(context -> {
+                    // then
+                    assertThat(context).doesNotHaveBean(FeignResponseTraceInterceptor.class);
+                    assertThat(context).hasSingleBean(TraceIdFeignInterceptor.class);
                 });
     }
 

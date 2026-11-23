@@ -46,6 +46,7 @@
         <module>banyan-sign</module>
         <module>banyan-data</module>
         <module>banyan-mq</module>
+        <module>banyan-spring</module>
     </modules>
 
     <properties>
@@ -58,6 +59,7 @@
         <spring-cloud-context.version>4.1.5</spring-cloud-context.version>
         <dubbo.version>3.2.13</dubbo.version>
         <feign.version>13.5</feign.version>
+        <spring-cloud-openfeign.version>4.2.0</spring-cloud-openfeign.version>
         <rocketmq-spring.version>2.2.3</rocketmq-spring.version>
 
         <embedded-redis.version>1.4.3</embedded-redis.version>

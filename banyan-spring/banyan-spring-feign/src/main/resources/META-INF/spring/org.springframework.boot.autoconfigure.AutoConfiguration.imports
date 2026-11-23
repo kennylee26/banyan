@@ -1,0 +1,2 @@
+cn.kennylee.banyan.spring.feign.autoconfigure.FeignAutoConfiguration
+cn.kennylee.banyan.spring.feign.autoconfigure.FeignMissingClassAutoConfiguration

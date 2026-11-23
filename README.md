@@ -34,6 +34,8 @@ An infrastructure toolkit for Spring Boot.
 | `banyan-mq-consumer` | Method-level `@MqConsumer`, multiple consumers per class, env suffix isolation, retry semantics |
 | `banyan-mq-kafka-spring` | Kafka backend built on spring-kafka |
 | `banyan-mq-rocketmq-apache` | RocketMQ backend built on rocketmq-spring-boot-starter |
+| `banyan-spring` | Parent module of Spring Boot application capabilities (compile-scope Spring deps, enabled switches) |
+| `banyan-spring-feign` | Feign capability: header forwarding, request/response logging and auto-configuration |
 
 ## Logging
 

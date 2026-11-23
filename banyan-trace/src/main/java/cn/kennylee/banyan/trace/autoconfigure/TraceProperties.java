@@ -132,6 +132,9 @@ public class TraceProperties {
 
         /** 是否启用 Feign 出向透传。 */
         private boolean enabled = true;
+
+        /** 是否启用响应侧 TraceId 补全。 */
+        private boolean responseEnabled = true;
     }
 
     /**
