@@ -1,12 +1,7 @@
-# banyan OpenAPI 签名对接指南（第三方版）
+# banyan OpenAPI 加密与签名对接指南（第三方版）
 
-本文给调用方使用，**不要求引入任何 banyan 组件**。可以选择：
-
-1. 直接拷贝本模块源码（推荐，零传递依赖）；
-2. 使用 `banyan-sign-client` 与对应 HTTP 适配器 jar；
-3. 按第 2 节协议用任意语言手工实现。
-
-算法与字段顺序一旦约定就不要自行调整。
+本文面向**不引入任何 banyan 依赖**的调用方，只使用 JDK 与 Apache HttpClient 5。
+按本文实现即可生成提供方能够验签、解密的请求。
 
 ## 1. 双方约定
 
@@ -18,13 +13,19 @@
 | 加密算法 | `AES-256-GCM` |
 | 时间窗口 | 默认 5 分钟，时间戳单位为毫秒 |
 | Content-Type | `application/json` |
-| 签名 header | `X-Banyan-Alg` / `X-Banyan-KeyId` / `X-Banyan-Timestamp` / `X-Banyan-Nonce` / `X-Banyan-Sign` |
 
-提供方可以整体改名五个 header；以对方给出的名字为准。
+## 2. 一次请求要做什么
 
-## 2. 协议
+1. 准备明文 JSON。
+2. 加密 body，得到 `wireBody`；空 body 跳过加密。
+3. 对 `wireBody` 的 UTF-8 字节做 SHA-256，得到 `bodyHash`（小写十六进制）。
+4. 按固定格式拼出规范化串 `canonical`。
+5. 用 `HMAC-SHA256(canonical, secret)` 计算签名（小写十六进制）。
+6. 发送原始 method / path / query + `wireBody`，并附加五个 header。
 
-### 2.1 加密 body（加密模式）
+提供方顺序相反：读 header → 校验时间窗口 → 对**收到的 body** 重算签名 → 去重 nonce → 解密。
+
+## 3. 加密：AES-256-GCM
 
 ```
 aesKey     = SHA-256(UTF8("banyan-aes") ‖ UTF8(secret))   // 32 字节
@@ -33,10 +34,14 @@ ciphertext = AES-256-GCM(aesKey, iv, UTF8(明文))          // 含 16 字节 tag
 wireBody   = Base64(iv ‖ ciphertext)                       // 标准 Base64，单行
 ```
 
-- body 为空时跳过加密，直接发送空 body
-- 明文模式下不加密，直接发送原文；是否加密由双方约定
+- 加密的只有 **body**；method、path、query 不加密。
+- 空 body 不加密，直接发送空 body。
+- 解密：Base64 解码后，前 12 字节是 IV，其余是 `ciphertext + tag`；
+  用同一把 `aesKey` 和 IV 调 `AES/GCM/NoPadding` 解密。
 
-### 2.2 规范化串
+## 4. 签名：HMAC-SHA256
+
+### 4.1 规范化串
 
 按固定顺序拼接，每段之间用 `\n`：
 
@@ -52,152 +57,286 @@ BANYAN-SIGN-V1
 HmacSHA256
 ```
 
-- `path`：提供方使用的是「去掉 context-path 后」的路径；带 `/api` 前缀部署时，
-  调用方也要在签名前剥离 `/api`
+规则：
+
+- `path`：提供方验签时用的是「去掉 context-path 后」的路径。带 `/api` 前缀部署时，
+  调用方签名前也要剥离 `/api`。
 - `query`：参数名升序；同名参数按值字典序；空值跳过；key 与 value 各做一次
-  UTF-8 URL 编码；排除 `alg` / `keyId` / `timestamp` / `nonce` / `sign`
+  UTF-8 URL 编码；排除 `alg` / `keyId` / `timestamp` / `nonce` / `sign`。
 - `bodyHash`：对**实际发送的 body**（加密模式下是密文）做 SHA-256，输出小写十六进制；
-  没有 body 时对空串计算
-- `nonce`：每次请求都不同的随机串，建议 16 字节随机数转十六进制
+  没有 body 时对空串计算。
+- `timestamp`：当前毫秒时间戳。
+- `nonce`：每次请求都不同的随机串，建议 16 字节随机数转十六进制。
+- 签名：`HMAC-SHA256(canonical, UTF8(secret))`，输出小写十六进制。
 
-签名：`HMAC-SHA256(canonical, UTF8(secret))`，输出小写十六进制。
+### 4.2 五个 header
 
-### 2.3 发送
+| 参数 | Header 默认名 | 值 | 说明 |
+|---|---|---|---|
+| alg | `X-Banyan-Alg` | `HmacSHA256` | 签名算法 |
+| keyId | `X-Banyan-KeyId` | 提供方分配的 keyId | 用于选密钥 |
+| timestamp | `X-Banyan-Timestamp` | 毫秒时间戳 | 时间窗口校验 |
+| nonce | `X-Banyan-Nonce` | 每次不同的随机串 | 防重放 |
+| sign | `X-Banyan-Sign` | HMAC 签名 | 小写十六进制 |
 
-业务 method / path / query 照常发送，body 用 `wireBody`，再加五个 header：
+如果提供方改名，以对方给出的五个名字为准，值不变。加密与解密**不额外增加 header**，
+`Content-Type` 仍是 `application/json`。
 
-| Header | 值 |
-|---|---|
-| `X-Banyan-Alg` | `HmacSHA256` |
-| `X-Banyan-KeyId` | keyId |
-| `X-Banyan-Timestamp` | 毫秒时间戳 |
-| `X-Banyan-Nonce` | nonce |
-| `X-Banyan-Sign` | 签名 |
+## 5. 可直接拷贝的纯 JDK 工具类
 
-处理顺序：先加密 body，再对密文签名（encrypt-then-sign）。
-
-## 3. Java：Apache HttpClient 5（原地签名）
+不依赖 banyan，也不需要第三方库；复制到自己的项目即可。
 
 ```java
-OpenApiRequestSigner signer = OpenApiRequestSigner.builder()
-        .keyId("app1")
-        .secret(secret)
-        .build();
+import javax.crypto.Cipher;
+import javax.crypto.Mac;
+import javax.crypto.spec.GCMParameterSpec;
+import javax.crypto.spec.SecretKeySpec;
+import java.net.URLDecoder;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.SecureRandom;
+import java.util.ArrayList;
+import java.util.Base64;
+import java.util.Collections;
+import java.util.HexFormat;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeMap;
 
-HttpPost post = new HttpPost("https://provider.example.com/openapi/orders?page=1");
-post.setEntity(new StringEntity("{\"id\":1}", ContentType.APPLICATION_JSON));
+final class BanyanOpenApiSigner {
 
-SigningHttpRequests.sign(signer, post);   // 原地加密 + 写 5 个 header
+    record SignedRequest(Map<String, String> headers, String body) {
+    }
 
-try (CloseableHttpResponse response = myHttpClient.execute(post)) {
+    private static final String VERSION = "BANYAN-SIGN-V1";
+    private static final String ALG = "HmacSHA256";
+    private static final String KEY_LABEL = "banyan-aes";
+    private static final Set<String> PROTOCOL_PARAMS =
+            Set.of("alg", "keyId", "timestamp", "nonce", "sign");
+    private static final SecureRandom RANDOM = new SecureRandom();
+
+    private final String keyId;
+    private final String secret;
+    private final String algHeader;
+    private final String keyIdHeader;
+    private final String timestampHeader;
+    private final String nonceHeader;
+    private final String signHeader;
+
+    BanyanOpenApiSigner(String keyId, String secret) {
+        this(keyId, secret, "X-Banyan-Alg", "X-Banyan-KeyId",
+                "X-Banyan-Timestamp", "X-Banyan-Nonce", "X-Banyan-Sign");
+    }
+
+    BanyanOpenApiSigner(String keyId, String secret, String algHeader, String keyIdHeader,
+                        String timestampHeader, String nonceHeader, String signHeader) {
+        this.keyId = keyId;
+        this.secret = secret;
+        this.algHeader = algHeader;
+        this.keyIdHeader = keyIdHeader;
+        this.timestampHeader = timestampHeader;
+        this.nonceHeader = nonceHeader;
+        this.signHeader = signHeader;
+    }
+
+    SignedRequest sign(String method, String path,
+                       Map<String, List<String>> query, String plaintextBody) {
+        String body = encrypt(plaintextBody);
+        long timestamp = System.currentTimeMillis();
+        String nonce = newNonce();
+        String canonical = canonicalize(method, path, query, body, timestamp, nonce);
+        String signature = hmac(canonical, secret);
+        Map<String, String> headers = new LinkedHashMap<>();
+        headers.put(algHeader, ALG);
+        headers.put(keyIdHeader, keyId);
+        headers.put(timestampHeader, Long.toString(timestamp));
+        headers.put(nonceHeader, nonce);
+        headers.put(signHeader, signature);
+        return new SignedRequest(Collections.unmodifiableMap(headers), body);
+    }
+
+    /** 从 URL 的 rawQuery 解析参数；没有 query 返回空 Map。 */
+    static Map<String, List<String>> parseQuery(String rawQuery) {
+        if (rawQuery == null || rawQuery.isEmpty()) {
+            return Map.of();
+        }
+        Map<String, List<String>> params = new LinkedHashMap<>();
+        for (String pair : rawQuery.split("&")) {
+            if (pair.isEmpty()) {
+                continue;
+            }
+            int index = pair.indexOf('=');
+            String name = decode(index < 0 ? pair : pair.substring(0, index));
+            if (name.isBlank()) {
+                continue;
+            }
+            String value = index < 0 ? "" : decode(pair.substring(index + 1));
+            params.computeIfAbsent(name, key -> new ArrayList<>()).add(value);
+        }
+        return params;
+    }
+
+    private String canonicalize(String method, String path, Map<String, List<String>> query,
+                                String body, long timestamp, String nonce) {
+        return VERSION + '\n' + method + '\n' + path + '\n' + queryString(query) + '\n'
+                + sha256(body) + '\n' + timestamp + '\n' + nonce + '\n' + keyId + '\n' + ALG;
+    }
+
+    private static String queryString(Map<String, List<String>> query) {
+        if (query == null || query.isEmpty()) {
+            return "";
+        }
+        List<String> pairs = new ArrayList<>();
+        new TreeMap<>(query).forEach((key, values) -> {
+            if (PROTOCOL_PARAMS.contains(key) || values == null) {
+                return;
+            }
+            values.stream()
+                    .filter(value -> value != null && !value.isBlank())
+                    .sorted()
+                    .forEach(value -> pairs.add(encode(key) + '=' + encode(value)));
+        });
+        return String.join("&", pairs);
+    }
+
+    private String encrypt(String plaintext) {
+        if (plaintext == null || plaintext.isEmpty()) {
+            return plaintext;
+        }
+        byte[] key = sha256Bytes(KEY_LABEL, secret);
+        byte[] iv = new byte[12];
+        RANDOM.nextBytes(iv);
+        try {
+            Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
+            cipher.init(Cipher.ENCRYPT_MODE, new SecretKeySpec(key, "AES"),
+                    new GCMParameterSpec(128, iv));
+            byte[] encrypted = cipher.doFinal(plaintext.getBytes(StandardCharsets.UTF_8));
+            byte[] payload = new byte[iv.length + encrypted.length];
+            System.arraycopy(iv, 0, payload, 0, iv.length);
+            System.arraycopy(encrypted, 0, payload, iv.length, encrypted.length);
+            return Base64.getEncoder().encodeToString(payload);
+        } catch (Exception e) {
+            throw new IllegalStateException("AES-256-GCM 加密失败", e);
+        }
+    }
+
+    private static String hmac(String canonical, String secret) {
+        try {
+            Mac mac = Mac.getInstance("HmacSHA256");
+            mac.init(new SecretKeySpec(secret.getBytes(StandardCharsets.UTF_8), "HmacSHA256"));
+            return HexFormat.of().formatHex(
+                    mac.doFinal(canonical.getBytes(StandardCharsets.UTF_8)));
+        } catch (Exception e) {
+            throw new IllegalStateException("HMAC-SHA256 计算失败", e);
+        }
+    }
+
+    private static String sha256(String text) {
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            String value = text == null ? "" : text;
+            return HexFormat.of().formatHex(
+                    digest.digest(value.getBytes(StandardCharsets.UTF_8)));
+        } catch (Exception e) {
+            throw new IllegalStateException("SHA-256 计算失败", e);
+        }
+    }
+
+    private static byte[] sha256Bytes(String label, String secret) {
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            digest.update(label.getBytes(StandardCharsets.UTF_8));
+            return digest.digest(secret.getBytes(StandardCharsets.UTF_8));
+        } catch (Exception e) {
+            throw new IllegalStateException("SHA-256 计算失败", e);
+        }
+    }
+
+    private static String newNonce() {
+        byte[] bytes = new byte[16];
+        RANDOM.nextBytes(bytes);
+        return HexFormat.of().formatHex(bytes);
+    }
+
+    private static String encode(String value) {
+        return URLEncoder.encode(value, StandardCharsets.UTF_8);
+    }
+
+    private static String decode(String value) {
+        return URLDecoder.decode(value, StandardCharsets.UTF_8);
+    }
+}
+```
+
+## 6. 示例一：Apache HttpClient 5
+
+```java
+String url = "https://provider.example.com";
+String method = "POST";
+String path = "/openapi/orders";
+String rawQuery = "page=1";
+String plaintext = "{\"id\":1}";
+
+BanyanOpenApiSigner signer = new BanyanOpenApiSigner("app1", secret);
+BanyanOpenApiSigner.SignedRequest signed = signer.sign(
+        method, path, BanyanOpenApiSigner.parseQuery(rawQuery), plaintext);
+
+CloseableHttpClient httpClient = HttpClients.createDefault(); // 你已有的 client
+HttpPost post = new HttpPost(url + path + (rawQuery.isEmpty() ? "" : "?" + rawQuery));
+post.setEntity(new StringEntity(signed.body(), ContentType.APPLICATION_JSON));
+signed.headers().forEach(post::setHeader);
+
+try (CloseableHttpResponse response = httpClient.execute(post)) {
     System.out.println(response.getCode());
 }
 ```
 
-- `myHttpClient` 可以是任何已构造的 HttpClient；签名工具只改请求
-- 想全自动时用 `SigningHttpClients.create(signer)` 或把 `SigningHttpRequestInterceptor` 注册到 client
-- 只支持 `StringEntity` 与 `ByteArrayEntity`；流式、文件与 multipart 直接抛异常
-- 自动拦截版本已禁用重定向与自动重试；原地签名由调用方的 client 自行决定
-
-## 4. Java：JDK HttpClient
+自定义 header 名时，构造 signer 时传入五个名字：
 
 ```java
-HttpRequest unsigned = HttpRequest.newBuilder(
-                URI.create("https://provider.example.com/openapi/orders?page=1"))
-        .method("POST", HttpRequest.BodyPublishers.noBody())
-        .header("Content-Type", "application/json")
-        .build();
-
-HttpRequest signed = SigningJdkHttpRequests.sign(signer, unsigned, "{\"id\":1}");
-
-HttpResponse<String> response = HttpClient.newHttpClient()
-        .send(signed, HttpResponse.BodyHandlers.ofString());
+BanyanOpenApiSigner signer = new BanyanOpenApiSigner(
+        "app1", secret,
+        "X-Acme-Alg", "X-Acme-KeyId", "X-Acme-Timestamp", "X-Acme-Nonce", "X-Acme-Sign");
 ```
 
-- JDK HttpClient 没有请求拦截器 API，所以工具只转换请求，不包装 client
-- body 必须作为字符串单独传入，因为 `BodyPublisher` 不暴露原始内容
-
-## 5. Java：Spring RestTemplate
+## 7. 示例二：JDK HttpClient
 
 ```java
-OpenApiRequestSigner signer = OpenApiRequestSigner.builder()
-        .keyId("app1")
-        .secret(secret)
-        .build();
+String url = "https://provider.example.com";
+String method = "POST";
+String path = "/openapi/orders";
+String rawQuery = "page=1";
+String plaintext = "{\"id\":1}";
 
-RestTemplate rest = new RestTemplate();
-SigningRestTemplates.attach(rest, signer);
+BanyanOpenApiSigner signer = new BanyanOpenApiSigner("app1", secret);
+BanyanOpenApiSigner.SignedRequest signed = signer.sign(
+        method, path, BanyanOpenApiSigner.parseQuery(rawQuery), plaintext);
 
-HttpHeaders headers = new HttpHeaders();
-headers.setContentType(MediaType.APPLICATION_JSON);
+HttpClient httpClient = HttpClient.newHttpClient(); // 你已有的 client
+HttpRequest.Builder builder = HttpRequest.newBuilder(
+                URI.create(url + path + (rawQuery.isEmpty() ? "" : "?" + rawQuery)))
+        .method(method, HttpRequest.BodyPublishers.ofString(
+                signed.body() == null ? "" : signed.body(), StandardCharsets.UTF_8))
+        .header("Content-Type", "application/json");
+signed.headers().forEach(builder::setHeader);
 
-ResponseEntity<String> response = rest.exchange(
-        "https://provider.example.com/openapi/orders",
-        HttpMethod.POST,
-        new HttpEntity<>("{\"id\":1}", headers),
-        String.class);
+HttpResponse<String> response = httpClient.send(
+        builder.build(), HttpResponse.BodyHandlers.ofString());
 ```
 
-- `attach` 可以挂到任何已有 RestTemplate，重复调用不会重复添加
-- 一行创建时用 `SigningRestTemplates.create(signer)`（使用 JDK HttpClient 并禁止跟随重定向）
-- multipart 请求不支持
+## 8. 提供方如何解密
 
-## 6. 常用配置
+1. 从五个 header 读取 `keyId`、`timestamp`、`nonce`、`alg`、`sign`。
+2. 按第 4 节用**收到的 body** 重算规范化串与签名，比较 `sign`。
+3. 用 `keyId` 找到对应的 `secret`。
+4. 按第 3 节解密 body，得到明文。
 
-| 场景 | 写法 |
-|---|---|
-| 明文模式（提供方关闭加密） | `OpenApiRequestSigner.builder()...plainBody().build()` |
-| context-path 部署 | `.basePath("/api")`，请求路径 `/api/openapi/orders` 会按 `/openapi/orders` 签名 |
-| 自定义 header 名 | 见下方「自定义 header 名」 |
-| 多调用方隔离 | 每个调用方各自创建 `OpenApiRequestSigner` 实例，不共享静态配置 |
+任何一步失败都返回统一错误，默认不向调用方透露具体原因。
 
-### 自定义 header 名
-
-调用方与提供方必须使用同一组名字。**加密与解密都不额外增加 header**：body 始终是
-`application/json`，五个 header 只承载签名参数。
-
-客户端：
-
-```java
-SignHeaders headers = new SignHeaders(
-        "X-Acme-Alg",
-        "X-Acme-KeyId",
-        "X-Acme-Timestamp",
-        "X-Acme-Nonce",
-        "X-Acme-Sign");
-
-OpenApiRequestSigner signer = OpenApiRequestSigner.builder()
-        .keyId("app1")
-        .secret(secret)
-        .headers(headers)
-        .build();
-```
-
-提供方 `application.yml`：
-
-```yaml
-banyan:
-  openapi-sign:
-    headers:
-      alg: X-Acme-Alg
-      key-id: X-Acme-KeyId
-      timestamp: X-Acme-Timestamp
-      nonce: X-Acme-Nonce
-      sign: X-Acme-Sign
-```
-
-`SignHeaders.DEFAULT` 只是默认值常量，Builder 默认已经用它，通常不需要显式传入；
-只有需要引用默认名字时才用。五个名字必须非空、互不重复（不区分大小写），且符合
-HTTP header token 字符集。
-
-## 7. 拷贝源码 vs 依赖 jar
-
-- 只拷贝源码：复制 `cn/kennylee/banyan/openapi/sign/client` 包，以及需要的适配器包；
-  运行时只需 JDK 17 + `slf4j-api`，适配器另需 `httpclient5` 或 `spring-web`
-- 依赖 jar：`banyan-sign-client` 本身不依赖 banyan 其它模块；两个适配器分别引入
-  `httpclient5` 与 `spring-web`
-
-## 8. 非 Java 实现检查清单
+## 9. 非 Java 实现检查清单
 
 - [ ] SHA-256 与 HMAC-SHA256 输出小写十六进制
 - [ ] AES-GCM 使用 12 字节 IV、16 字节 tag，Base64 拼接顺序是 IV 在前
@@ -206,18 +345,8 @@ HTTP header token 字符集。
 - [ ] nonce 每次请求都变
 - [ ] query 编码只做一次，且排除五个协议参数
 - [ ] path 已剥离提供方的 context-path
+- [ ] 五个 header 名与提供方一致
 - [ ] 加密开关与提供方一致
-
-## 9. 失败响应
-
-默认固定 401：
-
-```json
-{"code":"openapi.sign.invalid","message":"签名校验失败"}
-```
-
-提供方开启 `reveal-reason` 时 `message` 会指出具体原因（过期、重放、签名不匹配等），
-`code` 不变。联调完成后建议提供方关闭该开关。
 
 ## 10. 常见问题
 
