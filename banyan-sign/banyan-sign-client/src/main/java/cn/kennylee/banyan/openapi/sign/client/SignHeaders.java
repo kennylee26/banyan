@@ -23,7 +23,12 @@ public record SignHeaders(String alg, String keyId, String timestamp,
     /** RFC 7230 token 字符集。 */
     private static final Pattern TOKEN = Pattern.compile("^[!#$%&'*+.^_`|~0-9A-Za-z-]+$");
 
-    /** 默认 header 名。 */
+    /**
+     * 默认 header 名。
+     *
+     * <p>{@link OpenApiRequestSigner.Builder} 默认已使用该值，通常不需要显式传入；
+     * 只有需要引用默认名字时才使用。</p>
+     */
     public static final SignHeaders DEFAULT = new SignHeaders(
             "X-Banyan-Alg", "X-Banyan-KeyId", "X-Banyan-Timestamp",
             "X-Banyan-Nonce", "X-Banyan-Sign");

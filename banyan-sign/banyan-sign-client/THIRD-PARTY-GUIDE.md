@@ -148,8 +148,47 @@ ResponseEntity<String> response = rest.exchange(
 |---|---|
 | 明文模式（提供方关闭加密） | `OpenApiRequestSigner.builder()...plainBody().build()` |
 | context-path 部署 | `.basePath("/api")`，请求路径 `/api/openapi/orders` 会按 `/openapi/orders` 签名 |
-| 自定义 header 名 | `.headers(new SignHeaders("X-Acme-Alg", "X-Acme-Key", "X-Acme-Time", "X-Acme-Nonce", "X-Acme-Sign"))` |
+| 自定义 header 名 | 见下方「自定义 header 名」 |
 | 多调用方隔离 | 每个调用方各自创建 `OpenApiRequestSigner` 实例，不共享静态配置 |
+
+### 自定义 header 名
+
+调用方与提供方必须使用同一组名字。**加密与解密都不额外增加 header**：body 始终是
+`application/json`，五个 header 只承载签名参数。
+
+客户端：
+
+```java
+SignHeaders headers = new SignHeaders(
+        "X-Acme-Alg",
+        "X-Acme-KeyId",
+        "X-Acme-Timestamp",
+        "X-Acme-Nonce",
+        "X-Acme-Sign");
+
+OpenApiRequestSigner signer = OpenApiRequestSigner.builder()
+        .keyId("app1")
+        .secret(secret)
+        .headers(headers)
+        .build();
+```
+
+提供方 `application.yml`：
+
+```yaml
+banyan:
+  openapi-sign:
+    headers:
+      alg: X-Acme-Alg
+      key-id: X-Acme-KeyId
+      timestamp: X-Acme-Timestamp
+      nonce: X-Acme-Nonce
+      sign: X-Acme-Sign
+```
+
+`SignHeaders.DEFAULT` 只是默认值常量，Builder 默认已经用它，通常不需要显式传入；
+只有需要引用默认名字时才用。五个名字必须非空、互不重复（不区分大小写），且符合
+HTTP header token 字符集。
 
 ## 7. 拷贝源码 vs 依赖 jar
 

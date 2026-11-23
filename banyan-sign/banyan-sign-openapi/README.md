@@ -65,6 +65,26 @@ public class OrderController {
 五个 header 名必须与调用方一致。`keyId` 不要包含点号，否则属性绑定会歧义；
 复杂场景改用自定义 `SignKeyResolver`。
 
+自定义 header 名时，服务端与调用方使用同一组名字（加密与解密不额外增加 header）：
+
+```yaml
+banyan:
+  openapi-sign:
+    headers:
+      alg: X-Acme-Alg
+      key-id: X-Acme-KeyId
+      timestamp: X-Acme-Timestamp
+      nonce: X-Acme-Nonce
+      sign: X-Acme-Sign
+```
+
+调用方对应写法：
+
+```java
+new SignHeaders("X-Acme-Alg", "X-Acme-KeyId", "X-Acme-Timestamp",
+        "X-Acme-Nonce", "X-Acme-Sign");
+```
+
 ## 失败响应与日志
 
 默认响应固定为 401：

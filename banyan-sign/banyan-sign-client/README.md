@@ -58,6 +58,22 @@ signed.body();    // 密文，直接作为请求体发送
 | `basePath(String)` | 空 | 从请求路径剥离的前缀，例如 `/api`；不匹配直接失败 |
 | `plainBody()` | 加密 | 切换到明文签名，对应服务端 `encrypted=false` |
 
+自定义五个 header 名时，客户端与提供方必须一致：
+
+```java
+SignHeaders headers = new SignHeaders(
+        "X-Acme-Alg", "X-Acme-KeyId", "X-Acme-Timestamp", "X-Acme-Nonce", "X-Acme-Sign");
+
+OpenApiRequestSigner signer = OpenApiRequestSigner.builder()
+        .keyId("app1")
+        .secret(secret)
+        .headers(headers)
+        .build();
+```
+
+`SignHeaders.DEFAULT` 是默认值常量，Builder 默认已使用，通常不需要显式传入。
+加密与解密不额外增加 header，五个 header 只承载签名参数。
+
 ## 限制
 
 - body 按 UTF-8 文本处理，不解析 JSON；流式 / multipart body 会被适配器拒绝
