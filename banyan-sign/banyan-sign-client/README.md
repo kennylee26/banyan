@@ -78,4 +78,4 @@ OpenApiRequestSigner signer = OpenApiRequestSigner.builder()
 
 - body 按 UTF-8 文本处理，不解析 JSON；流式 / multipart body 会被适配器拒绝
 - 不支持 WebFlux / `WebClient` / 异步 HttpClient
-- 适配器不跟随重定向、不自动重试；需要重发时重新签名
+- `create` 工厂默认不跟随重定向、不自动重试；`attach` 和 JDK 适配器不包装 client，需调用方自行关闭；重发时重新签名

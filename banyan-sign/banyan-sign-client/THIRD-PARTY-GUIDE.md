@@ -25,6 +25,14 @@
 
 提供方顺序相反：读 header → 校验时间窗口 → 对**收到的 body** 重算签名 → 去重 nonce → 解密。
 
+### 2.1 重定向与重试
+
+签名绑定 method / path / body，重定向或自动重试后原签名必然失效：
+
+- Apache HttpClient：关闭自动重定向与自动重试。
+- JDK HttpClient：默认不跟随重定向，保持默认即可；不要额外配置重试。
+- 需要重发请求时，重新生成 timestamp / nonce 并重新签名，不要复用旧 header。
+
 ## 3. 加密：AES-256-GCM
 
 ```
@@ -120,6 +128,7 @@ final class BanyanOpenApiSigner {
 
     private final String keyId;
     private final String secret;
+    private final boolean encrypted;
     private final String algHeader;
     private final String keyIdHeader;
     private final String timestampHeader;
@@ -127,14 +136,22 @@ final class BanyanOpenApiSigner {
     private final String signHeader;
 
     BanyanOpenApiSigner(String keyId, String secret) {
-        this(keyId, secret, "X-Banyan-Alg", "X-Banyan-KeyId",
+        this(keyId, secret, true, "X-Banyan-Alg", "X-Banyan-KeyId",
                 "X-Banyan-Timestamp", "X-Banyan-Nonce", "X-Banyan-Sign");
     }
 
     BanyanOpenApiSigner(String keyId, String secret, String algHeader, String keyIdHeader,
                         String timestampHeader, String nonceHeader, String signHeader) {
+        this(keyId, secret, true, algHeader, keyIdHeader, timestampHeader,
+                nonceHeader, signHeader);
+    }
+
+    private BanyanOpenApiSigner(String keyId, String secret, boolean encrypted,
+                                String algHeader, String keyIdHeader, String timestampHeader,
+                                String nonceHeader, String signHeader) {
         this.keyId = keyId;
         this.secret = secret;
+        this.encrypted = encrypted;
         this.algHeader = algHeader;
         this.keyIdHeader = keyIdHeader;
         this.timestampHeader = timestampHeader;
@@ -142,12 +159,19 @@ final class BanyanOpenApiSigner {
         this.signHeader = signHeader;
     }
 
+    /** 明文模式：只签名原文，不加密。 */
+    BanyanOpenApiSigner plainBody() {
+        return new BanyanOpenApiSigner(keyId, secret, false, algHeader, keyIdHeader,
+                timestampHeader, nonceHeader, signHeader);
+    }
+
     SignedRequest sign(String method, String path,
                        Map<String, List<String>> query, String plaintextBody) {
-        String body = encrypt(plaintextBody);
+        String body = encrypted ? encrypt(plaintextBody) : plaintextBody;
+        String normalizedPath = path == null || path.isEmpty() ? "/" : path;
         long timestamp = System.currentTimeMillis();
         String nonce = newNonce();
-        String canonical = canonicalize(method, path, query, body, timestamp, nonce);
+        String canonical = canonicalize(method, normalizedPath, query, body, timestamp, nonce);
         String signature = hmac(canonical, secret);
         Map<String, String> headers = new LinkedHashMap<>();
         headers.put(algHeader, ALG);
@@ -292,6 +316,12 @@ signed.headers().forEach(post::setHeader);
 try (CloseableHttpResponse response = httpClient.execute(post)) {
     System.out.println(response.getCode());
 }
+```
+
+提供方关闭加密时，用明文模式；body 不再加密，签名对象仍是实际发送的 body：
+
+```java
+BanyanOpenApiSigner signer = new BanyanOpenApiSigner("app1", secret).plainBody();
 ```
 
 自定义 header 名时，构造 signer 时传入五个名字：

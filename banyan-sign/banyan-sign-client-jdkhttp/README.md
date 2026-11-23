@@ -20,3 +20,4 @@ HttpResponse<String> response = HttpClient.newHttpClient()
 - body 必须作为字符串单独传入，因为 `BodyPublisher` 不暴露原始内容；空 body 传 `null`
 - 原请求的 method / URI / version / timeout / header 会被保留，body 换成密文
 - 五个签名 header 会覆盖同名原 header
+- 本适配器不包装 client：JDK HttpClient 默认不跟随重定向，保持默认即可；不要额外配置重试
