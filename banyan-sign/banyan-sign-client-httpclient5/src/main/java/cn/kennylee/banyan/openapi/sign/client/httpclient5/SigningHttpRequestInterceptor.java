@@ -37,8 +37,9 @@ public final class SigningHttpRequestInterceptor implements HttpRequestIntercept
      * @param request 请求
      * @param entity  实体信息
      * @param context 上下文
-     * @throws HttpException HTTP 异常
-     * @throws IOException   IO 异常
+     * @throws HttpException            HTTP 异常
+     * @throws IOException              IO 异常
+     * @throws IllegalArgumentException 不是经典请求，或 entity 类型不受支持
      */
     @Override
     public void process(HttpRequest request, EntityDetails entity, HttpContext context)

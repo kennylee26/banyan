@@ -31,10 +31,10 @@ class SignsTest {
         // given
         CanonicalRequest request = new CanonicalRequest("POST", "/openapi/orders",
                 Map.of("b", List.of("2", "1"), "a", List.of("x y"), "sign", List.of("ignored")),
-                BODY, 1700000000000L, "abc", "app1", "Hmac" + "SHA256");
+                BODY, 1700000000000L, "abc", "app1", HmacSha256.NAME);
         String expected = String.join("\n",
                 "BANYAN-SIGN-V1", "POST", "/openapi/orders", "a=x+y&b=1&b=2", BODY_HASH,
-                "1700000000000", "abc", "app1", "Hmac" + "SHA256");
+                "1700000000000", "abc", "app1", HmacSha256.NAME);
 
         // when
         assertEquals(expected, Signs.canonicalize(request));
@@ -48,7 +48,7 @@ class SignsTest {
                 Map.of("alg", List.of("OTHER"), "keyId", List.of("other"),
                         "timestamp", List.of("1"), "nonce", List.of("n"),
                         "sign", List.of("s"), "a", List.of("1")),
-                null, 1700000000000L, "abc", "app1", "Hmac" + "SHA256");
+                null, 1700000000000L, "abc", "app1", HmacSha256.NAME);
 
         // when
         String canonical = Signs.canonicalize(request);
@@ -66,7 +66,7 @@ class SignsTest {
         CanonicalRequest request = new CanonicalRequest("GET", "/openapi/ping",
                 Map.of("empty", List.of(""), "blank", List.of("  "),
                         "b", List.of("2", "1")),
-                null, 1700000000000L, "abc", "app1", "Hmac" + "SHA256");
+                null, 1700000000000L, "abc", "app1", HmacSha256.NAME);
 
         // when
         String canonical = Signs.canonicalize(request);

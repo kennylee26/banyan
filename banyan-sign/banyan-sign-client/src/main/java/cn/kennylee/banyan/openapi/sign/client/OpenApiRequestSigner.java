@@ -79,8 +79,8 @@ public final class OpenApiRequestSigner {
                 body == null ? 0 : body.length());
         long timestamp = clock.millis();
         String nonce = Signs.newNonce();
-        LOG.debug("OpenAPI 签名请求: method={}, path={}, query={}, keyId={}, timestamp={}, nonce={}",
-                request.method(), path, request.queryParams(), keyId, timestamp, nonce);
+        LOG.debug("OpenAPI 签名请求: method={}, path={}, queryKeys={}, keyId={}, timestamp={}, nonce={}",
+                request.method(), path, request.queryParams().keySet(), keyId, timestamp, nonce);
 
         CanonicalRequest canonicalRequest = new CanonicalRequest(request.method(), path,
                 request.queryParams(), body, timestamp, nonce, keyId, Signs.ALG);

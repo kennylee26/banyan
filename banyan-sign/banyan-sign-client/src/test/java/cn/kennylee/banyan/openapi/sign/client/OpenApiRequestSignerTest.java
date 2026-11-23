@@ -34,7 +34,7 @@ class OpenApiRequestSignerTest {
     private static final String SECRET = "secret-for-tests";
 
     /** 协议算法标识。 */
-    private static final String ALG = "Hmac" + "SHA256";
+    private static final String ALG = HmacSha256.NAME;
 
     /** 加密模式返回五个 header 与密文。 */
     @Test

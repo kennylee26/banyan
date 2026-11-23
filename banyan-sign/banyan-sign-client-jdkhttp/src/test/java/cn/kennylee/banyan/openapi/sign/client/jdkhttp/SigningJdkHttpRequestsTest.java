@@ -117,6 +117,20 @@ class SigningJdkHttpRequestsTest {
         assertEquals(5, banyanHeaders().size());
     }
 
+    /** multipart 请求明确失败。 */
+    @Test
+    void rejectsMultipartRequest() {
+        // given
+        HttpRequest unsigned = HttpRequest.newBuilder(uri("/openapi/orders"))
+                .method("POST", HttpRequest.BodyPublishers.noBody())
+                .header("Content-Type", "multipart/form-data; boundary=x")
+                .build();
+
+        // when
+        org.junit.jupiter.api.Assertions.assertThrows(IllegalArgumentException.class,
+                () -> SigningJdkHttpRequests.sign(signer(), unsigned, "data"));
+    }
+
     /** 构造签名门面。 */
     private OpenApiRequestSigner signer() {
         return OpenApiRequestSigner.builder().keyId("app1").secret(SECRET).build();

@@ -45,7 +45,8 @@ public final class SigningClientHttpRequestInterceptor implements ClientHttpRequ
      * @param body      请求体字节
      * @param execution 执行链
      * @return 响应
-     * @throws IOException IO 异常
+     * @throws IOException              IO 异常
+     * @throws IllegalArgumentException multipart 请求不受支持
      */
     @Override
     public ClientHttpResponse intercept(HttpRequest request, byte[] body,

@@ -28,7 +28,12 @@ public record UnsignedRequest(String method, String path,
         if (method == null || method.isBlank()) {
             throw new IllegalArgumentException("请求缺少 method");
         }
-        if (path == null || path.isBlank()) {
+        if (path == null) {
+            throw new IllegalArgumentException("请求缺少 path");
+        }
+        // URI 没有 path 时 getRawPath() 返回空串；服务端根路径签的是 "/"
+        path = path.isEmpty() ? "/" : path;
+        if (path.isBlank()) {
             throw new IllegalArgumentException("请求缺少 path");
         }
         queryParams = copyParams(queryParams);

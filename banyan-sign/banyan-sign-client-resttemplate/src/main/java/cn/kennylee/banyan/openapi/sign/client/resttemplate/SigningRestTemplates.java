@@ -34,6 +34,9 @@ public final class SigningRestTemplates {
     /**
      * 给已有 RestTemplate 挂上签名拦截器；重复调用不会重复添加。
      *
+     * <p>不改请求工厂，因此也不改变重定向与重试行为；需要禁止重定向时请用
+     * {@link #create(OpenApiRequestSigner)} 或自行配置不跟随重定向的工厂。</p>
+     *
      * @param restTemplate 已有 RestTemplate
      * @param signer       签名门面
      * @return 原实例
