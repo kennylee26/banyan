@@ -22,5 +22,6 @@
         <module>banyan-sign-client</module>
         <module>banyan-sign-client-httpclient5</module>
         <module>banyan-sign-client-resttemplate</module>
+        <module>banyan-sign-client-jdkhttp</module>
     </modules>
 </project>

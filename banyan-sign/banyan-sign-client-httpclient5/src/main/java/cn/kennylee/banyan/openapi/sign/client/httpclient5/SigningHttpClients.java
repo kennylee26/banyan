@@ -1,6 +1,7 @@
 package cn.kennylee.banyan.openapi.sign.client.httpclient5;
 
 import cn.kennylee.banyan.openapi.sign.client.OpenApiRequestSigner;
+import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
 import org.apache.hc.client5.http.impl.classic.HttpClientBuilder;
 
 import java.util.Objects;
@@ -14,6 +15,16 @@ import java.util.Objects;
 public final class SigningHttpClients {
 
     private SigningHttpClients() {
+    }
+
+    /**
+     * 一行创建带签名拦截器的 HttpClient。
+     *
+     * @param signer 签名门面
+     * @return HttpClient
+     */
+    public static CloseableHttpClient create(OpenApiRequestSigner signer) {
+        return builder(signer).build();
     }
 
     /**

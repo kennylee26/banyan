@@ -91,6 +91,27 @@ class SigningClientHttpRequestInterceptorTest {
         assertEquals(hmac(canonicalOf(), SECRET), header("x-banyan-sign"));
     }
 
+    /** 给已有 RestTemplate 挂拦截器；重复挂载不会重复添加。 */
+    @Test
+    void attachesToExistingTemplate() {
+        // given
+        RestTemplate rest = new RestTemplate();
+        SigningRestTemplates.attach(rest, signer().build());
+        SigningRestTemplates.attach(rest, signer().build());
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+
+        // when
+        rest.exchange(baseUrl() + "/openapi/orders?page=1", HttpMethod.POST,
+                new HttpEntity<>("{\"id\":2}", headers), String.class);
+
+        // then
+        assertEquals(1, rest.getInterceptors().size());
+        assertNotEquals("{\"id\":2}", capturedBody);
+        assertEquals(5, banyanHeaders().size());
+        assertEquals(hmac(canonicalOf(), SECRET), header("x-banyan-sign"));
+    }
+
     /** 无论 Content-Type 声明什么字符集，body 都按 UTF-8 处理。 */
     @Test
     void treatsBodyAsUtf8RegardlessOfDeclaredCharset() {

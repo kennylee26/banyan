@@ -71,6 +71,11 @@
             </dependency>
             <dependency>
                 <groupId>cn.kennylee.banyan</groupId>
+                <artifactId>banyan-sign-client-jdkhttp</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>cn.kennylee.banyan</groupId>
                 <artifactId>banyan-data-core</artifactId>
                 <version>${project.version}</version>
             </dependency>

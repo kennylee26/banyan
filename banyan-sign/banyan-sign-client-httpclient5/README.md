@@ -2,22 +2,41 @@
 
 Apache HttpClient 5 适配器：在请求发出前自动加密 body、计算签名并写入五个 header。
 
-```java
-OpenApiRequestSigner signer = OpenApiRequestSigner.builder()
-        .keyId("app1")
-        .secret(secret)
-        .build();
+## 原地签名（推荐）
 
-try (CloseableHttpClient client = SigningHttpClients.builder(signer).build()) {
-    HttpPost post = new HttpPost(baseUrl + "/openapi/orders");
-    post.setEntity(new StringEntity("{\"id\":1}", ContentType.APPLICATION_JSON));
-    try (CloseableHttpResponse response = client.execute(post)) {
-        // ...
-    }
+自己构造请求和 client，把请求交给工具签名即可：
+
+```java
+HttpPost post = new HttpPost(baseUrl + "/openapi/orders");
+post.setEntity(new StringEntity("{\"id\":1}", ContentType.APPLICATION_JSON));
+
+SigningHttpRequests.sign(signer, post);   // 原地加密 + 写 5 个 header
+
+try (CloseableHttpResponse response = myHttpClient.execute(post)) {
+    // ...
 }
 ```
 
-- `SigningHttpClients.builder(signer)` 已禁用重定向与自动重试，并注册 `SigningHttpRequestInterceptor`
-- 只接受 `StringEntity` 与 `ByteArrayEntity`；流式、文件与 multipart 直接抛异常
+## 自动拦截
+
+想省掉每次手动调用时，可以用带拦截器的 client：
+
+```java
+// 一行创建
+try (CloseableHttpClient client = SigningHttpClients.create(signer)) {
+    // ...
+}
+
+// 或先定制 builder
+CloseableHttpClient client = SigningHttpClients.builder(signer)
+        .setConnectionManager(connectionManager)
+        .build();
+```
+
+## 限制
+
+- `SigningHttpRequests.sign` 与拦截器都只接受 `StringEntity` 与 `ByteArrayEntity`；
+  流式、文件与 multipart entity 直接抛异常
 - 替换 entity 后会同步更新 `Content-Length`，避免密文被截断
-- 需要自己组装 client 时，把 `new SigningHttpRequestInterceptor(signer)` 注册为请求拦截器即可
+- 自动拦截的 client 已禁用重定向与自动重试；原地签名由调用方的 client 自行决定
+- 同一个请求不要重复签名，否则会二次加密

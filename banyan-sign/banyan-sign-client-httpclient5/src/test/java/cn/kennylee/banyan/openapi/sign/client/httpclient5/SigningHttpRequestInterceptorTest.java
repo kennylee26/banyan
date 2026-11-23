@@ -7,6 +7,7 @@ import org.apache.hc.client5.http.classic.methods.HttpGet;
 import org.apache.hc.client5.http.classic.methods.HttpPost;
 import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
 import org.apache.hc.client5.http.impl.classic.CloseableHttpResponse;
+import org.apache.hc.client5.http.impl.classic.HttpClientBuilder;
 import org.apache.hc.core5.http.ContentType;
 import org.apache.hc.core5.http.io.entity.ByteArrayEntity;
 import org.apache.hc.core5.http.io.entity.FileEntity;
@@ -93,6 +94,26 @@ class SigningHttpRequestInterceptorTest {
         assertEquals("POST", captured.get("method"));
         assertEquals("/openapi/orders", captured.get("path"));
         assertNotEquals("{\"id\":1}", capturedBody);
+        assertEquals(5, banyanHeaders().size());
+        assertEquals(hmac(canonicalOf("/openapi/orders"), SECRET), header("x-banyan-sign"));
+    }
+
+    /** 原地签名后可以用任意 HttpClient 发送。 */
+    @Test
+    void signsRequestInPlaceWithAnyClient() throws Exception {
+        // given
+        HttpPost post = new HttpPost(baseUrl() + "/openapi/orders?page=1");
+        post.setEntity(new StringEntity("{\"id\":2}", ContentType.APPLICATION_JSON));
+        SigningHttpRequests.sign(signer().build(), post);
+
+        // when
+        try (CloseableHttpClient client = HttpClientBuilder.create().build();
+             CloseableHttpResponse response = client.execute(post)) {
+            assertEquals(200, response.getCode());
+        }
+
+        // then
+        assertNotEquals("{\"id\":2}", capturedBody);
         assertEquals(5, banyanHeaders().size());
         assertEquals(hmac(canonicalOf("/openapi/orders"), SECRET), header("x-banyan-sign"));
     }

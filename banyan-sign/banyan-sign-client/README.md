@@ -38,6 +38,17 @@ signed.headers(); // 五个签名 header
 signed.body();    // 密文，直接作为请求体发送
 ```
 
+## HTTP 客户端接入
+
+| 客户端 | 推荐写法 |
+|---|---|
+| Apache HttpClient 5 | `SigningHttpRequests.sign(signer, request)` 原地签名，client 自己构造 |
+| Spring RestTemplate | `SigningRestTemplates.attach(restTemplate, signer)` 挂到已有模板 |
+| JDK HttpClient | `SigningJdkHttpRequests.sign(signer, request, body)` 返回已签名请求 |
+
+想省事时，两个拦截器版本也可以一行创建：`SigningHttpClients.create(signer)`、
+`SigningRestTemplates.create(signer)`。JDK HttpClient 没有拦截器 API，只能转换请求。
+
 ## 配置
 
 | Builder 方法 | 默认 | 说明 |

@@ -28,9 +28,24 @@ public final class SigningRestTemplates {
         HttpClient httpClient = HttpClient.newBuilder()
                 .followRedirects(HttpClient.Redirect.NEVER)
                 .build();
-        RestTemplate restTemplate = new RestTemplate(new JdkClientHttpRequestFactory(httpClient));
-        restTemplate.getInterceptors().add(new SigningClientHttpRequestInterceptor(
-                Objects.requireNonNull(signer, "signer")));
+        return attach(new RestTemplate(new JdkClientHttpRequestFactory(httpClient)), signer);
+    }
+
+    /**
+     * 给已有 RestTemplate 挂上签名拦截器；重复调用不会重复添加。
+     *
+     * @param restTemplate 已有 RestTemplate
+     * @param signer       签名门面
+     * @return 原实例
+     */
+    public static RestTemplate attach(RestTemplate restTemplate, OpenApiRequestSigner signer) {
+        Objects.requireNonNull(restTemplate, "restTemplate");
+        boolean present = restTemplate.getInterceptors().stream()
+                .anyMatch(SigningClientHttpRequestInterceptor.class::isInstance);
+        if (!present) {
+            restTemplate.getInterceptors().add(new SigningClientHttpRequestInterceptor(
+                    Objects.requireNonNull(signer, "signer")));
+        }
         return restTemplate;
     }
 }

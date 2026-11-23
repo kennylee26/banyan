@@ -22,6 +22,7 @@
 | `banyan-sign-client` | 第三方可拷贝的协议内核：AES-GCM 加密与 HMAC-SHA256 签名，零 banyan 依赖 |
 | `banyan-sign-client-httpclient5` | Apache HttpClient 5 适配器：自动加密、签名与附加 header |
 | `banyan-sign-client-resttemplate` | Spring RestTemplate 适配器：自动加密、签名与附加 header |
+| `banyan-sign-client-jdkhttp` | JDK HttpClient 适配器：对已有 `HttpRequest` 生成已签名请求 |
 | `banyan-data` | 数据访问层（Das）父模块 |
 | `banyan-data-core` | 公共契约：分页、排序、查询条件、查询策略、校验 |
 | `banyan-data-mysql-mybatis` | 基于 MyBatis-Plus 的 MySQL 数据访问层 |

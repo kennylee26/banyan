@@ -76,7 +76,7 @@ HmacSHA256
 
 处理顺序：先加密 body，再对密文签名（encrypt-then-sign）。
 
-## 3. Java：Apache HttpClient 5
+## 3. Java：Apache HttpClient 5（原地签名）
 
 ```java
 OpenApiRequestSigner signer = OpenApiRequestSigner.builder()
@@ -84,20 +84,40 @@ OpenApiRequestSigner signer = OpenApiRequestSigner.builder()
         .secret(secret)
         .build();
 
-try (CloseableHttpClient client = SigningHttpClients.builder(signer).build()) {
-    HttpPost post = new HttpPost("https://provider.example.com/openapi/orders?page=1");
-    post.setEntity(new StringEntity("{\"id\":1}", ContentType.APPLICATION_JSON));
-    try (CloseableHttpResponse response = client.execute(post)) {
-        System.out.println(response.getCode());
-    }
+HttpPost post = new HttpPost("https://provider.example.com/openapi/orders?page=1");
+post.setEntity(new StringEntity("{\"id\":1}", ContentType.APPLICATION_JSON));
+
+SigningHttpRequests.sign(signer, post);   // 原地加密 + 写 5 个 header
+
+try (CloseableHttpResponse response = myHttpClient.execute(post)) {
+    System.out.println(response.getCode());
 }
 ```
 
-- 拦截器会自动读取 method / path / query / body，写回密文与五个 header
+- `myHttpClient` 可以是任何已构造的 HttpClient；签名工具只改请求
+- 想全自动时用 `SigningHttpClients.create(signer)` 或把 `SigningHttpRequestInterceptor` 注册到 client
 - 只支持 `StringEntity` 与 `ByteArrayEntity`；流式、文件与 multipart 直接抛异常
-- 构建助手已禁用重定向与自动重试
+- 自动拦截版本已禁用重定向与自动重试；原地签名由调用方的 client 自行决定
 
-## 4. Java：Spring RestTemplate
+## 4. Java：JDK HttpClient
+
+```java
+HttpRequest unsigned = HttpRequest.newBuilder(
+                URI.create("https://provider.example.com/openapi/orders?page=1"))
+        .method("POST", HttpRequest.BodyPublishers.noBody())
+        .header("Content-Type", "application/json")
+        .build();
+
+HttpRequest signed = SigningJdkHttpRequests.sign(signer, unsigned, "{\"id\":1}");
+
+HttpResponse<String> response = HttpClient.newHttpClient()
+        .send(signed, HttpResponse.BodyHandlers.ofString());
+```
+
+- JDK HttpClient 没有请求拦截器 API，所以工具只转换请求，不包装 client
+- body 必须作为字符串单独传入，因为 `BodyPublisher` 不暴露原始内容
+
+## 5. Java：Spring RestTemplate
 
 ```java
 OpenApiRequestSigner signer = OpenApiRequestSigner.builder()
@@ -105,7 +125,9 @@ OpenApiRequestSigner signer = OpenApiRequestSigner.builder()
         .secret(secret)
         .build();
 
-RestTemplate rest = SigningRestTemplates.create(signer);
+RestTemplate rest = new RestTemplate();
+SigningRestTemplates.attach(rest, signer);
+
 HttpHeaders headers = new HttpHeaders();
 headers.setContentType(MediaType.APPLICATION_JSON);
 
@@ -116,11 +138,11 @@ ResponseEntity<String> response = rest.exchange(
         String.class);
 ```
 
-- `SigningRestTemplates.create` 使用 JDK HttpClient 并禁止跟随重定向
-- 已有 RestTemplate 时，把 `new SigningClientHttpRequestInterceptor(signer)` 加进拦截器列表
+- `attach` 可以挂到任何已有 RestTemplate，重复调用不会重复添加
+- 一行创建时用 `SigningRestTemplates.create(signer)`（使用 JDK HttpClient 并禁止跟随重定向）
 - multipart 请求不支持
 
-## 5. 常用配置
+## 6. 常用配置
 
 | 场景 | 写法 |
 |---|---|
@@ -129,14 +151,14 @@ ResponseEntity<String> response = rest.exchange(
 | 自定义 header 名 | `.headers(new SignHeaders("X-Acme-Alg", "X-Acme-Key", "X-Acme-Time", "X-Acme-Nonce", "X-Acme-Sign"))` |
 | 多调用方隔离 | 每个调用方各自创建 `OpenApiRequestSigner` 实例，不共享静态配置 |
 
-## 6. 拷贝源码 vs 依赖 jar
+## 7. 拷贝源码 vs 依赖 jar
 
 - 只拷贝源码：复制 `cn/kennylee/banyan/openapi/sign/client` 包，以及需要的适配器包；
   运行时只需 JDK 17 + `slf4j-api`，适配器另需 `httpclient5` 或 `spring-web`
 - 依赖 jar：`banyan-sign-client` 本身不依赖 banyan 其它模块；两个适配器分别引入
   `httpclient5` 与 `spring-web`
 
-## 7. 非 Java 实现检查清单
+## 8. 非 Java 实现检查清单
 
 - [ ] SHA-256 与 HMAC-SHA256 输出小写十六进制
 - [ ] AES-GCM 使用 12 字节 IV、16 字节 tag，Base64 拼接顺序是 IV 在前
@@ -147,7 +169,7 @@ ResponseEntity<String> response = rest.exchange(
 - [ ] path 已剥离提供方的 context-path
 - [ ] 加密开关与提供方一致
 
-## 8. 失败响应
+## 9. 失败响应
 
 默认固定 401：
 
@@ -158,7 +180,7 @@ ResponseEntity<String> response = rest.exchange(
 提供方开启 `reveal-reason` 时 `message` 会指出具体原因（过期、重放、签名不匹配等），
 `code` 不变。联调完成后建议提供方关闭该开关。
 
-## 9. 常见问题
+## 10. 常见问题
 
 | 现象 | 排查方向 |
 |---|---|

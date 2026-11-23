@@ -22,6 +22,7 @@ An infrastructure toolkit for Spring Boot.
 | `banyan-sign-client` | Third-party copyable protocol core: AES-GCM encryption and HMAC-SHA256 signing, no banyan dependency |
 | `banyan-sign-client-httpclient5` | Apache HttpClient 5 adapter: automatic encryption, signing and headers |
 | `banyan-sign-client-resttemplate` | Spring RestTemplate adapter: automatic encryption, signing and headers |
+| `banyan-sign-client-jdkhttp` | JDK HttpClient adapter: signs an existing `HttpRequest` |
 | `banyan-data` | Parent module of the data access layer (Das) |
 | `banyan-data-core` | Shared contracts: paging, sorting, query criteria, query strategy, validation |
 | `banyan-data-mysql-mybatis` | MySQL data access layer built on MyBatis-Plus |
