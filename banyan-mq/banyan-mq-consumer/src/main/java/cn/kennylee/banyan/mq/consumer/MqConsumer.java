@@ -37,11 +37,14 @@ public @interface MqConsumer {
     String topic();
 
     /**
-     * tag 过滤表达式，默认匹配全部，支持 Spring 占位符。
+     * tag 列表，默认匹配全部，支持 Spring 占位符。
      *
-     * @return tag 表达式
+     * <p>空数组或包含 {@code "*"} 时不做 tag 过滤；多个 tag 由框架拼成后端的过滤表达式，
+     * 调用方不需要关心分隔符。环境后缀会逐 tag 追加。</p>
+     *
+     * @return tag 列表
      */
-    String tag() default MqConstants.WILDCARD_TAG;
+    String[] tag() default {MqConstants.WILDCARD_TAG};
 
     /**
      * 消费组；为空时按业务类与方法名自动生成，支持 Spring 占位符。

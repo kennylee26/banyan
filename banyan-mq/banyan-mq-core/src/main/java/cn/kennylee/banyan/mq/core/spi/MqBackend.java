@@ -39,10 +39,20 @@ public interface MqBackend {
      * @throws MqConfigurationException 后端不支持该能力
      */
     default void requireCapability(MqCapability capability) {
-        if (!capabilities().contains(capability)) {
+        if (!supports(capability)) {
             throw new MqConfigurationException(Messages.get(ErrorCode.MQ_CONFIGURATION_INVALID,
                     "后端 " + type() + " 不支持能力 " + capability));
         }
+    }
+
+    /**
+     * 是否声明支持某能力。
+     *
+     * @param capability 能力
+     * @return 支持返回 true
+     */
+    default boolean supports(MqCapability capability) {
+        return capabilities().contains(capability);
     }
 
     /**

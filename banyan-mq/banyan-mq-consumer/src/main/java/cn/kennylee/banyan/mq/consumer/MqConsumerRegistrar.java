@@ -11,6 +11,7 @@ import cn.kennylee.banyan.mq.core.MqMessage;
 import cn.kennylee.banyan.mq.core.MqMessageCodec;
 import cn.kennylee.banyan.mq.core.StringMqMessageCodec;
 import cn.kennylee.banyan.mq.core.instance.MqInstanceRegistry;
+import cn.kennylee.banyan.mq.core.spi.MqBackend;
 import cn.kennylee.banyan.mq.core.spi.MqConsumerDefinition;
 import cn.kennylee.banyan.mq.core.spi.MqConsumerHandler;
 import lombok.extern.slf4j.Slf4j;
@@ -107,11 +108,10 @@ public class MqConsumerRegistrar {
 
     private void registerMethod(Object bean, Method method, MqConsumer annotation) {
         String instance = resolveInstance(resolvePlaceholders(annotation.instance()));
-        String rawTag = resolvePlaceholders(annotation.tag());
-        boolean wildcard = MqConstants.WILDCARD_TAG.equals(rawTag);
-        String tag = wildcard ? rawTag : applySuffix(rawTag, annotation.tagSuffixEnabled());
+        String tag = resolveTags(annotation.tag(), annotation.tagSuffixEnabled());
+        boolean wildcard = MqConstants.WILDCARD_TAG.equals(tag);
         if (!wildcard) {
-            registry.requireCapability(instance, MqCapability.TAG);
+            requireTagCapability(instance, tag);
         }
 
         MqConsumerDefinition definition = MqConsumerDefinition.builder()
@@ -139,6 +139,57 @@ public class MqConsumerRegistrar {
             group = ClassUtils.getUserClass(bean).getSimpleName() + "_" + method.getName() + "Consumer";
         }
         return applySuffix(group, annotation.groupSuffixEnabled());
+    }
+
+    /**
+     * 把注解的 tag 数组解析成后端过滤表达式：去空、去重、逐 tag 追加后缀，再用 {@code ||} 拼接。
+     *
+     * <p>空数组或包含 {@code "*"} 时返回通配符，表示不过滤。历史写法里单个元素带
+     * {@code "a || b"} 也会被拆开，避免后缀整体追加到表达式末尾。</p>
+     *
+     * @param values        注解上的 tag 数组
+     * @param suffixEnabled 是否追加环境后缀
+     * @return 过滤表达式或通配符
+     */
+    private String resolveTags(String[] values, boolean suffixEnabled) {
+        if (values.length == 0) {
+            return MqConstants.WILDCARD_TAG;
+        }
+        java.util.LinkedHashSet<String> tags = new java.util.LinkedHashSet<>();
+        for (String value : values) {
+            if (Strings.isBlank(value)) {
+                continue;
+            }
+            for (String part : resolvePlaceholders(value).split("\\|\\|")) {
+                String tag = part.trim();
+                if (Strings.isBlank(tag)) {
+                    continue;
+                }
+                if (MqConstants.WILDCARD_TAG.equals(tag)) {
+                    return MqConstants.WILDCARD_TAG;
+                }
+                tags.add(applySuffix(tag, suffixEnabled));
+            }
+        }
+        return tags.isEmpty() ? MqConstants.WILDCARD_TAG : String.join(" || ", tags);
+    }
+
+    /**
+     * 校验后端是否支持 tag 过滤；多个 tag 时给出更明确的错误。
+     *
+     * @param instance 逻辑实例名
+     * @param tag      已解析的 tag 表达式
+     * @throws MqConfigurationException 后端不支持 tag 或多 tag 过滤
+     */
+    private void requireTagCapability(String instance, String tag) {
+        MqBackend backend = registry.backendOf(instance);
+        if (backend.supports(MqCapability.TAG)) {
+            return;
+        }
+        String detail = tag.contains(" || ")
+                ? "后端 " + backend.type() + " 不支持多 tag 过滤: " + tag
+                : "后端 " + backend.type() + " 不支持能力 " + MqCapability.TAG;
+        throw new MqConfigurationException(Messages.get(ErrorCode.MQ_CONFIGURATION_INVALID, detail));
     }
 
     private String applySuffix(String value, boolean enabled) {

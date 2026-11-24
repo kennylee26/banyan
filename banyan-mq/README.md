@@ -149,11 +149,11 @@ public class OrderConsumers {
 ```
 
 - 一个 class 里写多个方法即可，不需要为每个消费者建类。
-- `tag` 默认 `"*"`：不追加后缀、也不向后端校验 TAG 能力；写了具体 tag 才按 tag 过滤。
+- `tag` 是数组，默认 `{"*"}`：空数组或包含 `"*"` 时不追加后缀、也不向后端校验 TAG 能力；写了具体 tag 才按 tag 过滤。
 
 ### 一个 topic、多个 tag
 
-支持两种用法，但**只有 RocketMQ 有 tag 能力**；Kafka 上写任何非 `*` 的 tag 都会在启动期因缺少 `TAG` 能力失败。
+支持两种用法，但**只有 RocketMQ 有 tag 能力**；Kafka 上写任何非 `*` 的 tag 都会在启动期失败。
 
 **多个消费者方法各订阅一个 tag**：同一个 topic 上写多个方法即可，注册时会各自生成独立的消费定义。
 
@@ -165,21 +165,23 @@ public void onPaid(MqMessage message) { }
 public void onClosed(MqMessage message) { }
 ```
 
-**一个方法订阅多个 tag**：`tag` 是 RocketMQ 的过滤表达式，可用 `||`：
+**一个方法订阅多个 tag**：`tag` 直接写数组，框架负责拼成后端的过滤表达式，调用方不需要知道分隔符：
 
 ```java
-@MqConsumer(instance = "rocketmq", topic = "orders", tag = "paid || closed",
-        group = "order-status", tagSuffixEnabled = false)
+@MqConsumer(instance = "rocketmq", topic = "orders",
+        tag = {"paid", "closed"},
+        group = "order-status")
 public void onStatusChanged(MqMessage message, MqConsumeContext context) {
-    // context.getTag() 是消息的实际单个 tag，不是表达式
+    // context.getTag() 是消息的实际单个 tag，不是数组
 }
 ```
 
 注意事项：
 
-- 一条消息只能有一个 tag（RocketMQ 限制），多 tag 是消费端订阅表达式，不是发送端能力。
-- **环境后缀会把整个表达式当成一个字符串追加**：`paid || closed` 在 UAT 会变成 `paid || closed-uat`，只有最后一个 tag 带后缀，前一个不变。用多 tag 表达式时请关闭 `tagSuffixEnabled`，或自行给每个 tag 写好后缀。
+- 一条消息只能有一个 tag（RocketMQ 限制），多 tag 是消费端订阅能力，不是发送端能力。
+- 环境后缀会**逐个 tag** 追加：`{"paid", "closed"}` 在 UAT 下变成 `paid-uat || closed-uat`。旧的单元素写法 `tag = "paid || closed"` 也会被拆开处理，但新代码请直接用数组。
 - 同一个 topic 上多个消费者如果手写 `group`，必须使用不同消费组；RocketMQ 同一消费组对同一 topic 的订阅会互相覆盖。不写 `group` 时框架按 `类名_方法名Consumer` 自动生成，天然不冲突。
+- 后端不支持 tag 时启动期直接报错：单个 tag 报「不支持能力 TAG」，多个 tag 会明确指出「不支持多 tag 过滤」及具体表达式。
 - `topic` / `tag` / `group` / `instance` 支持 Spring 占位符；`concurrency` / `maxRetryTimes` 是数值，注解上不能写占位符。
 - `concurrency` 默认 `0`（后端默认）：Kafka 映射容器并发数，RocketMQ 同时设置 `consumeThreadNumber` 与 `consumeThreadMax`。
 - `maxRetryTimes` 默认 `-1`（后端默认）：RocketMQ 映射 `maxReconsumeTimes`；Kafka 没有内建重试能力，该属性在 Kafka 上不生效并打印 WARN，需要重试时用手动 ACK 或自定义错误处理器。
