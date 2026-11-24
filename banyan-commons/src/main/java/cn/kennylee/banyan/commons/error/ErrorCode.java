@@ -211,6 +211,11 @@ public enum ErrorCode {
 
     /** 消息配置错误。 */
     MQ_CONFIGURATION_INVALID("banyan.mq.configuration-invalid"),
+    /** tag 数组元素里出现了分隔符。 */
+    MQ_TAG_SEPARATOR_NOT_ALLOWED("banyan.mq.tag-separator-not-allowed"),
+
+    /** 通配 tag 与其它 tag 混用。 */
+    MQ_TAG_WILDCARD_MIXED("banyan.mq.tag-wildcard-mixed"),
 
     /** topic 为空。 */
     MQ_TOPIC_REQUIRED("banyan.mq.topic-required"),

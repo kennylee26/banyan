@@ -186,7 +186,7 @@ public void onStatusChanged(MqMessage message, MqConsumeContext context) {
 - `topic` / `tag` / `group` / `instance` 支持 Spring 占位符；`concurrency` / `maxRetryTimes` 是数值，注解上不能写占位符。
 - `concurrency` 默认 `0`（后端默认）：Kafka 映射容器并发数，RocketMQ 同时设置 `consumeThreadNumber` 与 `consumeThreadMax`。
 - `maxRetryTimes` 默认 `-1`（后端默认）：RocketMQ 映射 `maxReconsumeTimes`；Kafka 没有内建重试能力，该属性在 Kafka 上不生效并打印 WARN，需要重试时用手动 ACK 或自定义错误处理器。
-- 消费组与 tag 自动追加 `-<profile>` 环境后缀，防止同一 RocketMQ 在测试与 UAT 串台；两者可分别用 `groupSuffixEnabled = false` / `tagSuffixEnabled = false` 关闭。
+- 消费组与每个 tag 自动追加 `-<profile>` 环境后缀，防止同一 RocketMQ 在测试与 UAT 串台；两者可分别用 `groupSuffixEnabled = false` / `tagSuffixEnabled = false` 关闭。
 - 返回值支持 `void` 与 `boolean`：
   - `void` 正常结束 = 成功；`void` 抛异常 = 失败
   - `boolean` 返回 `true` = 成功；返回 `false` = 失败

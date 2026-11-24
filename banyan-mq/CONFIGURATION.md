@@ -64,7 +64,7 @@ MqInstanceRegistry mqInstanceRegistry(MqBackend memberKafkaBackend, MqBackend pa
 | `concurrency` | `0` | 并发数，`0` 用后端默认；Kafka 映射容器并发数，RocketMQ 同时设置 `consumeThreadNumber` / `consumeThreadMax` |
 | `maxRetryTimes` | `-1` | 最大重试次数，`-1` 用后端默认；RocketMQ 映射 `maxReconsumeTimes`，Kafka 无内建重试，该属性不生效并打印 WARN |
 | `groupSuffixEnabled` | `true` | 是否给消费组追加环境后缀 |
-| `tagSuffixEnabled` | `true` | 是否给 tag 追加环境后缀 |
+| `tagSuffixEnabled` | `true` | 是否给每个 tag 追加环境后缀 |
 
 `concurrency` 与 `maxRetryTimes` 是数值属性，Java 注解上不能写占位符。
 

@@ -165,8 +165,7 @@ public class MqConsumerRegistrar {
             String resolved = resolvePlaceholders(value);
             if (resolved.contains(MqConstants.TAG_SEPARATOR)) {
                 throw new MqConfigurationException(Messages.get(
-                        ErrorCode.MQ_CONFIGURATION_INVALID,
-                        "tag 请使用数组，不要写分隔符: " + resolved));
+                        ErrorCode.MQ_TAG_SEPARATOR_NOT_ALLOWED, resolved));
             }
             tags.add(MqConstants.WILDCARD_TAG.equals(resolved)
                     ? resolved : applySuffix(resolved, suffixEnabled));
@@ -175,8 +174,7 @@ public class MqConsumerRegistrar {
         if (distinct.contains(MqConstants.WILDCARD_TAG)) {
             if (distinct.size() > 1) {
                 throw new MqConfigurationException(Messages.get(
-                        ErrorCode.MQ_CONFIGURATION_INVALID,
-                        "通配符 * 不能与其它 tag 混用: " + distinct));
+                        ErrorCode.MQ_TAG_WILDCARD_MIXED, distinct));
             }
             return List.of();
         }
