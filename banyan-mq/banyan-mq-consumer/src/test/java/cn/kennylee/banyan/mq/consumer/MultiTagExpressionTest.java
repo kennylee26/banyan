@@ -9,7 +9,6 @@ import org.junit.jupiter.api.Test;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -24,7 +23,7 @@ class MultiTagExpressionTest {
     @Test
     void joinsTagArrayIntoExpression() {
         // given
-        RecordingBackend backend = new RecordingBackend("rocketmq", MqCapability.TAG);
+        RecordingBackend backend = new RecordingBackend("rocketmq", MqCapability.TAG, MqCapability.MULTI_TAG);
         MqConsumerRegistrar registrar = new MqConsumerRegistrar(
                 new MqInstanceRegistry(List.of(backend)));
 
@@ -32,13 +31,14 @@ class MultiTagExpressionTest {
         registrar.register(new MultiTagConsumer());
 
         // then
-        assertNotNull(backend.definitionOf("rocketmq", "orders", "created || cancelled"));
+        assertEquals("created || cancelled",
+                backend.definitionOf("rocketmq", "orders", "created || cancelled").getTag());
     }
 
     @Test
     void appliesSuffixToEveryTag() {
         // given
-        RecordingBackend backend = new RecordingBackend("rocketmq", MqCapability.TAG);
+        RecordingBackend backend = new RecordingBackend("rocketmq", MqCapability.TAG, MqCapability.MULTI_TAG);
         MqConsumerRegistrar registrar = new MqConsumerRegistrar(
                 new MqInstanceRegistry(List.of(backend)), "uat");
 
@@ -46,8 +46,9 @@ class MultiTagExpressionTest {
         registrar.register(new SuffixedMultiTagConsumer());
 
         // then
-        assertNotNull(backend.definitionOf("rocketmq", "orders",
-                "created-uat || cancelled-uat"));
+        assertEquals("created-uat || cancelled-uat",
+                backend.definitionOf("rocketmq", "orders",
+                        "created-uat || cancelled-uat").getTag());
     }
 
     @Test
@@ -61,36 +62,68 @@ class MultiTagExpressionTest {
         registrar.register(new EmptyTagConsumer());
 
         // then
-        assertNotNull(backend.definitionOf("rocketmq", "orders", "*"));
+        assertEquals("*", backend.definitionOf("rocketmq", "orders", "*").getTag());
     }
 
     @Test
-    void wildcardElementMeansNoFiltering() {
+    void pureWildcardArrayMeansNoFiltering() {
         // given
         RecordingBackend backend = new RecordingBackend("rocketmq");
         MqConsumerRegistrar registrar = new MqConsumerRegistrar(
                 new MqInstanceRegistry(List.of(backend)));
 
         // when
-        registrar.register(new WildcardElementConsumer());
+        registrar.register(new PureWildcardConsumer());
 
         // then
-        assertNotNull(backend.definitionOf("rocketmq", "orders", "*"));
+        assertEquals("*", backend.definitionOf("rocketmq", "orders", "*").getTag());
     }
 
     @Test
-    void splitsLegacySingleElementExpressionAndAppliesSuffixPerTag() {
+    void rejectsSeparatorInsideTagElement() {
         // given
-        RecordingBackend backend = new RecordingBackend("rocketmq", MqCapability.TAG);
+        RecordingBackend backend = new RecordingBackend("rocketmq",
+                MqCapability.TAG, MqCapability.MULTI_TAG);
         MqConsumerRegistrar registrar = new MqConsumerRegistrar(
-                new MqInstanceRegistry(List.of(backend)), "uat");
+                new MqInstanceRegistry(List.of(backend)));
 
         // when
-        registrar.register(new LegacyExpressionConsumer());
+        MqConfigurationException error = assertThrows(MqConfigurationException.class,
+                () -> registrar.register(new LegacyExpressionConsumer()));
 
         // then
-        assertNotNull(backend.definitionOf("rocketmq", "orders",
-                "paid-uat || closed-uat"));
+        assertTrue(error.getMessage().contains("不要写分隔符"));
+    }
+
+    @Test
+    void rejectsWildcardMixedWithOtherTags() {
+        // given
+        RecordingBackend backend = new RecordingBackend("rocketmq");
+        MqConsumerRegistrar registrar = new MqConsumerRegistrar(
+                new MqInstanceRegistry(List.of(backend)));
+
+        // when
+        MqConfigurationException error = assertThrows(MqConfigurationException.class,
+                () -> registrar.register(new WildcardElementConsumer()));
+
+        // then
+        assertTrue(error.getMessage().contains("不能与其它 tag 混用"));
+    }
+
+    @Test
+    void rejectsMultiTagWhenBackendSupportsOnlySingleTag() {
+        // given
+        RecordingBackend backend = new RecordingBackend("single-tag", MqCapability.TAG);
+        MqConsumerRegistrar registrar = new MqConsumerRegistrar(
+                new MqInstanceRegistry(List.of(backend)));
+
+        // when
+        MqConfigurationException error = assertThrows(MqConfigurationException.class,
+                () -> registrar.register(new SingleTagBackendConsumer()));
+
+        // then
+        assertTrue(error.getMessage().contains("MULTI_TAG"));
+        assertTrue(error.getMessage().contains("single-tag"));
     }
 
     @Test
@@ -105,9 +138,9 @@ class MultiTagExpressionTest {
                 () -> registrar.register(new KafkaMultiTagConsumer()));
 
         // then
-        assertTrue(error.getMessage().contains("不支持多 tag"));
+        assertTrue(error.getMessage().contains("MULTI_TAG"));
         assertTrue(error.getMessage().contains("kafka"));
-        assertEquals(0, backend.definitions().size());
+        assertTrue(backend.definitions().isEmpty());
     }
 
     /** 多个 tag 数组。 */
@@ -125,6 +158,16 @@ class MultiTagExpressionTest {
 
         @MqConsumer(instance = "rocketmq", topic = "orders",
                 tag = {"created", "cancelled"}, groupSuffixEnabled = false)
+        public void onMulti(MqMessage message) {
+        }
+    }
+
+    /** 只声明单 tag 能力的后端实例上的多 tag 消费者。 */
+    static class SingleTagBackendConsumer {
+
+        @MqConsumer(instance = "single-tag", topic = "orders",
+                tag = {"created", "cancelled"},
+                groupSuffixEnabled = false, tagSuffixEnabled = false)
         public void onMulti(MqMessage message) {
         }
     }
@@ -147,7 +190,15 @@ class MultiTagExpressionTest {
         }
     }
 
-    /** 包含通配符元素。 */
+    /** 纯通配数组。 */
+    static class PureWildcardConsumer {
+
+        @MqConsumer(instance = "rocketmq", topic = "orders", tag = {"*"})
+        public void onMulti(MqMessage message) {
+        }
+    }
+
+    /** 通配符与具体 tag 混用。 */
     static class WildcardElementConsumer {
 
         @MqConsumer(instance = "rocketmq", topic = "orders", tag = {"paid", "*"})
@@ -155,7 +206,7 @@ class MultiTagExpressionTest {
         }
     }
 
-    /** 旧写法：单个元素里带 ||，也应拆开后逐 tag 加后缀。 */
+    /** 旧写法：单个元素里带分隔符，应直接报错。 */
     static class LegacyExpressionConsumer {
 
         @MqConsumer(instance = "rocketmq", topic = "orders", tag = "paid || closed")

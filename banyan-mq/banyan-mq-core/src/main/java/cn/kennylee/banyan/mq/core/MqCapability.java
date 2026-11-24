@@ -11,8 +11,11 @@ package cn.kennylee.banyan.mq.core;
  */
 public enum MqCapability {
 
-    /** tag 过滤。 */
+    /** 单个 tag 过滤。 */
     TAG,
+
+    /** 多个 tag 过滤（后端需支持 tag 表达式）。 */
+    MULTI_TAG,
 
     /** 延迟消息。 */
     DELAY

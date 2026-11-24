@@ -94,7 +94,7 @@ public final class RocketMqBackend implements MqBackend {
 
     @Override
     public Set<MqCapability> capabilities() {
-        return Set.of(MqCapability.TAG, MqCapability.DELAY);
+        return Set.of(MqCapability.TAG, MqCapability.MULTI_TAG, MqCapability.DELAY);
     }
 
     @Override

@@ -34,6 +34,7 @@ class RocketMqBackendTest {
 
         // when
         assertTrue(backend.capabilities().contains(MqCapability.TAG));
+        assertTrue(backend.capabilities().contains(MqCapability.MULTI_TAG));
 
         // then
         assertTrue(backend.capabilities().contains(MqCapability.DELAY));

@@ -59,7 +59,7 @@ MqInstanceRegistry mqInstanceRegistry(MqBackend memberKafkaBackend, MqBackend pa
 |---|---|---|
 | `instance` | 空 | 逻辑实例名；为空时使用唯一默认实例。支持 Spring 占位符 |
 | `topic` | 必填 | topic，支持 Spring 占位符 |
-| `tag` | `*` | tag 过滤表达式；`*` 表示不按 tag 过滤，且不追加后缀、不校验后端 tag 能力。支持 Spring 占位符 |
+| `tag` | `{"*"}` | tag 数组；空数组或只有 `*` 表示不按 tag 过滤，且不追加后缀、不校验后端 tag 能力。多个 tag 由框架拼成后端表达式，支持 Spring 占位符 |
 | `group` | 类名_方法名Consumer | 消费组，支持 Spring 占位符 |
 | `concurrency` | `0` | 并发数，`0` 用后端默认；Kafka 映射容器并发数，RocketMQ 同时设置 `consumeThreadNumber` / `consumeThreadMax` |
 | `maxRetryTimes` | `-1` | 最大重试次数，`-1` 用后端默认；RocketMQ 映射 `maxReconsumeTimes`，Kafka 无内建重试，该属性不生效并打印 WARN |
