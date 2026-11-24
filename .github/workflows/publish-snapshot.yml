@@ -15,8 +15,7 @@ jobs:
   publish:
     # 防止在 dev 等分支上手动触发 workflow_dispatch 时误发快照
     if: github.ref == 'refs/heads/main'
-    # 固定 22.04：ubuntu-latest(24.04) 上 flapdoodle 内嵌 Mongo 启动失败，先回退到较旧 LTS 观察
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     env:
       # maven-gpg-plugin 默认读取 MAVEN_GPG_PASSPHRASE，名字不可随意改
       MAVEN_GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
@@ -36,7 +35,11 @@ jobs:
           gpg-passphrase: MAVEN_GPG_PASSPHRASE
 
       - name: Build and publish snapshot
-        run: mvn --batch-mode -Prelease clean deploy
+        # flapdoodle 1.9.0 在 GH runner 上探不到 Ubuntu 版本，会降级选 ubuntu2004 包而缺 libssl.so.1；
+        # 显式指定平台命中 openssl3 的 2404 包（诊断 workflow 已在 24.04 验证 36 测试全过）
+        run: >
+          mvn --batch-mode -Prelease clean deploy
+          -DargLine='-Dde.flapdoodle.os.override=Linux|X86_64|Ubuntu|Ubuntu_24_04'
         env:
           CENTRAL_TOKEN_USERNAME: ${{ secrets.CENTRAL_TOKEN_USERNAME }}
           CENTRAL_TOKEN_PASSWORD: ${{ secrets.CENTRAL_TOKEN_PASSWORD }}

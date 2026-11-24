@@ -15,7 +15,7 @@ jobs:
   publish:
     # 防止在非 main 的 ref 上手动触发误发；tag 必须指向 main 的提交
     if: github.ref_type == 'tag'
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     env:
       MAVEN_GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
     steps:
@@ -50,7 +50,10 @@ jobs:
       # autoPublish=false：bundle 上传后需在 https://central.sonatype.com/publishing/deployments
       # 人工确认发布，避免误操作直接对外可见
       - name: Build and publish release
-        run: mvn --batch-mode -Prelease clean deploy
+        # 同 publish-snapshot.yml：显式指定 flapdoodle 平台，避免 24.04 上选错包缺 libssl.so.1
+        run: >
+          mvn --batch-mode -Prelease clean deploy
+          -DargLine='-Dde.flapdoodle.os.override=Linux|X86_64|Ubuntu|Ubuntu_24_04'
         env:
           CENTRAL_TOKEN_USERNAME: ${{ secrets.CENTRAL_TOKEN_USERNAME }}
           CENTRAL_TOKEN_PASSWORD: ${{ secrets.CENTRAL_TOKEN_PASSWORD }}
