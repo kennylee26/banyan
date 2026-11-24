@@ -1,12 +1,10 @@
 package cn.kennylee.banyan.spring.feign.autoconfigure;
 
-import cn.kennylee.banyan.commons.spring.log.LoggingOptions;
+import cn.kennylee.banyan.commons.http.HeaderForwardOptions;
+import cn.kennylee.banyan.commons.log.LoggingOptions;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Feign 能力配置。
@@ -56,15 +54,9 @@ public class FeignProperties {
      */
     @Getter
     @Setter
-    public static class ForwardHeaders {
+    public static class ForwardHeaders extends HeaderForwardOptions {
 
         /** 默认关闭，避免自动带出敏感入站 header。 */
         private boolean enabled;
-
-        /** apply 后自动清理上下文。 */
-        private boolean clearAfterApply = true;
-
-        /** 额外阻塞头。 */
-        private List<String> blockedHeaders = new ArrayList<>();
     }
 }

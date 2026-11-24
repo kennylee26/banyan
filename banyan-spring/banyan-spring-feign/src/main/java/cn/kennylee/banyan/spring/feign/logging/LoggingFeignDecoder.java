@@ -1,7 +1,7 @@
 package cn.kennylee.banyan.spring.feign.logging;
 
-import cn.kennylee.banyan.commons.spring.log.LogSanitizer;
-import cn.kennylee.banyan.commons.spring.log.LoggingOptions;
+import cn.kennylee.banyan.commons.log.LogSanitizer;
+import cn.kennylee.banyan.commons.log.LoggingOptions;
 import feign.Response;
 import feign.codec.Decoder;
 import lombok.extern.slf4j.Slf4j;

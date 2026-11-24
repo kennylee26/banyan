@@ -1,6 +1,6 @@
 package cn.kennylee.banyan.spring.feign.logging;
 
-import cn.kennylee.banyan.commons.spring.log.LoggingOptions;
+import cn.kennylee.banyan.commons.log.LoggingOptions;
 import feign.Capability;
 import feign.codec.Decoder;
 import org.springframework.cloud.openfeign.FeignBuilderCustomizer;

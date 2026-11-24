@@ -3,7 +3,10 @@ package cn.kennylee.banyan.commons.util;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
+import java.util.Set;
 
 /**
  * 集合工具。
@@ -34,6 +37,20 @@ public final class CollUtils {
      */
     public static boolean isNotEmpty(Collection<?> collection) {
         return !isEmpty(collection);
+    }
+
+    /**
+     * 把字符串集合转成小写集合，用于大小写无关的名称匹配。
+     *
+     * @param values 原集合；为 null 时返回空集合
+     * @return 小写集合
+     */
+    public static Set<String> lowerSet(Collection<String> values) {
+        Set<String> result = new HashSet<>();
+        if (values != null) {
+            values.forEach(value -> result.add(value.toLowerCase(Locale.ROOT)));
+        }
+        return result;
     }
 
     /**

@@ -1,7 +1,7 @@
 package cn.kennylee.banyan.spring.feign.interceptor;
 
-import cn.kennylee.banyan.commons.spring.log.LogSanitizer;
-import cn.kennylee.banyan.commons.spring.log.LoggingOptions;
+import cn.kennylee.banyan.commons.log.LogSanitizer;
+import cn.kennylee.banyan.commons.log.LoggingOptions;
 import feign.RequestInterceptor;
 import feign.RequestTemplate;
 import lombok.extern.slf4j.Slf4j;

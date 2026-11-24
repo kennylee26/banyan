@@ -1,7 +1,8 @@
-package cn.kennylee.banyan.commons.spring.log;
+package cn.kennylee.banyan.commons.log;
 
 import org.junit.jupiter.api.Test;
 
+import java.nio.charset.StandardCharsets;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -75,9 +76,12 @@ class LogSanitizerTest {
         // given
         LoggingOptions options = new LoggingOptions();
 
-        // when / then
-        assertEquals("", LogSanitizer.body(null, options));
+        // when
+        String body = LogSanitizer.body(null, options);
+
+        // then
+        assertEquals("", body);
         assertEquals("", LogSanitizer.utf8(null));
-        assertEquals("abc", LogSanitizer.utf8("abc".getBytes(java.nio.charset.StandardCharsets.UTF_8)));
+        assertEquals("abc", LogSanitizer.utf8("abc".getBytes(StandardCharsets.UTF_8)));
     }
 }

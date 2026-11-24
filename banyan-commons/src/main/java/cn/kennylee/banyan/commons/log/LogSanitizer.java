@@ -1,8 +1,8 @@
-package cn.kennylee.banyan.commons.spring.log;
+package cn.kennylee.banyan.commons.log;
+
+import cn.kennylee.banyan.commons.util.CollUtils;
 
 import java.nio.charset.StandardCharsets;
-import java.util.Collection;
-import java.util.HashSet;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
@@ -33,8 +33,8 @@ public final class LogSanitizer {
      * @return 可打印文本
      */
     public static String headers(Map<String, String> headers, LoggingOptions options) {
-        Set<String> ignored = lower(options.getIgnoredHeaders());
-        Set<String> masked = lower(options.getMaskedHeaders());
+        Set<String> ignored = CollUtils.lowerSet(options.getIgnoredHeaders());
+        Set<String> masked = CollUtils.lowerSet(options.getMaskedHeaders());
         Map<String, String> sorted = new TreeMap<>();
         headers.forEach((name, value) -> {
             if (ignored.contains(name.toLowerCase(Locale.ROOT))) {
@@ -69,12 +69,5 @@ public final class LogSanitizer {
      */
     public static String utf8(byte[] bytes) {
         return bytes == null ? "" : new String(bytes, StandardCharsets.UTF_8);
-    }
-
-    /** header 名转小写集合。 */
-    private static Set<String> lower(Collection<String> names) {
-        Set<String> result = new HashSet<>();
-        names.forEach(name -> result.add(name.toLowerCase(Locale.ROOT)));
-        return result;
     }
 }

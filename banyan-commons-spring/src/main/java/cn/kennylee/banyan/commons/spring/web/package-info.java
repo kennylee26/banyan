@@ -1,5 +1,5 @@
 /**
- * header 传播的公共能力：入站读取、阻塞规则与单次调用上下文。
+ * Servlet 场景下读取入站 header 的能力，缺类时自动降级。
  *
  * @author kennylee
  * @since 0.1.0

@@ -1,8 +1,9 @@
 package cn.kennylee.banyan.spring.feign.interceptor;
 
-import cn.kennylee.banyan.commons.spring.web.HeaderContext;
-import cn.kennylee.banyan.commons.spring.web.HeaderContextHolder;
-import cn.kennylee.banyan.commons.spring.web.HeaderRules;
+import cn.kennylee.banyan.commons.http.HeaderContext;
+import cn.kennylee.banyan.commons.http.HeaderContextHolder;
+import cn.kennylee.banyan.commons.http.HeaderRules;
+import cn.kennylee.banyan.commons.spring.web.ServletHeaders;
 import cn.kennylee.banyan.spring.feign.autoconfigure.FeignProperties;
 import feign.RequestInterceptor;
 import feign.RequestTemplate;
@@ -10,8 +11,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.Ordered;
 import org.springframework.lang.NonNull;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -39,12 +38,12 @@ public class ForwardHeadersInterceptor implements RequestInterceptor, Ordered {
     public void apply(@NonNull RequestTemplate template) {
         HeaderContext context = HeaderContextHolder.current();
         try {
-            if (!HeaderContextHolder.isForwardEnabled()) {
+            if (!HeaderContextHolder.isPropagationEnabled()) {
                 log.debug("当前 header 上下文或全局开关禁用转发");
                 return;
             }
-            Map<String, String> headers = HeaderRules.inboundHeaders();
-            HeaderRules.removeBlocked(headers, blockedOf(context));
+            Map<String, String> headers = ServletHeaders.inbound();
+            HeaderRules.removeBlocked(headers, properties.getForwardHeaders(), context);
             headers.putAll(context.getCustomHeaders());
             headers.forEach(template::header);
         } finally {
@@ -58,13 +57,5 @@ public class ForwardHeadersInterceptor implements RequestInterceptor, Ordered {
     @Override
     public int getOrder() {
         return FeignRequestLogInterceptor.ORDER - 1;
-    }
-
-    /** 合并配置与单次的额外阻塞头。 */
-    private List<String> blockedOf(HeaderContext context) {
-        List<String> blocked = new ArrayList<>(
-                properties.getForwardHeaders().getBlockedHeaders());
-        blocked.addAll(context.getBlockedHeaders());
-        return blocked;
     }
 }

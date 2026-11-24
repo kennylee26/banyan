@@ -14,7 +14,7 @@
     <artifactId>banyan-commons-spring</artifactId>
 
     <name>banyan-commons-spring</name>
-    <description>依赖 Spring 的公共层：可替换接口、策略注册器与装配骨架</description>
+    <description>依赖 Spring 的公共层：可替换接口、Servlet header 读取与装配骨架</description>
 
     <dependencies>
         <dependency>

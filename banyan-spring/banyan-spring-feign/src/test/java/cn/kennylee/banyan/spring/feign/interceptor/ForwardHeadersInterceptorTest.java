@@ -1,6 +1,6 @@
 package cn.kennylee.banyan.spring.feign.interceptor;
 
-import cn.kennylee.banyan.commons.spring.web.HeaderContextHolder;
+import cn.kennylee.banyan.commons.http.HeaderContextHolder;
 import cn.kennylee.banyan.spring.feign.autoconfigure.FeignProperties;
 import feign.RequestTemplate;
 import org.junit.jupiter.api.AfterEach;
@@ -57,7 +57,7 @@ class ForwardHeadersInterceptorTest {
         MockHttpServletRequest request = new MockHttpServletRequest();
         request.addHeader("X-Tenant", "t1");
         RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(request));
-        HeaderContextHolder.disableForwardHeaders();
+        HeaderContextHolder.disablePropagation();
         ForwardHeadersInterceptor interceptor = new ForwardHeadersInterceptor(new FeignProperties());
         RequestTemplate template = new RequestTemplate();
 
@@ -80,6 +80,24 @@ class ForwardHeadersInterceptorTest {
 
         // then
         assertTrue(HeaderContextHolder.current().getCustomHeaders().isEmpty());
+    }
+
+    /** 关闭自动清理后，串联的多次调用仍能读到同一份自定义头。 */
+    @Test
+    void keepsContextWhenClearAtOnceDisabled() {
+        // given
+        HeaderContextHolder.addCustomHeader("X-Tenant", "t1");
+        HeaderContextHolder.setClearAtOnce(false);
+        ForwardHeadersInterceptor interceptor = new ForwardHeadersInterceptor(new FeignProperties());
+        RequestTemplate first = new RequestTemplate();
+        RequestTemplate second = new RequestTemplate();
+
+        // when
+        interceptor.apply(first);
+        interceptor.apply(second);
+
+        // then
+        assertEquals("t1", second.headers().get("X-Tenant").iterator().next());
     }
 
     /** 自定义头覆盖，阻塞头大小写无关。 */
