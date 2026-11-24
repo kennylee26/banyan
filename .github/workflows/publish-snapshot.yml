@@ -26,7 +26,7 @@ jobs:
           distribution: temurin
           java-version: '17'
           cache: maven
-          server-id: central
+          server-id: central-portal
           server-username: CENTRAL_TOKEN_USERNAME
           server-password: CENTRAL_TOKEN_PASSWORD
           gpg-private-key: ${{ secrets.GPG_PRIVATE_KEY }}
