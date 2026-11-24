@@ -1,26 +1,18 @@
 package cn.kennylee.banyan.spring.feign.interceptor;
 
-import cn.kennylee.banyan.spring.feign.FeignContext;
-import cn.kennylee.banyan.spring.feign.FeignContextHolder;
+import cn.kennylee.banyan.commons.spring.web.HeaderContext;
+import cn.kennylee.banyan.commons.spring.web.HeaderContextHolder;
+import cn.kennylee.banyan.commons.spring.web.HeaderRules;
 import cn.kennylee.banyan.spring.feign.autoconfigure.FeignProperties;
 import feign.RequestInterceptor;
 import feign.RequestTemplate;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.Ordered;
-import org.springframework.http.HttpHeaders;
 import org.springframework.lang.NonNull;
-import org.springframework.web.context.request.RequestAttributes;
-import org.springframework.web.context.request.RequestContextHolder;
-import org.springframework.web.context.request.ServletRequestAttributes;
 
-import jakarta.servlet.http.HttpServletRequest;
-
-import java.util.Enumeration;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.Locale;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 /**
  * 入站 header 转发拦截器：默认由配置关闭，开启后按阻塞名单与单次上下文转发。
@@ -30,11 +22,6 @@ import java.util.Set;
  */
 @Slf4j
 public class ForwardHeadersInterceptor implements RequestInterceptor, Ordered {
-
-    /** 默认阻塞头。 */
-    private static final Set<String> DEFAULT_BLOCKED = Set.of(
-            HttpHeaders.COOKIE, HttpHeaders.SET_COOKIE, HttpHeaders.CONTENT_LENGTH,
-            HttpHeaders.CONTENT_TYPE, HttpHeaders.ACCEPT, HttpHeaders.AUTHORIZATION);
 
     /** 配置。 */
     private final FeignProperties properties;
@@ -50,20 +37,20 @@ public class ForwardHeadersInterceptor implements RequestInterceptor, Ordered {
 
     @Override
     public void apply(@NonNull RequestTemplate template) {
-        FeignContext context = FeignContextHolder.current();
+        HeaderContext context = HeaderContextHolder.current();
         try {
-            if (!FeignContextHolder.isForwardEnabled()) {
-                log.debug("当前 Feign 上下文或全局开关禁用转发 header");
+            if (!HeaderContextHolder.isForwardEnabled()) {
+                log.debug("当前 header 上下文或全局开关禁用转发");
                 return;
             }
-            Map<String, String> headers = originHeaders();
-            removeBlocked(headers, context);
+            Map<String, String> headers = HeaderRules.inboundHeaders();
+            HeaderRules.removeBlocked(headers, blockedOf(context));
             headers.putAll(context.getCustomHeaders());
             headers.forEach(template::header);
         } finally {
             if (properties.getForwardHeaders().isClearAfterApply()
                     && context.isClearAtOnce()) {
-                FeignContextHolder.clear();
+                HeaderContextHolder.clear();
             }
         }
     }
@@ -73,35 +60,11 @@ public class ForwardHeadersInterceptor implements RequestInterceptor, Ordered {
         return FeignRequestLogInterceptor.ORDER - 1;
     }
 
-    /** 读取当前 Servlet 请求的 header。 */
-    private static Map<String, String> originHeaders() {
-        RequestAttributes attributes = RequestContextHolder.getRequestAttributes();
-        if (!(attributes instanceof ServletRequestAttributes servletAttributes)) {
-            return new LinkedHashMap<>();
-        }
-        HttpServletRequest request = servletAttributes.getRequest();
-        Enumeration<String> names = request.getHeaderNames();
-        Map<String, String> headers = new LinkedHashMap<>();
-        if (names == null) {
-            return headers;
-        }
-        while (names.hasMoreElements()) {
-            String name = names.nextElement();
-            String value = request.getHeader(name);
-            if (value != null && !value.isEmpty()) {
-                headers.put(name, value);
-            }
-        }
-        return headers;
-    }
-
-    /** 应用默认 + 配置 + 单次的阻塞头。 */
-    private void removeBlocked(Map<String, String> headers, FeignContext context) {
-        Set<String> blocked = new HashSet<>();
-        DEFAULT_BLOCKED.forEach(name -> blocked.add(name.toLowerCase(Locale.ROOT)));
-        properties.getForwardHeaders().getBlockedHeaders()
-                .forEach(name -> blocked.add(name.toLowerCase(Locale.ROOT)));
-        context.getBlockedHeaders().forEach(name -> blocked.add(name.toLowerCase(Locale.ROOT)));
-        headers.keySet().removeIf(name -> blocked.contains(name.toLowerCase(Locale.ROOT)));
+    /** 合并配置与单次的额外阻塞头。 */
+    private List<String> blockedOf(HeaderContext context) {
+        List<String> blocked = new ArrayList<>(
+                properties.getForwardHeaders().getBlockedHeaders());
+        blocked.addAll(context.getBlockedHeaders());
+        return blocked;
     }
 }

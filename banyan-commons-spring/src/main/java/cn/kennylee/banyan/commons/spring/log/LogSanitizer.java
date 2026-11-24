@@ -1,20 +1,20 @@
-package cn.kennylee.banyan.spring.feign.logging;
-
-import cn.kennylee.banyan.spring.feign.autoconfigure.FeignProperties;
+package cn.kennylee.banyan.commons.spring.log;
 
 import java.nio.charset.StandardCharsets;
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 
 /**
- * Feign 日志格式化：忽略头、敏感值脱敏与 body 截断。
+ * 请求/响应日志格式化：忽略头、敏感值脱敏与 body 截断。
  *
  * @author kennylee
  * @since 0.1.0
  */
-public final class FeignLogSupport {
+public final class LogSanitizer {
 
     /** 敏感值占位。 */
     private static final String MASKED = "***";
@@ -22,26 +22,25 @@ public final class FeignLogSupport {
     /** 截断标记。 */
     private static final String TRUNCATED = "...<truncated>";
 
-    private FeignLogSupport() {
+    private LogSanitizer() {
     }
 
     /**
-     * 格式化 header 表。
+     * 格式化 header 表，按名排序便于比对。
      *
-     * @param headers   header 表
-     * @param logging   日志配置
+     * @param headers header 表
+     * @param options 日志配置
      * @return 可打印文本
      */
-    public static String headers(Map<String, String> headers,
-                                 FeignProperties.Logging logging) {
-        Set<String> ignored = lower(logging.getIgnoredHeaders());
-        Set<String> masked = lower(logging.getMaskedHeaders());
+    public static String headers(Map<String, String> headers, LoggingOptions options) {
+        Set<String> ignored = lower(options.getIgnoredHeaders());
+        Set<String> masked = lower(options.getMaskedHeaders());
         Map<String, String> sorted = new TreeMap<>();
         headers.forEach((name, value) -> {
             if (ignored.contains(name.toLowerCase(Locale.ROOT))) {
                 return;
             }
-            String output = logging.isMaskSensitive()
+            String output = options.isMaskSensitive()
                     && masked.contains(name.toLowerCase(Locale.ROOT)) ? MASKED : value;
             sorted.put(name, output);
         });
@@ -52,12 +51,12 @@ public final class FeignLogSupport {
      * 格式化 body，超长时截断。
      *
      * @param body    body 文本
-     * @param logging 日志配置
+     * @param options 日志配置
      * @return 可打印文本
      */
-    public static String body(String body, FeignProperties.Logging logging) {
+    public static String body(String body, LoggingOptions options) {
         String text = body == null ? "" : body;
-        int limit = Math.max(0, logging.getMaxBodyLength());
+        int limit = Math.max(0, options.getMaxBodyLength());
         return text.length() <= limit ? text
                 : text.substring(0, limit) + TRUNCATED;
     }
@@ -73,8 +72,8 @@ public final class FeignLogSupport {
     }
 
     /** header 名转小写集合。 */
-    private static Set<String> lower(java.util.Collection<String> names) {
-        Set<String> result = new java.util.HashSet<>();
+    private static Set<String> lower(Collection<String> names) {
+        Set<String> result = new HashSet<>();
         names.forEach(name -> result.add(name.toLowerCase(Locale.ROOT)));
         return result;
     }

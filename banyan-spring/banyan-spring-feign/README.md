@@ -30,11 +30,14 @@ Feign 应用能力扩展：引入后自动装配请求/响应日志；header 转
 ## 单次 header 上下文
 
 ```java
-FeignContextHolder.addCustomHeader("X-Tenant", "t1");
-FeignContextHolder.addBlockedHeader("X-Internal");
-FeignContextHolder.disableForwardHeaders();   // 单次关闭转发
-FeignContextHolder.setClearAtOnce(false);     // 自行控制 clear()
+HeaderContextHolder.addCustomHeader("X-Tenant", "t1");
+HeaderContextHolder.addBlockedHeader("X-Internal");
+HeaderContextHolder.disableForwardHeaders();   // 单次关闭转发
+HeaderContextHolder.setClearAtOnce(false);     // 自行控制 clear()
 ```
+
+`HeaderContextHolder` 位于 `banyan-commons-spring`（包 `cn.kennylee.banyan.commons.spring.web`），
+不绑定 Feign，后续其它出站客户端能力共用同一套上下文。
 
 默认 apply 后自动 `clear()`，避免异步/线程池串 header。
 

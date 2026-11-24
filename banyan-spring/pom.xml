@@ -20,4 +20,13 @@
     <modules>
         <module>banyan-spring-feign</module>
     </modules>
+
+    <dependencies>
+        <!-- 所有 Spring 能力包的公共层：header 传播、日志脱敏等 -->
+        <dependency>
+            <groupId>cn.kennylee.banyan</groupId>
+            <artifactId>banyan-commons-spring</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+    </dependencies>
 </project>

@@ -1,6 +1,6 @@
 package cn.kennylee.banyan.spring.feign.interceptor;
 
-import cn.kennylee.banyan.spring.feign.FeignContextHolder;
+import cn.kennylee.banyan.commons.spring.web.HeaderContextHolder;
 import cn.kennylee.banyan.spring.feign.autoconfigure.FeignProperties;
 import feign.RequestTemplate;
 import org.junit.jupiter.api.AfterEach;
@@ -26,7 +26,7 @@ class ForwardHeadersInterceptorTest {
     @AfterEach
     void clear() {
         RequestContextHolder.resetRequestAttributes();
-        FeignContextHolder.clear();
+        HeaderContextHolder.clear();
     }
 
     /** 转发入站 header 并应用默认阻塞名单。 */
@@ -57,7 +57,7 @@ class ForwardHeadersInterceptorTest {
         MockHttpServletRequest request = new MockHttpServletRequest();
         request.addHeader("X-Tenant", "t1");
         RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(request));
-        FeignContextHolder.disableForwardHeaders();
+        HeaderContextHolder.disableForwardHeaders();
         ForwardHeadersInterceptor interceptor = new ForwardHeadersInterceptor(new FeignProperties());
         RequestTemplate template = new RequestTemplate();
 
@@ -72,14 +72,14 @@ class ForwardHeadersInterceptorTest {
     @Test
     void clearsContextAfterApplyByDefault() {
         // given
-        FeignContextHolder.addCustomHeader("X-Tenant", "t1");
+        HeaderContextHolder.addCustomHeader("X-Tenant", "t1");
         ForwardHeadersInterceptor interceptor = new ForwardHeadersInterceptor(new FeignProperties());
 
         // when
         interceptor.apply(new RequestTemplate());
 
         // then
-        assertTrue(FeignContextHolder.current().getCustomHeaders().isEmpty());
+        assertTrue(HeaderContextHolder.current().getCustomHeaders().isEmpty());
     }
 
     /** 自定义头覆盖，阻塞头大小写无关。 */
@@ -89,8 +89,8 @@ class ForwardHeadersInterceptorTest {
         MockHttpServletRequest request = new MockHttpServletRequest();
         request.addHeader("x-tenant", "origin");
         RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(request));
-        FeignContextHolder.addBlockedHeaders(List.of("X-TENANT"));
-        FeignContextHolder.addCustomHeader("X-Tenant", "override");
+        HeaderContextHolder.addBlockedHeaders(List.of("X-TENANT"));
+        HeaderContextHolder.addCustomHeader("X-Tenant", "override");
         ForwardHeadersInterceptor interceptor = new ForwardHeadersInterceptor(new FeignProperties());
         RequestTemplate template = new RequestTemplate();
 

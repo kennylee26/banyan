@@ -8,6 +8,7 @@ Spring Boot 应用能力扩展家族。与 `banyan-commons` / 传统 starter 不
 
 ## 约定
 
+- 所有子模块统一依赖 [`banyan-commons-spring`](../banyan-commons-spring)（父 POM `<dependencies>` 统一声明），公共能力放那一层，能力包只写胶水。
 - 子模块可以 `compile` 依赖 Spring / Spring Cloud / 具体客户端，使用方不需要再手工补依赖。
 - 版本只在根 POM `<properties>` 与 `banyan-bom` 维护。
 - 每个能力有 `banyan.spring.<capability>.enabled` 总开关；缺类时跳过装配并打 WARN。

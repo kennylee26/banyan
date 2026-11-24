@@ -1,6 +1,5 @@
-package cn.kennylee.banyan.spring.feign.logging;
+package cn.kennylee.banyan.commons.spring.log;
 
-import cn.kennylee.banyan.spring.feign.autoconfigure.FeignProperties;
 import org.junit.jupiter.api.Test;
 
 import java.util.LinkedHashMap;
@@ -17,14 +16,14 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * @author kennylee
  * @since 0.1.0
  */
-class FeignLogSupportTest {
+class LogSanitizerTest {
 
     /** 敏感头默认脱敏，忽略头完全不打印。 */
     @Test
     void masksSensitiveHeadersAndSkipsIgnoredHeaders() {
         // given
-        FeignProperties properties = new FeignProperties();
-        properties.getLogging().setIgnoredHeaders(List.of("X-Internal"));
+        LoggingOptions options = new LoggingOptions();
+        options.setIgnoredHeaders(List.of("X-Internal"));
         Map<String, String> headers = new LinkedHashMap<>();
         headers.put("Authorization", "Bearer secret");
         headers.put("Cookie", "sid=1");
@@ -32,7 +31,7 @@ class FeignLogSupportTest {
         headers.put("X-Internal", "hidden");
 
         // when
-        String text = FeignLogSupport.headers(headers, properties.getLogging());
+        String text = LogSanitizer.headers(headers, options);
 
         // then
         assertTrue(text.contains("Authorization=***"));
@@ -46,12 +45,11 @@ class FeignLogSupportTest {
     @Test
     void printsValuesWhenMaskingDisabled() {
         // given
-        FeignProperties properties = new FeignProperties();
-        properties.getLogging().setMaskSensitive(false);
+        LoggingOptions options = new LoggingOptions();
+        options.setMaskSensitive(false);
 
         // when
-        String text = FeignLogSupport.headers(Map.of("Authorization", "Bearer secret"),
-                properties.getLogging());
+        String text = LogSanitizer.headers(Map.of("Authorization", "Bearer secret"), options);
 
         // then
         assertTrue(text.contains("Authorization=Bearer secret"));
@@ -61,13 +59,25 @@ class FeignLogSupportTest {
     @Test
     void truncatesLongBody() {
         // given
-        FeignProperties properties = new FeignProperties();
-        properties.getLogging().setMaxBodyLength(8);
+        LoggingOptions options = new LoggingOptions();
+        options.setMaxBodyLength(8);
 
         // when
-        String text = FeignLogSupport.body("0123456789", properties.getLogging());
+        String text = LogSanitizer.body("0123456789", options);
 
         // then
         assertEquals("01234567...<truncated>", text);
+    }
+
+    /** 空值与空 body 都按空串处理。 */
+    @Test
+    void treatsNullAsEmpty() {
+        // given
+        LoggingOptions options = new LoggingOptions();
+
+        // when / then
+        assertEquals("", LogSanitizer.body(null, options));
+        assertEquals("", LogSanitizer.utf8(null));
+        assertEquals("abc", LogSanitizer.utf8("abc".getBytes(java.nio.charset.StandardCharsets.UTF_8)));
     }
 }

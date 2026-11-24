@@ -1,6 +1,6 @@
 package cn.kennylee.banyan.spring.feign.logging;
 
-import cn.kennylee.banyan.spring.feign.autoconfigure.FeignProperties;
+import cn.kennylee.banyan.commons.spring.log.LoggingOptions;
 import feign.Capability;
 import feign.codec.Decoder;
 
@@ -13,14 +13,14 @@ import feign.codec.Decoder;
 public class LoggingFeignDecoderCapability implements Capability {
 
     /** 日志配置。 */
-    private final FeignProperties.Logging logging;
+    private final LoggingOptions logging;
 
     /**
      * 构造能力。
      *
      * @param logging 日志配置
      */
-    public LoggingFeignDecoderCapability(FeignProperties.Logging logging) {
+    public LoggingFeignDecoderCapability(LoggingOptions logging) {
         this.logging = logging;
     }
 

@@ -1,6 +1,6 @@
 package cn.kennylee.banyan.spring.feign.logging;
 
-import cn.kennylee.banyan.spring.feign.autoconfigure.FeignProperties;
+import cn.kennylee.banyan.commons.spring.log.LoggingOptions;
 import feign.Capability;
 import feign.codec.Decoder;
 import org.springframework.cloud.openfeign.FeignBuilderCustomizer;
@@ -18,14 +18,14 @@ import org.springframework.cloud.openfeign.FeignBuilderCustomizer;
 public class LoggingFeignDecoderCustomizer implements FeignBuilderCustomizer {
 
     /** 日志配置。 */
-    private final FeignProperties.Logging logging;
+    private final LoggingOptions logging;
 
     /**
      * 构造自定义器。
      *
      * @param logging 日志配置
      */
-    public LoggingFeignDecoderCustomizer(FeignProperties.Logging logging) {
+    public LoggingFeignDecoderCustomizer(LoggingOptions logging) {
         this.logging = logging;
     }
 

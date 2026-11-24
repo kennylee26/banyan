@@ -1,40 +1,40 @@
-package cn.kennylee.banyan.spring.feign;
+package cn.kennylee.banyan.commons.spring.web;
 
 import java.util.Collection;
 import java.util.Map;
 
 /**
- * Feign 单次 header 上下文持有器。
+ * 出站请求 header 上下文的线程级持有器。
  *
- * <p>默认每次 apply 后自动清理；支持单次禁用转发、追加阻塞头、追加自定义头，
+ * <p>默认每次应用后自动清理；支持单次禁用传播、追加阻塞头、追加自定义头，
  * 或关闭自动清理后由调用方自行 {@link #clear()}。</p>
  *
  * @author kennylee
  * @since 0.1.0
  */
-public final class FeignContextHolder {
+public final class HeaderContextHolder {
 
     /** 线程级上下文。 */
-    private static final ThreadLocal<FeignContext> HOLDER =
-            ThreadLocal.withInitial(FeignContext::new);
+    private static final ThreadLocal<HeaderContext> HOLDER =
+            ThreadLocal.withInitial(HeaderContext::new);
 
-    /** 全局开关；关闭时所有 header 转发停用。 */
+    /** 全局开关；关闭时所有 header 传播停用。 */
     private static volatile boolean globallyEnabled = true;
 
-    private FeignContextHolder() {
+    private HeaderContextHolder() {
     }
 
     /**
-     * 设置全局 header 转发开关。
+     * 设置全局 header 传播开关。
      *
-     * @param value true 表示允许转发
+     * @param value true 表示允许传播
      */
     public static void setGloballyEnabled(boolean value) {
         globallyEnabled = value;
     }
 
     /**
-     * 当前是否允许 header 转发。
+     * 当前是否允许 header 传播。
      *
      * @return 全局开关与单次开关都为 true 时返回 true
      */
@@ -47,7 +47,7 @@ public final class FeignContextHolder {
      *
      * @return 上下文
      */
-    public static FeignContext current() {
+    public static HeaderContext current() {
         return HOLDER.get();
     }
 
@@ -59,14 +59,14 @@ public final class FeignContextHolder {
     }
 
     /**
-     * 单次启用 header 转发。
+     * 单次启用 header 传播。
      */
     public static void enableForwardHeaders() {
         current().setForwardHeaders(true);
     }
 
     /**
-     * 单次禁用 header 转发。
+     * 单次禁用 header 传播。
      */
     public static void disableForwardHeaders() {
         current().setForwardHeaders(false);
@@ -91,7 +91,7 @@ public final class FeignContextHolder {
     }
 
     /**
-     * 追加自定义头，覆盖同名转发头。
+     * 追加自定义头，覆盖同名传播头。
      *
      * @param name  header 名
      * @param value header 值
@@ -120,7 +120,7 @@ public final class FeignContextHolder {
     }
 
     /**
-     * 设置 apply 后是否自动清理。
+     * 设置应用后是否自动清理。
      *
      * @param value true 表示自动清理
      */

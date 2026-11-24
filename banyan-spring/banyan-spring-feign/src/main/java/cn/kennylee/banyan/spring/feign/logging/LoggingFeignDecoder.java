@@ -1,6 +1,7 @@
 package cn.kennylee.banyan.spring.feign.logging;
 
-import cn.kennylee.banyan.spring.feign.autoconfigure.FeignProperties;
+import cn.kennylee.banyan.commons.spring.log.LogSanitizer;
+import cn.kennylee.banyan.commons.spring.log.LoggingOptions;
 import feign.Response;
 import feign.codec.Decoder;
 import lombok.extern.slf4j.Slf4j;
@@ -24,7 +25,7 @@ public class LoggingFeignDecoder implements Decoder {
     private final Decoder delegate;
 
     /** 日志配置。 */
-    private final FeignProperties.Logging logging;
+    private final LoggingOptions logging;
 
     /**
      * 构造包装解码器。
@@ -32,7 +33,7 @@ public class LoggingFeignDecoder implements Decoder {
      * @param delegate 原解码器
      * @param logging  日志配置
      */
-    public LoggingFeignDecoder(Decoder delegate, FeignProperties.Logging logging) {
+    public LoggingFeignDecoder(Decoder delegate, LoggingOptions logging) {
         this.delegate = delegate;
         this.logging = logging;
     }
@@ -47,7 +48,7 @@ public class LoggingFeignDecoder implements Decoder {
         try (java.io.InputStream body = response.body().asInputStream()) {
             bytes = body.readAllBytes();
         }
-        String text = FeignLogSupport.body(FeignLogSupport.utf8(bytes), logging);
+        String text = LogSanitizer.body(LogSanitizer.utf8(bytes), logging);
         log(response, text);
         Response replay = response.toBuilder().body(bytes).build();
         return delegate.decode(replay, type);
@@ -62,6 +63,6 @@ public class LoggingFeignDecoder implements Decoder {
         response.headers().forEach((name, values) ->
                 headers.put(name, values.isEmpty() ? "" : values.iterator().next()));
         log.debug("Feign 响应: status={}, headers={}, body={}", response.status(),
-                FeignLogSupport.headers(headers, logging), body);
+                LogSanitizer.headers(headers, logging), body);
     }
 }

@@ -1,7 +1,7 @@
 package cn.kennylee.banyan.spring.feign.interceptor;
 
-import cn.kennylee.banyan.spring.feign.autoconfigure.FeignProperties;
-import cn.kennylee.banyan.spring.feign.logging.FeignLogSupport;
+import cn.kennylee.banyan.commons.spring.log.LogSanitizer;
+import cn.kennylee.banyan.commons.spring.log.LoggingOptions;
 import feign.RequestInterceptor;
 import feign.RequestTemplate;
 import lombok.extern.slf4j.Slf4j;
@@ -25,14 +25,14 @@ public class FeignRequestLogInterceptor implements RequestInterceptor, Ordered {
     public static final int ORDER = 0;
 
     /** 日志配置。 */
-    private final FeignProperties.Logging logging;
+    private final LoggingOptions logging;
 
     /**
      * 构造拦截器。
      *
      * @param logging 日志配置
      */
-    public FeignRequestLogInterceptor(FeignProperties.Logging logging) {
+    public FeignRequestLogInterceptor(LoggingOptions logging) {
         this.logging = logging;
     }
 
@@ -46,8 +46,8 @@ public class FeignRequestLogInterceptor implements RequestInterceptor, Ordered {
                 headers.put(name, first(values)));
         log.debug("Feign 请求: method={}, url={}, headers={}, body={}",
                 template.method(), template.url(),
-                FeignLogSupport.headers(headers, logging),
-                FeignLogSupport.body(FeignLogSupport.utf8(template.body()), logging));
+                LogSanitizer.headers(headers, logging),
+                LogSanitizer.body(LogSanitizer.utf8(template.body()), logging));
     }
 
     @Override

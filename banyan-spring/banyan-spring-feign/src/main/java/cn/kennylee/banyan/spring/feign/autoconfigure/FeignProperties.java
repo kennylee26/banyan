@@ -1,5 +1,6 @@
 package cn.kennylee.banyan.spring.feign.autoconfigure;
 
+import cn.kennylee.banyan.commons.spring.log.LoggingOptions;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -31,7 +32,7 @@ public class FeignProperties {
     private Toggle responseLog = new Toggle();
 
     /** 日志细节配置。 */
-    private Logging logging = new Logging();
+    private LoggingOptions logging = new LoggingOptions();
 
     /**
      * 简单的能力开关。
@@ -65,32 +66,5 @@ public class FeignProperties {
 
         /** 额外阻塞头。 */
         private List<String> blockedHeaders = new ArrayList<>();
-    }
-
-    /**
-     * 日志配置。
-     *
-     * @author kennylee
-     * @since 0.1.0
-     */
-    @Getter
-    @Setter
-    public static class Logging {
-
-        /** 默认 body 打印上限。 */
-        public static final int DEFAULT_MAX_BODY_LENGTH = 2048;
-
-        /** 敏感值脱敏。 */
-        private boolean maskSensitive = true;
-
-        /** 需要脱敏的 header。 */
-        private List<String> maskedHeaders = new ArrayList<>(
-                List.of("Authorization", "Cookie", "Set-Cookie"));
-
-        /** 完全不打印的 header。 */
-        private List<String> ignoredHeaders = new ArrayList<>();
-
-        /** body 打印上限。 */
-        private int maxBodyLength = DEFAULT_MAX_BODY_LENGTH;
     }
 }
