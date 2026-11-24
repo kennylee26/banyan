@@ -32,9 +32,13 @@ jobs:
 
       - name: Run embedded Mongo tests (verbose, no publish)
         # 只跑 mongodb 模块，避开其它模块；-am 带上上游依赖
-        run: mvn --batch-mode -pl banyan-data/banyan-data-mongodb-springdata -am test -DskipTests=false
+        # flapdoodle 1.9.0 在 GH runner 上探不到 Ubuntu 版本（Platform 无 version），
+        # 会降级选 ubuntu2004 包而缺 libssl.so.1；显式指定 24.04 平台命中 openssl3 的 2404 包
+        run: >
+          mvn --batch-mode -pl banyan-data/banyan-data-mongodb-springdata -am test
+          -DskipTests=false
+          -DargLine='-Dde.flapdoodle.os.override=Linux|X86_64|Ubuntu|Ubuntu_24_04'
         env:
-          # 让 flapdoodle / Spring 打印更完整的诊断
           MAVEN_OPTS: -Dorg.slf4j.simpleLogger.defaultLogLevel=debug
 
       - name: Upload surefire reports
