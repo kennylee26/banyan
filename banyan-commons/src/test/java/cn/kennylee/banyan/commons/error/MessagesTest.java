@@ -41,6 +41,22 @@ class MessagesTest {
                 Messages.get(ErrorCode.UNKNOWN_PROPERTY, "name"));
     }
 
+    /** JVM 默认语言为英文时，显式切中文仍读中文，不回退到英文 bundle。 */
+    @Test
+    void resolvesChineseWhenJvmDefaultIsEnglish() {
+        Locale original = Locale.getDefault();
+        try {
+            Locale.setDefault(Locale.ENGLISH);
+            Messages.setLocale(Locale.SIMPLIFIED_CHINESE);
+
+            assertEquals("未找到表信息: users",
+                    Messages.get(ErrorCode.TABLE_INFO_NOT_FOUND, "users"));
+        } finally {
+            Locale.setDefault(original);
+            Messages.setLocale(original);
+        }
+    }
+
     /** 资源缺失时返回 key 本身，便于排查。 */
     @Test
     void missingKeyFallsBackToKey() {

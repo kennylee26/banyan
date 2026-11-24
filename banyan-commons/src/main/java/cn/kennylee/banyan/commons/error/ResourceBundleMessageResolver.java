@@ -27,6 +27,12 @@ public class ResourceBundleMessageResolver implements MessageResolver {
         public List<Locale> getCandidateLocales(String baseName, Locale locale) {
             return List.of(locale, Locale.ROOT);
         }
+
+        @Override
+        public Locale getFallbackLocale(String baseName, Locale locale) {
+            // 禁用 JDK 默认的「回退到 JVM 默认语言」，否则 zh_CN 会读到 en bundle
+            return null;
+        }
     };
 
     /** 目标语言。 */
