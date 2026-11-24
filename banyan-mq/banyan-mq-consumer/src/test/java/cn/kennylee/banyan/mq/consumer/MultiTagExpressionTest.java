@@ -1,12 +1,16 @@
 package cn.kennylee.banyan.mq.consumer;
 
+import cn.kennylee.banyan.commons.error.Messages;
 import cn.kennylee.banyan.mq.core.MqCapability;
 import cn.kennylee.banyan.mq.core.MqConfigurationException;
 import cn.kennylee.banyan.mq.core.MqMessage;
 import cn.kennylee.banyan.mq.core.instance.MqInstanceRegistry;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
+import java.util.Locale;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -19,6 +23,18 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * @since 0.1.0
  */
 class MultiTagExpressionTest {
+
+    /** 固定中文消息，避免不同 JVM 默认语言下断言失败。 */
+    @BeforeEach
+    void fixLocale() {
+        Messages.setLocale(Locale.SIMPLIFIED_CHINESE);
+    }
+
+    /** 恢复语言。 */
+    @AfterEach
+    void resetLocale() {
+        Messages.setLocale(Locale.getDefault());
+    }
 
     @Test
     void joinsTagArrayIntoExpression() {
