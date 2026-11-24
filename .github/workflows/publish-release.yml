@@ -1,0 +1,56 @@
+name: Publish Release to Maven Central
+
+# 正式版：在 main 上打 vX.Y.Z tag 触发。发布前须把根 pom.xml 版本改为不带 -SNAPSHOT 的 X.Y.Z，
+# 发完再切回下一个 -SNAPSHOT 版本继续开发。版本线约定见 studio/CLAUDE.md。
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+# 所需 GitHub Secrets 与 publish-snapshot.yml 相同：
+#   CENTRAL_TOKEN_USERNAME / CENTRAL_TOKEN_PASSWORD  Central Portal User Token
+#   GPG_PRIVATE_KEY / GPG_PASSPHRASE                  GPG 签名密钥
+
+jobs:
+  publish:
+    # 防止在非 main 的 ref 上手动触发误发；tag 必须指向 main 的提交
+    if: github.ref_type == 'tag'
+    runs-on: ubuntu-22.04
+    env:
+      MAVEN_GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Verify version is a non-SNAPSHOT release
+        run: |
+          VERSION=$(mvn -q help:evaluate -Dexpression=project.version -DforceStdout)
+          echo "project.version=$VERSION"
+          if echo "$VERSION" | grep -q -- '-SNAPSHOT'; then
+            echo "::error::正式版发布要求版本不带 -SNAPSHOT，当前为 $VERSION"
+            exit 1
+          fi
+          TAG="${GITHUB_REF_NAME#v}"
+          if [ "$VERSION" != "$TAG" ]; then
+            echo "::error::tag($TAG) 与 pom 版本($VERSION) 不一致"
+            exit 1
+          fi
+
+      - name: Set up JDK 17 and Maven settings
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: maven
+          server-id: central-portal
+          server-username: CENTRAL_TOKEN_USERNAME
+          server-password: CENTRAL_TOKEN_PASSWORD
+          gpg-private-key: ${{ secrets.GPG_PRIVATE_KEY }}
+          gpg-passphrase: MAVEN_GPG_PASSPHRASE
+
+      # autoPublish=false：bundle 上传后需在 https://central.sonatype.com/publishing/deployments
+      # 人工确认发布，避免误操作直接对外可见
+      - name: Build and publish release
+        run: mvn --batch-mode -Prelease clean deploy
+        env:
+          CENTRAL_TOKEN_USERNAME: ${{ secrets.CENTRAL_TOKEN_USERNAME }}
+          CENTRAL_TOKEN_PASSWORD: ${{ secrets.CENTRAL_TOKEN_PASSWORD }}
