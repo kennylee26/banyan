@@ -1,9 +1,14 @@
 package cn.kennylee.banyan.data.mysql.mybatis.das;
 
+import cn.kennylee.banyan.commons.error.Messages;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.boot.test.system.CapturedOutput;
 import org.springframework.boot.test.system.OutputCaptureExtension;
+
+import java.util.Locale;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -15,6 +20,16 @@ import static org.assertj.core.api.Assertions.assertThat;
  */
 @ExtendWith(OutputCaptureExtension.class)
 class MaxUpdateColumnsTest {
+
+    @BeforeEach
+    void fixLocale() {
+        Messages.setLocale(Locale.SIMPLIFIED_CHINESE);
+    }
+
+    @AfterEach
+    void resetLocale() {
+        Messages.setLocale(Locale.getDefault());
+    }
 
     /** 未配置时默认 6。 */
     @Test

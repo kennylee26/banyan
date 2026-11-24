@@ -1,6 +1,7 @@
 package cn.kennylee.banyan.data.mysql.mybatis;
 
 import cn.kennylee.banyan.commons.error.BanyanException;
+import cn.kennylee.banyan.commons.error.Messages;
 import cn.kennylee.banyan.commons.id.IdProvider;
 import cn.kennylee.banyan.data.core.page.PageResult;
 import cn.kennylee.banyan.data.core.page.PageDto;
@@ -11,6 +12,8 @@ import cn.kennylee.banyan.data.mysql.mybatis.wrapper.BanyanQueryWrapper;
 import com.baomidou.mybatisplus.annotation.DbType;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,6 +26,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
+import java.util.Locale;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -38,6 +42,16 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 @Transactional
 @ExtendWith(OutputCaptureExtension.class)
 class BaseDasTest {
+
+    @BeforeEach
+    void fixLocale() {
+        Messages.setLocale(Locale.SIMPLIFIED_CHINESE);
+    }
+
+    @AfterEach
+    void resetLocale() {
+        Messages.setLocale(Locale.getDefault());
+    }
 
     @Autowired
     private UserDas userDas;

@@ -1,9 +1,12 @@
 package cn.kennylee.banyan.data.mysql.mybatis.support;
 
+import cn.kennylee.banyan.commons.error.Messages;
 import cn.kennylee.banyan.data.mysql.mybatis.wrapper.BanyanQueryWrapper;
 import org.apache.ibatis.mapping.BoundSql;
 import org.apache.ibatis.mapping.ParameterMapping;
 import org.apache.ibatis.session.Configuration;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.boot.test.system.CapturedOutput;
@@ -11,6 +14,7 @@ import org.springframework.boot.test.system.OutputCaptureExtension;
 
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -23,6 +27,16 @@ import static org.assertj.core.api.Assertions.assertThat;
  */
 @ExtendWith(OutputCaptureExtension.class)
 class LikeEscapeInnerInterceptorTest {
+
+    @BeforeEach
+    void fixLocale() {
+        Messages.setLocale(Locale.SIMPLIFIED_CHINESE);
+    }
+
+    @AfterEach
+    void resetLocale() {
+        Messages.setLocale(Locale.getDefault());
+    }
 
     private final Configuration configuration = new Configuration();
 

@@ -1,5 +1,8 @@
 package cn.kennylee.banyan.commons.crypto;
 
+import cn.kennylee.banyan.commons.error.Messages;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import javax.crypto.Cipher;
@@ -9,6 +12,7 @@ import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.util.Arrays;
 import java.util.Base64;
+import java.util.Locale;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -30,6 +34,16 @@ class AesGcmPayloadCipherTest {
 
     /** 密钥明文。 */
     private final String secret = "secret-for-aes-gcm";
+
+    @BeforeEach
+    void fixLocale() {
+        Messages.setLocale(Locale.SIMPLIFIED_CHINESE);
+    }
+
+    @AfterEach
+    void resetLocale() {
+        Messages.setLocale(Locale.getDefault());
+    }
 
     /** 算法标识为 aes-gcm。 */
     @Test

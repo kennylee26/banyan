@@ -1,6 +1,9 @@
 package cn.kennylee.banyan.data.mysql.mybatis;
 
+import cn.kennylee.banyan.commons.error.Messages;
 import cn.kennylee.banyan.data.core.query.DasQueryStrategyRegistry;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,6 +14,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Locale;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -25,6 +29,16 @@ import static org.assertj.core.api.Assertions.assertThat;
 @Transactional
 @ExtendWith(OutputCaptureExtension.class)
 class BatchUpdateInvalidConfigTest {
+
+    @BeforeEach
+    void fixLocale() {
+        Messages.setLocale(Locale.SIMPLIFIED_CHINESE);
+    }
+
+    @AfterEach
+    void resetLocale() {
+        Messages.setLocale(Locale.getDefault());
+    }
 
     @Autowired
     private UserMapper userMapper;
