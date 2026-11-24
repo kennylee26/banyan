@@ -19,7 +19,7 @@ jobs:
     env:
       MAVEN_GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Verify version is a non-SNAPSHOT release
         run: |
@@ -36,16 +36,16 @@ jobs:
           fi
 
       - name: Set up JDK 17 and Maven settings
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v6
         with:
           distribution: temurin
           java-version: '17'
           cache: maven
           server-id: central-portal
-          server-username: CENTRAL_TOKEN_USERNAME
-          server-password: CENTRAL_TOKEN_PASSWORD
+          server-username-env-var: CENTRAL_TOKEN_USERNAME
+          server-password-env-var: CENTRAL_TOKEN_PASSWORD
           gpg-private-key: ${{ secrets.GPG_PRIVATE_KEY }}
-          gpg-passphrase: MAVEN_GPG_PASSPHRASE
+          gpg-passphrase-env-var: MAVEN_GPG_PASSPHRASE
 
       # autoPublish=false：bundle 上传后需在 https://central.sonatype.com/publishing/deployments
       # 人工确认发布，避免误操作直接对外可见
