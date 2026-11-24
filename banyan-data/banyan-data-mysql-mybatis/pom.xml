@@ -73,4 +73,19 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <!-- 每个测试类独立 JVM：共享 H2 内存库在多个 Spring 上下文间会累积数据，
+                         CI(Linux) 上出现断言行数偏多与锁表，本地无法复现，按 JVM 隔离消除环境差异 -->
+                    <forkCount>1</forkCount>
+                    <reuseForks>false</reuseForks>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
 </project>
