@@ -42,6 +42,10 @@ An infrastructure toolkit for Spring Boot.
 
 Every module with a java config has a `<artifactId>.yml` reference in its module directory; [`CONFIGURATION.md`](CONFIGURATION.md) is the full table of all `banyan.*` keys. Adding or changing a java config requires updating both in the same change. These files are documentation only — they are not packaged into the jar.
 
+## Module README convention
+
+Every module README starts with what the module brings (a short capability list and who should use it), then numbered sections (`一、二、三…`) for introduction, configuration and usage, and ends with a `能力 → 代码位置` table linking each capability to its source package, key types and config file. New modules and new capabilities must keep both the capability list and that table in sync.
+
 ## Logging
 
 `banyan-log` provides application lifecycle logging and an optional logback snippet set.
