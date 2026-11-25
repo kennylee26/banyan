@@ -31,7 +31,7 @@ public class MvcJacksonAutoConfiguration {
     @Bean
     @ConditionalOnMissingBean
     @ConditionalOnProperty(prefix = "banyan.spring.mvc.jackson", name = "enabled",
-            havingValue = "true")
+            havingValue = "true", matchIfMissing = true)
     public BanyanJacksonCustomizer banyanJacksonCustomizer(MvcProperties properties) {
         return new BanyanJacksonCustomizer(properties.getJackson());
     }

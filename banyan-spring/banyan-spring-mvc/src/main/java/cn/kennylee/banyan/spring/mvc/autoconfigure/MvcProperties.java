@@ -19,7 +19,7 @@ public class MvcProperties {
     private Jackson jackson = new Jackson();
 
     /**
-     * Jackson 增强配置，默认关闭，开启后可逐项调整。
+     * Jackson 增强配置。
      *
      * @author kennylee
      * @since 0.1.0
@@ -36,5 +36,11 @@ public class MvcProperties {
 
         /** BigDecimal 不使用科学计数法。 */
         private boolean bigDecimalAsPlain = true;
+
+        /** {@code java.util.Date} 与 {@code LocalDateTime} 的输入/输出格式；空表示不处理日期。 */
+        private String dateFormat = "yyyy-MM-dd HH:mm:ss";
+
+        /** 日期序列化时区；空表示沿用应用默认。 */
+        private String timeZone = "";
     }
 }

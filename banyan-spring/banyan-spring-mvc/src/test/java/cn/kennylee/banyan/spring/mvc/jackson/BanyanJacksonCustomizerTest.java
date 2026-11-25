@@ -7,6 +7,8 @@ import org.springframework.core.Ordered;
 import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.Date;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -77,6 +79,52 @@ class BanyanJacksonCustomizerTest {
         assertThat(json).contains("\"RED\"");
     }
 
+    /** 默认配置下 Date 与 LocalDateTime 都按统一格式输出。 */
+    @Test
+    void formatsDateAndLocalDateTime() throws Exception {
+        // given
+        MvcProperties.Jackson options = new MvcProperties.Jackson();
+        options.setTimeZone("UTC");
+        ObjectMapper mapper = mapperFor(options);
+        DateSample sample = new DateSample(new Date(0L), LocalDateTime.of(2026, 11, 25, 10, 30, 0));
+
+        // when
+        String json = mapper.writeValueAsString(sample);
+
+        // then
+        assertThat(json).contains("\"date\":\"1970-01-01 00:00:00\"");
+        assertThat(json).contains("\"dateTime\":\"2026-11-25 10:30:00\"");
+    }
+
+    /** LocalDateTime 能按配置的格式反序列化。 */
+    @Test
+    void deserializesLocalDateTimeWithConfiguredFormat() throws Exception {
+        // given
+        ObjectMapper mapper = mapperFor(new MvcProperties.Jackson());
+        String json = "{\"dateTime\":\"2026-11-25 10:30:00\"}";
+
+        // when
+        DateSample sample = mapper.readValue(json, DateSample.class);
+
+        // then
+        assertThat(sample.dateTime()).isEqualTo(LocalDateTime.of(2026, 11, 25, 10, 30, 0));
+    }
+
+    /** 日期格式置空时不处理 Date。 */
+    @Test
+    void dateFormatCanBeDisabled() throws Exception {
+        // given
+        MvcProperties.Jackson options = new MvcProperties.Jackson();
+        options.setDateFormat("");
+        ObjectMapper mapper = mapperFor(options);
+
+        // when
+        String json = mapper.writeValueAsString(new DateSample(new Date(0L), null));
+
+        // then
+        assertThat(json).contains("\"date\":0");
+    }
+
     /** 排序晚于 Spring Boot 自身 customizer（order=0）。 */
     @Test
     void orderIsAfterBootCustomizer() {
@@ -117,6 +165,17 @@ class BanyanJacksonCustomizerTest {
      * @since 0.1.0
      */
     record EnumHolder(TestColor color) {
+    }
+
+    /**
+     * 测试用日期容器。
+     *
+     * @param date     旧日期类型
+     * @param dateTime 新日期时间类型
+     * @author kennylee
+     * @since 0.1.0
+     */
+    record DateSample(Date date, LocalDateTime dateTime) {
     }
 
     /**

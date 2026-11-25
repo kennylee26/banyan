@@ -51,7 +51,7 @@ class MvcAutoConfigurationTest {
             assertThat(context).hasSingleBean(BanyanWebExceptionAdvice.class);
             assertThat(context).hasSingleBean(BanyanConstraintViolationAdvice.class);
             assertThat(context).hasSingleBean(BanyanFeignExceptionAdvice.class);
-            assertThat(context).doesNotHaveBean(BanyanJacksonCustomizer.class);
+            assertThat(context).hasSingleBean(BanyanJacksonCustomizer.class);
         });
     }
 
@@ -102,13 +102,13 @@ class MvcAutoConfigurationTest {
         });
     }
 
-    /** 开启 Jackson 增强。 */
+    /** 显式关闭 Jackson 增强。 */
     @Test
-    void registersJacksonCustomizerWhenEnabled() {
+    void skipsJacksonCustomizerWhenDisabled() {
         // when
-        runner.withPropertyValues("banyan.spring.mvc.jackson.enabled=true").run(context -> {
+        runner.withPropertyValues("banyan.spring.mvc.jackson.enabled=false").run(context -> {
             // then
-            assertThat(context).hasSingleBean(BanyanJacksonCustomizer.class);
+            assertThat(context).doesNotHaveBean(BanyanJacksonCustomizer.class);
         });
     }
 

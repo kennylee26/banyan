@@ -30,7 +30,9 @@ banyan:
       fallback-exception:
         enabled: true                   # 兜底 Exception advice
       jackson:
-        enabled: false                  # Jackson 增强能力总开关，默认关闭（可选能力）
-        long-as-string: true            # Long 序列化为字符串，防 JS 精度丢失；仅当 jackson.enabled=true 生效
-        enums-using-name: true          # 枚举按 name 序列化；仅当 jackson.enabled=true 生效
-        big-decimal-as-plain: true      # BigDecimal 不用科学计数法；仅当 jackson.enabled=true 生效
+        enabled: true                   # Jackson 增强总开关，默认开启；置 false 可完全恢复应用原有 JSON 输出
+        long-as-string: true            # Long 序列化为字符串，防 JS 精度丢失
+        enums-using-name: true          # 枚举按 name 序列化
+        big-decimal-as-plain: true      # BigDecimal 不用科学计数法
+        date-format: yyyy-MM-dd HH:mm:ss # java.util.Date 与 LocalDateTime 的输入/输出格式；空表示不处理日期
+        time-zone:                      # 日期时区；空表示沿用应用默认

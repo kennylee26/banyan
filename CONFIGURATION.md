@@ -99,10 +99,12 @@
 | banyan-spring-mvc | `banyan.spring.mvc.web-exception.enabled` | `true` | MVC 参数/绑定/校验异常 advice | 条件注解 | [yml](banyan-spring/banyan-spring-mvc/banyan-spring-mvc.yml) |
 | banyan-spring-mvc | `banyan.spring.mvc.feign-exception.enabled` | `true` | Feign 异常 advice（缺类跳过） | 条件注解 | [yml](banyan-spring/banyan-spring-mvc/banyan-spring-mvc.yml) |
 | banyan-spring-mvc | `banyan.spring.mvc.fallback-exception.enabled` | `true` | 兜底 Exception advice | 条件注解 | [yml](banyan-spring/banyan-spring-mvc/banyan-spring-mvc.yml) |
-| banyan-spring-mvc | `banyan.spring.mvc.jackson.enabled` | `false` | Jackson 增强总开关，默认关闭 | 条件注解 | [yml](banyan-spring/banyan-spring-mvc/banyan-spring-mvc.yml) |
-| banyan-spring-mvc | `banyan.spring.mvc.jackson.long-as-string` | `true` | Long 序列化为字符串；仅当 jackson.enabled=true 生效 | `MvcProperties` | [yml](banyan-spring/banyan-spring-mvc/banyan-spring-mvc.yml) |
-| banyan-spring-mvc | `banyan.spring.mvc.jackson.enums-using-name` | `true` | 枚举按 name 序列化；仅当 jackson.enabled=true 生效 | `MvcProperties` | [yml](banyan-spring/banyan-spring-mvc/banyan-spring-mvc.yml) |
-| banyan-spring-mvc | `banyan.spring.mvc.jackson.big-decimal-as-plain` | `true` | BigDecimal 不用科学计数法；仅当 jackson.enabled=true 生效 | `MvcProperties` | [yml](banyan-spring/banyan-spring-mvc/banyan-spring-mvc.yml) |
+| banyan-spring-mvc | `banyan.spring.mvc.jackson.enabled` | `true` | Jackson 增强总开关，默认开启；false 时恢复应用原有 JSON 输出 | 条件注解 | [yml](banyan-spring/banyan-spring-mvc/banyan-spring-mvc.yml) |
+| banyan-spring-mvc | `banyan.spring.mvc.jackson.long-as-string` | `true` | Long 序列化为字符串，防 JS 精度丢失 | `MvcProperties` | [yml](banyan-spring/banyan-spring-mvc/banyan-spring-mvc.yml) |
+| banyan-spring-mvc | `banyan.spring.mvc.jackson.enums-using-name` | `true` | 枚举按 name 序列化 | `MvcProperties` | [yml](banyan-spring/banyan-spring-mvc/banyan-spring-mvc.yml) |
+| banyan-spring-mvc | `banyan.spring.mvc.jackson.big-decimal-as-plain` | `true` | BigDecimal 不用科学计数法 | `MvcProperties` | [yml](banyan-spring/banyan-spring-mvc/banyan-spring-mvc.yml) |
+| banyan-spring-mvc | `banyan.spring.mvc.jackson.date-format` | `yyyy-MM-dd HH:mm:ss` | Date 与 LocalDateTime 的输入/输出格式；空表示不处理日期 | `MvcProperties` | [yml](banyan-spring/banyan-spring-mvc/banyan-spring-mvc.yml) |
+| banyan-spring-mvc | `banyan.spring.mvc.jackson.time-zone` | （空） | 日期时区；空表示沿用应用默认 | `MvcProperties` | [yml](banyan-spring/banyan-spring-mvc/banyan-spring-mvc.yml) |
 
 ## 仅测试用 / 非本库属性
 

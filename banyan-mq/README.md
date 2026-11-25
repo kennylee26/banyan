@@ -89,16 +89,24 @@ producer.send(MqSendRequest.builder()
 
 ### 4.1 绑定实例
 
-单后端项目不需要写实例名，自动使用唯一实例。多后端时可在启动阶段构造一个绑定实例的发送门面：
+**只有一个实例时自动识别**：容器里只有一个 `MqBackend` / 只声明了一个实例时，发送不写实例名、消费者不写 `instance` 都会自动使用它（`MqInstanceRegistry.defaultInstance()`）。这个唯一实例不一定是 `rocketmq`，单 Kafka 或自定义实例同理。
+
+**多实例时必须显式指定实例名**，否则 fail-fast，不会随便挑一个：
+
+- **发送**：`send(...)` 未带实例名时，`defaultInstance()` 发现候选不唯一会抛 `MqConfigurationException`。用 `MqSendRequest.builder().instance("orders")` 指定，或按下面方式绑定默认实例。
+- **消费**：`@MqConsumer` 的 `instance` 为空、且存在多个实例时，启动扫描阶段直接抛 `MqConfigurationException`；每个消费者必须写 `instance`（支持占位符，如 `instance = "${samples.mq.instance}"`）。
+- **实例名与后端类型不是一回事**：`instances.<name>.type` 的值是后端类型标识，必须等于某个 `MqBackend.type()`（`rocketmq` / `kafka`）；实例名只是逻辑名，和 `rocketmq.name-server` 这类原生配置没有命名绑定关系。同名只是写法上的巧合。
+
+多后端时可在启动阶段构造一个绑定实例的发送门面：
 
 ```java
 @Bean
 MqProducer orderProducer(MqInstanceRegistry registry) {
-    return new MqProducer(registry, "rocketmq");
+    return new MqProducer(registry, "orders");   // "orders" 是 instances 里声明的逻辑实例名
 }
 ```
 
-之后业务代码只写 `orderProducer.send("orders", body)`，不再关心实例名。
+之后业务代码只写 `orderProducer.send("orders-topic", body)`，不再关心实例名。
 
 ### 4.2 同类型多集群
 

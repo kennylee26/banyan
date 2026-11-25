@@ -7,7 +7,7 @@ Spring MVC 应用能力扩展。引入后自动装配，把**接口异常统一�
 - **统一异常处理**：按优先级分级的 4 个 advice 覆盖 MVC 参数/绑定/校验异常、Feign 调用异常与兜底 `Exception`，默认返回 HTTP 200 + `ErrorResponse(code, message)`，不回显堆栈或 SQL。
 - **响应体形状可替换**：通过 `ExceptionResultFactory` 契约换成自己的 `Result`，不绑死本库的结构。
 - **不改变成功响应**：不注册 `ResponseBodyAdvice`，正常返回值仍按应用原有方式渲染。
-- **可选 Jackson 增强**：默认关闭；开启后可让 `Long` 转字符串（防前端精度丢失）、枚举按 name、BigDecimal 不用科学计数法。日期格式等仍用 Spring Boot 原生 `spring.jackson.*`。
+- **Jackson 增强默认开启**：`Long` 转字符串（防前端精度丢失）、枚举按 `name()`、BigDecimal 不用科学计数法；`java.util.Date` 与 `LocalDateTime` 自动按 `yyyy-MM-dd HH:mm:ss` 双向转换。可用 `banyan.spring.mvc.jackson.enabled=false` 完全恢复应用原有 JSON 输出。
 - **缺类可降级**：Feign / `jakarta.validation` / Jackson 是可选增强，缺失时静默跳过；核心类缺失才 WARN，应用不崩。
 
 适合「想要统一异常响应、但不想被某个 Result 结构绑死」的 Spring Boot Web 应用。若你已有完整的全局异常处理，引入前先确认开关与优先级是否冲突。各能力的源码位置见文末「八、能力 → 代码位置」。
@@ -30,10 +30,12 @@ Spring MVC 应用能力扩展。引入后自动装配，把**接口异常统一�
 | `banyan.spring.mvc.web-exception.enabled` | `true` | MVC 参数/绑定/校验异常 advice |
 | `banyan.spring.mvc.feign-exception.enabled` | `true` | Feign 异常 advice；classpath 无 `feign.FeignException` 时静默跳过 |
 | `banyan.spring.mvc.fallback-exception.enabled` | `true` | 兜底 `Exception` advice |
-| `banyan.spring.mvc.jackson.enabled` | `false` | Jackson 增强总开关，默认关闭 |
-| `banyan.spring.mvc.jackson.long-as-string` | `true` | Long 序列化为字符串；仅当 `jackson.enabled=true` 生效 |
-| `banyan.spring.mvc.jackson.enums-using-name` | `true` | 枚举按 `name()` 序列化；仅当 `jackson.enabled=true` 生效 |
-| `banyan.spring.mvc.jackson.big-decimal-as-plain` | `true` | BigDecimal 不使用科学计数法；仅当 `jackson.enabled=true` 生效 |
+| `banyan.spring.mvc.jackson.enabled` | `true` | Jackson 增强总开关，默认开启；`false` 时恢复应用原有 JSON 输出 |
+| `banyan.spring.mvc.jackson.long-as-string` | `true` | Long 序列化为字符串，防 JS 精度丢失 |
+| `banyan.spring.mvc.jackson.enums-using-name` | `true` | 枚举按 `name()` 序列化 |
+| `banyan.spring.mvc.jackson.big-decimal-as-plain` | `true` | BigDecimal 不使用科学计数法 |
+| `banyan.spring.mvc.jackson.date-format` | `yyyy-MM-dd HH:mm:ss` | `Date` 与 `LocalDateTime` 的输入/输出格式；空表示不处理日期 |
+| `banyan.spring.mvc.jackson.time-zone` | （空） | 日期时区；空表示沿用应用默认 |
 
 完整默认值与注释见 [`banyan-spring-mvc.yml`](banyan-spring-mvc.yml)，全仓总表见 [`CONFIGURATION.md`](../../CONFIGURATION.md)。
 
@@ -66,20 +68,14 @@ ExceptionResultFactory exceptionResultFactory() {
 
 ## 六、Jackson 增强与 `spring.jackson.*` 的关系
 
-本模块**不重复定义**日期格式、时区、feature 布尔开关、属性包含策略——这些直接用 Spring Boot 原生配置：
+本模块默认开启，引入后立即统一这几项：
 
-```yaml
-spring:
-  jackson:
-    date-format: yyyy-MM-dd HH:mm:ss
-    time-zone: Asia/Shanghai
-    serialization:
-      write-dates-as-timestamps: false
-    deserialization:
-      fail-on-unknown-properties: false
-```
+- `Long` → JSON 字符串，避免前端精度丢失。
+- 枚举按 `name()` 序列化。
+- BigDecimal 不使用科学计数法。
+- `java.util.Date` 与 `LocalDateTime` 按 `banyan.spring.mvc.jackson.date-format`（默认 `yyyy-MM-dd HH:mm:ss`）双向转换；`LocalDate` / `LocalTime` 保持 Jackson 默认 ISO 格式。
 
-本模块只补 Boot 未直接给的三个便捷开关，且默认关闭：
+配置示例：
 
 ```yaml
 banyan:
@@ -87,18 +83,22 @@ banyan:
     mvc:
       jackson:
         enabled: true
+        date-format: yyyy-MM-dd HH:mm:ss
+        time-zone: Asia/Shanghai
 ```
 
-- `big-decimal-as-plain` 等价 `spring.jackson.generator.write-bigdecimal-as-plain`。
-- `enums-using-name=true` 是 Jackson 默认行为（强制按 `name()`，可覆盖被 `spring.jackson.datatype.enum.write-enums-using-to-string` 改写的设置）。
-- `long-as-string` 无直接等价 Boot 键（Boot 的 `write-numbers-as-strings` 作用于所有数字），是本模块真正补的能力。
+其余配置（属性包含策略、`SerializationFeature` / `DeserializationFeature` 等）仍用 Spring Boot 原生 `spring.jackson.*`。优先级：
+
+- 本模块的 `date-format` / `time-zone` 显式配置优先于 `spring.jackson.date-format` / `spring.jackson.time-zone`（本模块 customizer 排序在 Boot 之后）。
+- 不希望被本模块改动时，设置 `banyan.spring.mvc.jackson.enabled=false`，JSON 输出与未引入本模块时一致。
 
 本模块只注册一个 `Jackson2ObjectMapperBuilderCustomizer`（排序晚于 Boot 自身），不替换容器 `ObjectMapper`、不声明 `HttpMessageConverters` bean。使用方可以关闭本模块开关后自行追加 customizer。
 
 ## 七、Jackson 设计取舍
 
-- 不重复定义日期格式、时区、feature 布尔开关与包含策略：这些直接用 `spring.jackson.*`（Spring Boot 3.4.5 原生提供），本模块不为它们另起 `banyan.*` 键。
-- 三个便捷开关是**显式覆盖**语义：仅在 `jackson.enabled=true` 时生效，会覆盖等价的原生 feature 设置；未开启时不改动任何 JSON 输出。
+- **日期格式由本模块统一**：Boot 的 `spring.jackson.date-format` 只作用于 `java.util.Date`，不作用于 `LocalDateTime`；要让两者格式一致，只能在模块内注册 JSR-310 的 `LocalDateTimeSerializer` / `LocalDateTimeDeserializer`。
+- **默认开启**：引入即统一 JSON 输出，省去逐个 DTO 加 `@JsonFormat` / `@JsonSerialize`。代价是会改变既有接口的 JSON 形态（如 Long 变字符串），因此提供 `enabled=false` 一键恢复，并在本文与配置参考中显著标注。
+- 其余 Jackson feature 仍复用 `spring.jackson.*`，本模块不重复定义等价的 `banyan.*` 键。
 - 只注册一个 `Jackson2ObjectMapperBuilderCustomizer`，不替换容器 `ObjectMapper`、不声明 `HttpMessageConverters` bean，因此不会影响应用已有的 converter 配置。
 
 ## 八、能力 → 代码位置
