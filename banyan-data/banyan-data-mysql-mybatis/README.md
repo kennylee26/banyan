@@ -1,8 +1,15 @@
 # banyan-data-mysql-mybatis
 
-# data-mysql.wrapper 用法
+基于 MyBatis-Plus 的 MySQL 数据访问层实现（`banyan-data-core` 契约的 MySQL 落地）。引入后得到 `BaseDas` 分页/CRUD 模板、自研查询 Wrapper、主键策略与可逐个开关的拦截器。
 
-Java package 的职责说明仍在 `package-info.java`，本文只写为什么自研、和 LIKE 转义的边界。
+## 这个模块带来什么
+
+- **统一数据访问模板**：`BaseDas` 实现 `AbstractDas` 的 `countByQuery` / `queryPage` / `applySorts` 三个差异点，save / findPage 流程与 MongoDB 实现共用，返回统一 `PageResult`。
+- **可直接传给 `selectPage` 的查询 Wrapper**：`BanyanQueryWrapper<T>` 继承 MyBatis-Plus 本体 `QueryWrapper<T>`，不用链式代理容器，也不引入被禁用的 `mybatis-plus-join`。
+- **拦截器按需开关**：分页、LIKE 转义（策略 DTO 层 / 全局 SQL 层）、全表更新删除防护，各自独立 `enabled`，默认只开分页与策略层转义。
+- **主键策略跟随 MyBatis-Plus**：基类不声明 id 字段，使用方在自己的实体上用 `@TableId` 决定 AUTO / ASSIGN_UUID / INPUT 等。
+
+适合用 MyBatis-Plus 且想复用 `banyan-data-core` 公共契约的项目。Java package 的职责说明仍在各自的 `package-info.java`，本文只写为什么自研、和 LIKE 转义的边界。
 
 ## 为什么不用链式代理容器
 

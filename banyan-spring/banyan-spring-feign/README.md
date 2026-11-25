@@ -1,6 +1,16 @@
 # banyan-spring-feign
 
-Feign 应用能力扩展：引入后自动装配请求/响应日志；header 转发默认关闭，需要显式开启。
+Feign 应用能力扩展。引入后自动装配请求/响应日志与 header 转发能力，不用自己写 `RequestInterceptor` / `Decoder`。
+
+## 这个模块带来什么
+
+- **请求/响应 DEBUG 日志**：默认开启，敏感 header 默认脱敏，可配置忽略头、脱敏名单与 body 截断长度。
+- **入站 header 转发**：默认**关闭**（避免自动带出 Cookie / Authorization 等敏感头）；开启后转发入站 header，支持额外阻塞头与自定义头。
+- **单次请求级上下文**：`HeaderContextHolder` 支持按调用禁用转发、加自定义/阻塞头、控制清理时机；默认每次 apply 后自动清理，避免异步串 header。
+- **透明响应日志解码器**：包装当前 `Decoder`，只打印响应、不判断业务返回体、不破坏原解码结果或异常。
+- **traceId 配合**：`banyan-trace` 在 classpath 有 Feign 时自动出向透传 `X-Trace-Id`、响应侧补全，两模块互不依赖。
+
+适合「用了 Spring Cloud OpenFeign、想统一日志与 header 传播」的应用。只发简单调用、不需要日志与转发的话，这个包带来的价值有限。
 
 ```xml
 <dependency>

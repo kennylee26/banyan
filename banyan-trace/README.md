@@ -1,8 +1,17 @@
 # banyan-trace
 
-# trace.thread 用法
+Trace ID 生成、传播与日志集成。引入后自动在请求入口生成/沿用 TraceId，写入 MDC 与响应头，并跨 Servlet、WebFlux、Dubbo、Feign 与线程池传递。
 
-Java package 的职责说明仍在 `package-info.java`，本文只写异步场景的两种入口。
+## 这个模块带来什么
+
+- **入口生成与传播**：Servlet Filter / WebFlux Filter 从 header 或 query 取 TraceId（或生成新的），放入 MDC 并回写响应头，请求结束清理。
+- **跨线程/跨调用**：自动装饰容器里的 `ThreadPoolTaskExecutor`，也可手动创建带 `MdcTaskDecorator` 的线程池；Feign 出向写 header、响应侧可临时补全；Dubbo 提供端/消费端透传。
+- **可选增强、有则生效**：Servlet / WebFlux / Feign / Dubbo 相关依赖都是 `provided + optional`，classpath 缺哪个就跳过哪个并 WARN，不拖垮应用。
+- **不生成业务语义**：只管 TraceId 本身，不打印请求体/响应体，不依赖 `banyan-log`（`banyan-log` 只读取它写入 MDC 的 key）。
+
+适合需要全链路追踪标识、但还没上完整 APM 的 Spring Boot 应用。Java package 的职责说明仍在各自的 `package-info.java`，本文只写使用方式与容易踩的坑。
+
+## 线程池：异步场景的两种入口
 
 ## 为什么要显式用工厂
 

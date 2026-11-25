@@ -1,6 +1,16 @@
 # banyan-spring-mvc
 
-Spring MVC 应用能力扩展：按优先级分级的异常 advice、可替换错误响应契约，以及默认关闭的可选 Jackson 增强。引入后自动装配，不改变成功响应。
+Spring MVC 应用能力扩展。引入后自动装配，把**接口异常统一转成中性错误响应**，避免每个 Controller 各自 try-catch 或返回五花八门的错误体。
+
+## 这个模块带来什么
+
+- **统一异常处理**：按优先级分级的 4 个 advice 覆盖 MVC 参数/绑定/校验异常、Feign 调用异常与兜底 `Exception`，默认返回 HTTP 200 + `ErrorResponse(code, message)`，不回显堆栈或 SQL。
+- **响应体形状可替换**：通过 `ExceptionResultFactory` 契约换成自己的 `Result`，不绑死本库的结构。
+- **不改变成功响应**：不注册 `ResponseBodyAdvice`，正常返回值仍按应用原有方式渲染。
+- **可选 Jackson 增强**：默认关闭；开启后可让 `Long` 转字符串（防前端精度丢失）、枚举按 name、BigDecimal 不用科学计数法。日期格式等仍用 Spring Boot 原生 `spring.jackson.*`。
+- **缺类可降级**：Feign / `jakarta.validation` / Jackson 是可选增强，缺失时静默跳过；核心类缺失才 WARN，应用不崩。
+
+适合「想要统一异常响应、但不想被某个 Result 结构绑死」的 Spring Boot Web 应用。若你已有完整的全局异常处理，引入前先确认开关与优先级是否冲突。
 
 ```xml
 <dependency>
@@ -83,6 +93,8 @@ banyan:
 
 本模块只注册一个 `Jackson2ObjectMapperBuilderCustomizer`（排序晚于 Boot 自身），不替换容器 `ObjectMapper`、不声明 `HttpMessageConverters` bean。使用方可以关闭本模块开关后自行追加 customizer。
 
-## 设计依据
+## Jackson 设计取舍
 
-Jackson 定制的取舍见 `docs/adr/0010-spring-mvc-jackson-customization.md`（本地设计文档，不入库）。
+- 不重复定义日期格式、时区、feature 布尔开关与包含策略：这些直接用 `spring.jackson.*`（Spring Boot 3.4.5 原生提供），本模块不为它们另起 `banyan.*` 键。
+- 三个便捷开关是**显式覆盖**语义：仅在 `jackson.enabled=true` 时生效，会覆盖等价的原生 feature 设置；未开启时不改动任何 JSON 输出。
+- 只注册一个 `Jackson2ObjectMapperBuilderCustomizer`，不替换容器 `ObjectMapper`、不声明 `HttpMessageConverters` bean，因此不会影响应用已有的 converter 配置。

@@ -1,8 +1,15 @@
 # banyan-log
 
-应用生命周期日志、可选的 logback 输出片段、纯 JDK 日志值工具。
-Java package 的职责说明仍在各自的 `package-info.java`，本文只写使用方式与容易踩的坑。
-本模块**不依赖 `banyan-trace`**，只读取 trace 已写入 MDC 的 key，不生成、不传播 TraceId。
+应用生命周期日志、可选 logback 输出片段与纯 JDK 日志值工具。
+
+## 这个模块带来什么
+
+- **开箱即用的生命周期日志**：应用启动横幅 + 运行环境快照、优雅停机、启动失败堆栈，默认 INFO/ERROR，不打印任何业务数据。
+- **可选 logback 片段**：一组 `<included>` 资源提供控制台 / 按天文件 / 错误文件 appender，宿主显式 include 才生效，不覆盖宿主已有的日志配置。
+- **日志值工具**：`LogValues` 的手机号/邮箱遮蔽与超长文本截断，纯静态 JDK 方法，不调用就不生效。
+- **与 trace 弱耦合**：只读取 trace 已写入 MDC 的 key 用于日志 pattern，**不依赖 `banyan-trace`**、不生成也不传播 TraceId；未引入时该字段显示 `N/A`。
+
+适合想统一「启动/停机日志 + 文件输出格式」的项目；日志主体 pattern 仍来自 Spring Boot 默认配置。Java package 的职责说明仍在各自的 `package-info.java`，本文只写使用方式与容易踩的坑。
 
 ## 生命周期日志
 
