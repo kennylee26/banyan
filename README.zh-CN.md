@@ -36,6 +36,11 @@
 | `banyan-mq-rocketmq-apache` | 基于 rocketmq-spring-boot-starter 的 RocketMQ 后端 |
 | `banyan-spring` | Spring Boot 应用能力扩展父模块（强依赖 Spring 生态，提供 enabled 开关） |
 | `banyan-spring-feign` | Feign 能力：header 转发、请求/响应日志与自动装配 |
+| `banyan-spring-mvc` | Spring MVC 能力：按优先级分级的异常 advice、可替换错误响应与可选 Jackson 增强 |
+
+## 配置参考
+
+每个含 java config 的模块目录下都有一份 `<artifactId>.yml` 显式配置参考；根目录 [`CONFIGURATION.md`](CONFIGURATION.md) 是全部 `banyan.*` 配置项的总表。新增或修改 java config 时，必须在同一次改动里同步更新对应 yml 与总表。这些文件只是文档，不参与构建、不打入 jar。
 
 ## 日志
 

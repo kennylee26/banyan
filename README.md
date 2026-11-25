@@ -36,6 +36,11 @@ An infrastructure toolkit for Spring Boot.
 | `banyan-mq-rocketmq-apache` | RocketMQ backend built on rocketmq-spring-boot-starter |
 | `banyan-spring` | Parent module of Spring Boot application capabilities (compile-scope Spring deps, enabled switches) |
 | `banyan-spring-feign` | Feign capability: header forwarding, request/response logging and auto-configuration |
+| `banyan-spring-mvc` | Spring MVC capability: ordered exception advices, replaceable error response and optional Jackson enhancements |
+
+## Configuration reference
+
+Every module with a java config has a `<artifactId>.yml` reference in its module directory; [`CONFIGURATION.md`](CONFIGURATION.md) is the full table of all `banyan.*` keys. Adding or changing a java config requires updating both in the same change. These files are documentation only — they are not packaged into the jar.
 
 ## Logging
 
