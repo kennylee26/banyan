@@ -9,7 +9,7 @@
 - **日志值工具**：`LogValues` 的手机号/邮箱遮蔽与超长文本截断，纯静态 JDK 方法，不调用就不生效。
 - **与 trace 弱耦合**：只读取 trace 已写入 MDC 的 key 用于日志 pattern，**不依赖 `banyan-trace`**、不生成也不传播 TraceId；未引入时该字段显示 `N/A`。
 
-适合想统一「启动/停机日志 + 文件输出格式」的项目；日志主体 pattern 仍来自 Spring Boot 默认配置。Java package 的职责说明仍在各自的 `package-info.java`，本文只写使用方式与容易踩的坑。各能力的源码位置见文末「四、能力 → 代码位置」。
+适合想统一「启动/停机日志 + 文件输出格式」的项目；日志主体 pattern 仍来自 Spring Boot 默认配置。Java package 的职责说明仍在各自的 `package-info.java`，本文只写使用方式与容易踩的坑。各能力的源码位置见文末「五、能力 → 代码位置」。
 
 ## 二、生命周期日志
 
@@ -43,6 +43,8 @@ banyan:
 **自定义横幅的坑**：`MessageFormat` 里单引号会吞掉后续占位符，
 需要输出单引号必须双写（`It''s {0}`）。占位符 `{0}` = 应用名，`{1}` = profiles。
 文案缺省回落 `Messages` 消息资源（中英）。
+
+完整默认值与注释见 [`banyan-log.yml`](banyan-log.yml)，全仓总表见 [`CONFIGURATION.md`](../CONFIGURATION.md)。
 
 ### 2.2 替换环境信息采集
 

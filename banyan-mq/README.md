@@ -2,7 +2,17 @@
 
 消息中间件抽象：业务只面向统一 API 发送与消费，底层 Kafka / RocketMQ 可切换；生产者与消费者可单独引入。
 
-## 模块
+## 一、模块能力
+
+- **统一发送/消费 API**：`MqProducer` 与 `@MqConsumer` 屏蔽后端差异，业务不直接碰 KafkaTemplate / RocketMQ API。
+- **后端可切换、按需引入**：Kafka / RocketMQ 两个后端独立；生产者、消费者、commons-spring 可单独引入，依赖方向单向。
+- **逻辑实例路由**：`instances.<name>.type` 把业务名映射到后端，支持同类型多集群；未声明实例时单后端项目零配置。
+- **环境后缀隔离**：生产者 tag、消费者组与 tag 可按激活 profile 自动追加后缀，避免多环境串消费。
+- **能力差异不静默**：后端不支持的能力（如 Kafka 的 tag / 延迟）在启动期或发送前报明确错误，不悄悄忽略。
+
+适合需要统一消息 API、或未来可能切换 Kafka / RocketMQ 的项目；只用一个后端且不需要多实例路由时，引入前先评估这套抽象是否必要。各模块源码位置见文末「十一、能力 → 代码位置」。
+
+## 二、模块
 
 | 模块 | 角色 | 依赖 |
 |---|---|---|
@@ -15,7 +25,7 @@
 
 依赖方向单向：`producer` / `consumer` 依赖 `commons-spring`，两个后端只依赖 `core`；后端之间互不依赖。引入 `producer` 或 `consumer` 会传递带入 `commons-spring`。
 
-## 引入
+## 三、引入
 
 只发消息：
 
@@ -34,7 +44,7 @@
 
 只消费：把 `banyan-mq-producer` 换成 `banyan-mq-consumer`。两者都引也可以。
 
-## 发送
+## 四、发送
 
 日常只需要 topic 与 payload：
 
@@ -77,7 +87,7 @@ producer.send(MqSendRequest.builder()
 - `timestamp` 为空时使用发送时刻；它会作为消息属性透传给消费端。
 - 默认给 `tag` 追加环境后缀（`paid-<profile>`），与消费者侧的 tag 后缀对齐；单条发送想关掉时设 `tagSuffixEnabled(false)`，全局关掉用 `banyan.mq.producer.tag-suffix-enabled: false`。
 
-### 绑定实例
+### 4.1 绑定实例
 
 单后端项目不需要写实例名，自动使用唯一实例。多后端时可在启动阶段构造一个绑定实例的发送门面：
 
@@ -90,7 +100,7 @@ MqProducer orderProducer(MqInstanceRegistry registry) {
 
 之后业务代码只写 `orderProducer.send("orders", body)`，不再关心实例名。
 
-### 同类型多集群
+### 4.2 同类型多集群
 
 `banyan.mq.instances.<name>.type` 只区分后端类型，区分不了「同类型的不同连接」。多个 Kafka 集群这类场景，直接给每个生产者绑定一个独立的 `MqBackend`：
 
@@ -122,7 +132,7 @@ MqInstanceRegistry mqInstanceRegistry(MqBackend memberKafkaBackend, MqBackend pa
 
 只保证「本地事务提交后才发」，**不是** MQ 事务消息，不保证消息与数据库事务的原子性；事务回滚时不发送。
 
-## 消费
+## 五、消费
 
 ```java
 @Component
@@ -151,7 +161,7 @@ public class OrderConsumers {
 - 一个 class 里写多个方法即可，不需要为每个消费者建类。
 - `tag` 是数组，默认 `{"*"}`：空数组或只有 `"*"` 时不追加后缀、也不向后端校验 TAG 能力；写了具体 tag 才按 tag 过滤。
 
-### 一个 topic、多个 tag
+### 5.1 一个 topic、多个 tag
 
 支持两种用法，但**只有 RocketMQ 有 tag 能力**；Kafka 上写任何非 `*` 的 tag 都会在启动期失败。
 
@@ -194,7 +204,7 @@ public void onStatusChanged(MqMessage message, MqConsumeContext context) {
 - 异常不会被吞掉。
 - 第二个参数是不透明的消费上下文：公共字段直接可读，厂商专有信息通过 `nativeMessage()` 自行转换。
 
-## 配置
+## 六、配置
 
 ```yaml
 banyan:
@@ -220,11 +230,11 @@ banyan:
 - 多后端按逻辑实例名路由，不同业务走不同后端；**不做双写/广播，也不做运行时热切换**。
 - 每个模块默认自动装配，可用 `banyan.mq.*.enabled` 关闭；classpath 缺少必需类时跳过并 WARN，应用不崩。
 
-完整配置项（含后端原生配置与日志说明）见 [`CONFIGURATION.md`](CONFIGURATION.md)。
+完整默认值与注释见 [`banyan-mq.yml`](banyan-mq.yml)，后端原生配置与日志说明见 [`CONFIGURATION.md`](CONFIGURATION.md)，全仓总表见 [`../CONFIGURATION.md`](../CONFIGURATION.md)。
 
-## 内部流程
+## 七、内部流程
 
-### 配置如何变成逻辑实例
+### 7.1 配置如何变成逻辑实例
 
 ```mermaid
 sequenceDiagram
@@ -251,7 +261,7 @@ sequenceDiagram
 
 同类型多集群（例如两个 Kafka）无法用 `instances.<name>.type` 表达，改为在 Java 里 `new MqInstanceRegistry(Map<实例名, MqBackend>)`；自定义的 registry bean 会顶掉这里自动配置的那个。
 
-### 生产者：配置 → 实例 → 发送
+### 7.2 生产者：配置 → 实例 → 发送
 
 ```mermaid
 sequenceDiagram
@@ -281,7 +291,7 @@ sequenceDiagram
 
 实例只在「发送前」解析一次：业务代码写的是实例名，`MqProducer` 拿它去 `MqInstanceRegistry` 换后端，再委托给具体后端发送。
 
-### 消费者：注解 → listener
+### 7.3 消费者：注解 → listener
 
 ```mermaid
 sequenceDiagram
@@ -318,7 +328,7 @@ sequenceDiagram
 
 三步合起来：启动期把 yaml 与后端 bean 收敛成 `MqInstanceRegistry`；生产者拿实例名换后端发送；消费者按注解生成 `MqConsumerDefinition`，让同一个后端实现创建厂商容器，业务侧只剩方法。
 
-## 能力差异
+## 八、能力差异
 
 | 能力 | Kafka | RocketMQ |
 |---|---|---|
@@ -327,12 +337,26 @@ sequenceDiagram
 
 使用后端不支持的能力时，在发送前或消费者注册时直接报错，不会静默忽略。
 
-## 测试
+## 九、测试
 
 不连真实 broker：用纯 JDK 假后端跑「发送 → 路由 → 编解码 → 分发」链路，后端模块只测自动装配、配置映射与能力声明。
 
-## 已知限制
+## 十、已知限制
 
 - 启动性能未优化：每个消费者一个容器/连接；用户已明确列为后续重构项，本期不作性能承诺。
 - 原生能力逃生舱（`partition` / `attributes`）留待后续版本。
 - 顺序消息、广播、手动 ACK、死信、批量、事务消息本期不做。
+
+## 十一、能力 → 代码位置
+
+| 能力 | 源码位置 | 关键类型 |
+|---|---|---|
+| 消息公共契约与后端 SPI | [`banyan-mq-core/`](banyan-mq-core/) | `MqMessage`、`MqProducer`、`MqConsumer`、`MqBackend`、`MqInstanceRegistry` |
+| Spring 共享装配与配置 | [`banyan-mq-commons-spring/`](banyan-mq-commons-spring/) | `MqProperties`、`JsonMqMessageCodec` |
+| 生产者门面 | [`banyan-mq-producer/`](banyan-mq-producer/) | `MqProducer`（同步发送、事务提交后发送、延迟、实例路由） |
+| 消费者注解与扫描 | [`banyan-mq-consumer/`](banyan-mq-consumer/) | `@MqConsumer`、消费上下文、后缀隔离、重试语义 |
+| Kafka 后端 | [`banyan-mq-kafka-spring/`](banyan-mq-kafka-spring/) | `KafkaMqBackend`、`KafkaMqAutoConfiguration` |
+| RocketMQ 后端 | [`banyan-mq-rocketmq-apache/`](banyan-mq-rocketmq-apache/) | `RocketMqBackend`、`RocketMqAutoConfiguration` |
+| 配置属性与键 | [`banyan-mq.yml`](banyan-mq.yml)、[`CONFIGURATION.md`](CONFIGURATION.md) | 全部 `banyan.mq.*` 键与默认值 |
+
+本模块是聚合 POM，自身不含 `src`；各能力的实现分散在 6 个子模块中。

@@ -2,14 +2,17 @@
 
 注解驱动的 OpenAPI 入站保护：验签 → 解密 → 把明文交给 Controller，失败统一 401。
 
-- 依赖 `banyan-commons` 的签名与 AES-256-GCM 能力
-- 默认自动装配，`banyan.openapi-sign.enabled=false` 可整体关闭
-- 缺 Servlet / Spring MVC 时跳过装配并打 WARN，应用正常启动
-- 不新增第三方坐标：Servlet、Spring MVC、Lombok 全部 `provided + optional`
-- 调用方工具见 [`../banyan-sign-client`](../banyan-sign-client/README.md)；
-  不引入 banyan 组件时发给对方 [`第三方对接指南`](../banyan-sign-client/THIRD-PARTY-GUIDE.md)
+## 一、模块能力
 
-## 快速开始
+- **注解驱动入站保护**：给 Controller / 方法加 `@OpenApiSigned`，框架验签、解密，把明文 JSON 交给 `@RequestBody`，可重复读 body。
+- **失败统一 401**：错误签名、过期、重放、未知 keyId、解密失败默认返回同一 `code` 与 `message`；`reveal-reason=true` 才显示具体原因。
+- **默认自动装配、可整体关闭**：`banyan.openapi-sign.enabled=false` 即关闭；缺 Servlet / Spring MVC 类时跳过装配并 WARN，应用正常启动。
+- **可替换实现**：`SignKeyResolver` / `NonceStore` / `PayloadCipher` / `SignAlgorithm` 声明同类型 bean 即让位默认实现。
+- **不新增第三方坐标**：Servlet、Spring MVC、Lombok 全部 `provided + optional`。
+
+适合给 OpenAPI 接口做签名/加密保护的服务端项目；调用方工具见 [`../banyan-sign-client`](../banyan-sign-client/README.md)，不引入 banyan 组件时可把 [`第三方对接指南`](../banyan-sign-client/THIRD-PARTY-GUIDE.md) 发给对方。只支持同步 Servlet + Spring MVC（含 Spring Boot 3.x），不支持 WebFlux 与异步 Servlet 读取，引入前先确认技术栈。各能力的源码位置见文末「七、能力 → 代码位置」。
+
+## 二、快速开始
 
 ```xml
 <dependency>
@@ -43,7 +46,7 @@ public class OrderController {
 调用方按 `banyan-commons` 的协议签名并加密 body，见
 [`../../banyan-commons/guides/crypto.md`](../../banyan-commons/guides/crypto.md) 第九节。
 
-## 配置
+## 三、配置
 
 | 配置项 | 默认值 | 说明 |
 |---|---|---|
@@ -85,7 +88,9 @@ new SignHeaders("X-Acme-Alg", "X-Acme-KeyId", "X-Acme-Timestamp",
         "X-Acme-Nonce", "X-Acme-Sign");
 ```
 
-## 失败响应与日志
+完整默认值与注释见 [`banyan-sign-openapi.yml`](banyan-sign-openapi.yml)，全仓总表见 [`../../CONFIGURATION.md`](../../CONFIGURATION.md)。
+
+## 四、失败响应与日志
 
 默认响应固定为 401：
 
@@ -97,7 +102,7 @@ new SignHeaders("X-Acme-Alg", "X-Acme-KeyId", "X-Acme-Timestamp",
 - `reveal-reason=true` 时 `message` 换成具体原因文案，`code` 不变；上线前记得关掉
 - 日志始终 WARN，包含失败原因、method、path、keyId，不含密钥、签名串或 body
 
-## 替换默认实现
+## 五、替换默认实现
 
 声明同类型 bean 即可覆盖，配置中的默认实现会让位：
 
@@ -121,7 +126,7 @@ public NonceStore nonceStore(RedisTemplate<String, String> redis) {
 }
 ```
 
-## 实现说明与限制
+## 六、实现说明与限制
 
 - `RepeatableBodyFilter` 缓存原始 body；拦截器验签成功后把明文写入请求属性，包装器读取时替换。
   因此下游 `@RequestBody` 与输入流都能读到明文。
@@ -134,3 +139,14 @@ public NonceStore nonceStore(RedisTemplate<String, String> redis) {
   `getParameterMap()`，与调用方的 query 规范化不一致，不支持。
 - 自定义 Filter 若在链路中替换请求且没有保留属性，会导致拿不到缓存 body；拦截器会按格式非法拒绝，不会放行。
 - 解密只保护 body 机密性；身份与完整性由签名保证，传输层仍应使用 HTTPS。
+
+## 七、能力 → 代码位置
+
+| 能力 | 源码位置 | 关键类型 |
+|---|---|---|
+| 注解与入站拦截 | [`annotation/`](src/main/java/cn/kennylee/banyan/openapi/sign/annotation/)、[`web/`](src/main/java/cn/kennylee/banyan/openapi/sign/web/) | `@OpenApiSigned`、`OpenApiSignInterceptor`、`RepeatableBodyFilter`、`CachedBodyRequestWrapper` |
+| 错误响应与密钥解析 | [`support/`](src/main/java/cn/kennylee/banyan/openapi/sign/support/) | `ErrorResponses`、`SignKeyResolver`、`ConfiguredSignKeyResolver` |
+| 配置属性 | [`OpenApiSignProperties.java`](src/main/java/cn/kennylee/banyan/openapi/sign/autoconfigure/OpenApiSignProperties.java) | `OpenApiSignProperties` |
+| 自动装配与缺类降级 | [`autoconfigure/`](src/main/java/cn/kennylee/banyan/openapi/sign/autoconfigure/) | `OpenApiSignAutoConfiguration`、`OpenApiSignMissingClassAutoConfiguration`，注册清单见 [`AutoConfiguration.imports`](src/main/resources/META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports) |
+| 签名/加密协议内核 | [`banyan-commons` crypto 指南](../../banyan-commons/guides/crypto.md) | 规范化、HMAC-SHA256、AES-256-GCM、防重放 |
+| 配置参考 | [`banyan-sign-openapi.yml`](banyan-sign-openapi.yml) | 全部 `banyan.openapi-sign.*` 键与默认值 |
