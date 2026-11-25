@@ -5,6 +5,7 @@ Spring Boot 应用能力扩展家族。与 `banyan-commons` / 传统 starter 不
 | 模块 | 职责 |
 |---|---|
 | [`banyan-spring-feign`](banyan-spring-feign/README.md) | Feign header 转发、请求/响应日志与自动装配 |
+| [`banyan-spring-mvc`](banyan-spring-mvc/README.md) | Spring MVC 分级异常 advice、可替换错误响应与可选 Jackson 增强 |
 
 ## 约定
 

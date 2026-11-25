@@ -81,6 +81,11 @@
             </dependency>
             <dependency>
                 <groupId>cn.kennylee.banyan</groupId>
+                <artifactId>banyan-spring-mvc</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>cn.kennylee.banyan</groupId>
                 <artifactId>banyan-data-core</artifactId>
                 <version>${project.version}</version>
             </dependency>

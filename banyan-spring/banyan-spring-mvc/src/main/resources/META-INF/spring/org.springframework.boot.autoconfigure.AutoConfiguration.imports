@@ -1,0 +1,5 @@
+cn.kennylee.banyan.spring.mvc.autoconfigure.MvcCoreAutoConfiguration
+cn.kennylee.banyan.spring.mvc.autoconfigure.MvcWebExceptionAutoConfiguration
+cn.kennylee.banyan.spring.mvc.autoconfigure.MvcFeignExceptionAutoConfiguration
+cn.kennylee.banyan.spring.mvc.autoconfigure.MvcJacksonAutoConfiguration
+cn.kennylee.banyan.spring.mvc.autoconfigure.MvcMissingClassAutoConfiguration

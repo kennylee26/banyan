@@ -19,6 +19,7 @@
 
     <modules>
         <module>banyan-spring-feign</module>
+        <module>banyan-spring-mvc</module>
     </modules>
 
     <dependencies>

@@ -263,7 +263,22 @@ public enum ErrorCode {
     MQ_KAFKA_SEND_DEBUG("banyan.mq.kafka-send-debug"),
 
     /** RocketMQ 发送日志。 */
-    MQ_ROCKETMQ_SEND_DEBUG("banyan.mq.rocketmq-send-debug");
+    MQ_ROCKETMQ_SEND_DEBUG("banyan.mq.rocketmq-send-debug"),
+
+    /** MVC 请求参数不合法。 */
+    SPRING_MVC_BAD_REQUEST("banyan.spring.mvc.bad-request"),
+
+    /** MVC 参数校验失败。 */
+    SPRING_MVC_VALIDATION_FAILED("banyan.spring.mvc.validation-failed"),
+
+    /** Feign 调用异常。 */
+    SPRING_MVC_FEIGN_ERROR("banyan.spring.mvc.feign-error"),
+
+    /** 未预期的内部异常。 */
+    SPRING_MVC_INTERNAL_ERROR("banyan.spring.mvc.internal-error"),
+
+    /** 请求处理异常日志模板，参数为异常类型。 */
+    SPRING_MVC_EXCEPTION_HANDLED("banyan.spring.mvc.exception-handled");
 
     /** 资源文件中的消息 key。 */
     private final String messageKey;

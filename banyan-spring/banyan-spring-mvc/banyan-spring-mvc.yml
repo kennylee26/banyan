@@ -1,0 +1,36 @@
+# banyan-spring-mvc 配置参考
+# 本文件是显式配置参考，不参与构建、不打入 jar；所有值均为框架默认值，可直接拷贝后按需修改。
+# 对应 java config：MvcProperties / MvcCoreAutoConfiguration / MvcWebExceptionAutoConfiguration /
+#   MvcFeignExceptionAutoConfiguration / MvcJacksonAutoConfiguration / MvcMissingClassAutoConfiguration
+#   （banyan-spring/banyan-spring-mvc/src/main/java/cn/kennylee/banyan/spring/mvc/autoconfigure/）
+# 全仓总表见 ../../CONFIGURATION.md
+#
+# 说明：以下由 Spring Boot 提供，非本模块属性（仅作注释示例，不参与本 yml 的 YAML 键）：
+#   # spring.jackson.date-format                         日期格式（由 Spring Boot 提供，非本模块属性）
+#   # spring.jackson.time-zone                           时区（由 Spring Boot 提供，非本模块属性）
+#   # spring.jackson.serialization.*                     boolean feature 开关（由 Spring Boot 提供，非本模块属性）
+#   # spring.jackson.deserialization.*                   boolean feature 开关（由 Spring Boot 提供，非本模块属性）
+#   # spring.jackson.mapper.*                            boolean feature 开关（由 Spring Boot 提供，非本模块属性）
+#   # spring.jackson.parser.*                            boolean feature 开关（由 Spring Boot 提供，非本模块属性）
+#   # spring.jackson.generator.*                         boolean feature 开关（由 Spring Boot 提供，非本模块属性）
+#   # spring.jackson.default-property-inclusion          默认属性包含策略（由 Spring Boot 提供，非本模块属性）
+#   # spring.mvc.format.date                             日期格式（由 Spring Boot 提供，非本模块属性）
+#   # spring.mvc.format.time                             时间格式（由 Spring Boot 提供，非本模块属性）
+#   # spring.mvc.format.date-time                        日期时间格式（由 Spring Boot 提供，非本模块属性）
+# 本模块不重复定义这些键，日期格式与 boolean feature 直接用 Boot 原生配置；
+# 本模块只通过 Jackson2ObjectMapperBuilderCustomizer（可排序、可被使用方 @ConditionalOnMissingBean 接管）补 Boot 未直接给的 3 个增强。
+banyan:
+  spring:
+    mvc:
+      enabled: true                     # 总开关；false 时不注册任何本模块 bean
+      web-exception:
+        enabled: true                   # MVC 参数/绑定/校验异常 advice
+      feign-exception:
+        enabled: true                   # Feign 异常 advice（classpath 无 feign.FeignException 时跳过）
+      fallback-exception:
+        enabled: true                   # 兜底 Exception advice
+      jackson:
+        enabled: false                  # Jackson 增强能力总开关，默认关闭（可选能力）
+        long-as-string: true            # Long 序列化为字符串，防 JS 精度丢失；仅当 jackson.enabled=true 生效
+        enums-using-name: true          # 枚举按 name 序列化；仅当 jackson.enabled=true 生效
+        big-decimal-as-plain: true      # BigDecimal 不用科学计数法；仅当 jackson.enabled=true 生效
