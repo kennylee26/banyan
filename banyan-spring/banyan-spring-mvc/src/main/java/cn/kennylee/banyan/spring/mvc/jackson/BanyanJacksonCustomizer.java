@@ -3,7 +3,7 @@ package cn.kennylee.banyan.spring.mvc.jackson;
 import cn.kennylee.banyan.spring.mvc.autoconfigure.MvcProperties;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
-import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateTimeDeserializer;
+import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateSerializer;
 import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateTimeSerializer;
 import org.springframework.boot.autoconfigure.jackson.Jackson2ObjectMapperBuilderCustomizer;
 import org.springframework.core.Ordered;
@@ -11,8 +11,11 @@ import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.StringUtils;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.LinkedHashSet;
+import java.util.List;
 
 /**
  * Jackson 增强：Long 转字符串、枚举按 name、BigDecimal 非科学计数法，以及 Date / LocalDateTime 的统一日期格式。
@@ -54,6 +57,11 @@ public class BanyanJacksonCustomizer implements Jackson2ObjectMapperBuilderCusto
         } else {
             builder.featuresToDisable(SerializationFeature.WRITE_BIGDECIMAL_AS_PLAIN);
         }
+        if (options.isLenientBoolean()) {
+            LenientBooleanDeserializer booleanDeserializer = new LenientBooleanDeserializer();
+            builder.deserializerByType(Boolean.class, booleanDeserializer);
+            builder.deserializerByType(Boolean.TYPE, booleanDeserializer);
+        }
         applyDateTime(builder);
     }
 
@@ -69,13 +77,43 @@ public class BanyanJacksonCustomizer implements Jackson2ObjectMapperBuilderCusto
         builder.simpleDateFormat(options.getDateFormat());
         builder.featuresToDisable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
         if (ClassUtils.isPresent(JSR310_MODULE, BanyanJacksonCustomizer.class.getClassLoader())) {
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern(options.getDateFormat());
-            builder.serializerByType(LocalDateTime.class, new LocalDateTimeSerializer(formatter));
-            builder.deserializerByType(LocalDateTime.class, new LocalDateTimeDeserializer(formatter));
+            List<DateTimeFormatter> dateFormatters =
+                    formatters(options.getDateFormat(), options.getDateFormats());
+            builder.serializerByType(LocalDateTime.class,
+                    new LocalDateTimeSerializer(dateFormatters.get(0)));
+            builder.deserializerByType(LocalDateTime.class,
+                    new MultiFormatLocalDateTimeDeserializer(dateFormatters));
+
+            String localDatePattern = StringUtils.hasText(options.getLocalDateFormat())
+                    ? options.getLocalDateFormat() : MvcProperties.Jackson.DEFAULT_LOCAL_DATE_FORMAT;
+            List<DateTimeFormatter> localDateFormatters =
+                    formatters(localDatePattern, options.getLocalDateFormats());
+            builder.serializerByType(LocalDate.class,
+                    new LocalDateSerializer(localDateFormatters.get(0)));
+            builder.deserializerByType(LocalDate.class,
+                    new MultiFormatLocalDateDeserializer(localDateFormatters));
         }
         if (StringUtils.hasText(options.getTimeZone())) {
             builder.timeZone(options.getTimeZone());
         }
+    }
+
+    /**
+     * 合并输出格式与额外反序列化候选，去重保序。
+     *
+     * @param primary 首选格式
+     * @param extras  额外候选
+     * @return 格式列表，至少一个
+     */
+    private static List<DateTimeFormatter> formatters(String primary, List<String> extras) {
+        LinkedHashSet<String> patterns = new LinkedHashSet<>();
+        if (StringUtils.hasText(primary)) {
+            patterns.add(primary);
+        }
+        if (extras != null) {
+            extras.stream().filter(StringUtils::hasText).forEach(patterns::add);
+        }
+        return patterns.stream().map(DateTimeFormatter::ofPattern).toList();
     }
 
     @Override

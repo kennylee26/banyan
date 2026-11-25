@@ -103,7 +103,11 @@
 | banyan-spring-mvc | `banyan.spring.mvc.jackson.long-as-string` | `true` | Long 序列化为字符串，防 JS 精度丢失 | `MvcProperties` | [yml](banyan-spring/banyan-spring-mvc/banyan-spring-mvc.yml) |
 | banyan-spring-mvc | `banyan.spring.mvc.jackson.enums-using-name` | `true` | 枚举按 name 序列化 | `MvcProperties` | [yml](banyan-spring/banyan-spring-mvc/banyan-spring-mvc.yml) |
 | banyan-spring-mvc | `banyan.spring.mvc.jackson.big-decimal-as-plain` | `true` | BigDecimal 不用科学计数法 | `MvcProperties` | [yml](banyan-spring/banyan-spring-mvc/banyan-spring-mvc.yml) |
-| banyan-spring-mvc | `banyan.spring.mvc.jackson.date-format` | `yyyy-MM-dd HH:mm:ss` | Date 与 LocalDateTime 的输入/输出格式；空表示不处理日期 | `MvcProperties` | [yml](banyan-spring/banyan-spring-mvc/banyan-spring-mvc.yml) |
+| banyan-spring-mvc | `banyan.spring.mvc.jackson.lenient-boolean` | `true` | 布尔接受 true/false、0/1、字符串 "true"/"false"/"0"/"1" | `MvcProperties` | [yml](banyan-spring/banyan-spring-mvc/banyan-spring-mvc.yml) |
+| banyan-spring-mvc | `banyan.spring.mvc.jackson.date-format` | `yyyy-MM-dd HH:mm:ss` | Date 输出 + LocalDateTime 反序列化首选格式；空表示不处理日期 | `MvcProperties` | [yml](banyan-spring/banyan-spring-mvc/banyan-spring-mvc.yml) |
+| banyan-spring-mvc | `banyan.spring.mvc.jackson.date-formats` | `[]` | LocalDateTime 反序列化的额外候选格式，按顺序尝试 | `MvcProperties` | [yml](banyan-spring/banyan-spring-mvc/banyan-spring-mvc.yml) |
+| banyan-spring-mvc | `banyan.spring.mvc.jackson.local-date-format` | `yyyy-MM-dd` | LocalDate 输出 + 反序列化首选格式；不能带时间字段 | `MvcProperties` | [yml](banyan-spring/banyan-spring-mvc/banyan-spring-mvc.yml) |
+| banyan-spring-mvc | `banyan.spring.mvc.jackson.local-date-formats` | `[]` | LocalDate 反序列化的额外候选格式，按顺序尝试 | `MvcProperties` | [yml](banyan-spring/banyan-spring-mvc/banyan-spring-mvc.yml) |
 | banyan-spring-mvc | `banyan.spring.mvc.jackson.time-zone` | （空） | 日期时区；空表示沿用应用默认 | `MvcProperties` | [yml](banyan-spring/banyan-spring-mvc/banyan-spring-mvc.yml) |
 
 ## 仅测试用 / 非本库属性

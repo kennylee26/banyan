@@ -34,5 +34,9 @@ banyan:
         long-as-string: true            # Long 序列化为字符串，防 JS 精度丢失
         enums-using-name: true          # 枚举按 name 序列化
         big-decimal-as-plain: true      # BigDecimal 不用科学计数法
-        date-format: yyyy-MM-dd HH:mm:ss # java.util.Date 与 LocalDateTime 的输入/输出格式；空表示不处理日期
+        lenient-boolean: true           # 宽松布尔解析：接受布尔值、数字 0/1、字符串 "true"/"false"/"0"/"1"
+        date-format: yyyy-MM-dd HH:mm:ss # Date 输出 + LocalDateTime 反序列化首选格式；空表示不处理日期
+        date-formats: []                # LocalDateTime 反序列化的额外候选格式，按顺序尝试（序列化仍用 date-format）
+        local-date-format: yyyy-MM-dd   # LocalDate 输出 + 反序列化首选格式；不能带时间字段
+        local-date-formats: []          # LocalDate 反序列化的额外候选格式，按顺序尝试
         time-zone:                      # 日期时区；空表示沿用应用默认

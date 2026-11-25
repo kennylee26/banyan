@@ -34,7 +34,11 @@ Spring MVC 应用能力扩展。引入后自动装配，把**接口异常统一�
 | `banyan.spring.mvc.jackson.long-as-string` | `true` | Long 序列化为字符串，防 JS 精度丢失 |
 | `banyan.spring.mvc.jackson.enums-using-name` | `true` | 枚举按 `name()` 序列化 |
 | `banyan.spring.mvc.jackson.big-decimal-as-plain` | `true` | BigDecimal 不使用科学计数法 |
-| `banyan.spring.mvc.jackson.date-format` | `yyyy-MM-dd HH:mm:ss` | `Date` 与 `LocalDateTime` 的输入/输出格式；空表示不处理日期 |
+| `banyan.spring.mvc.jackson.lenient-boolean` | `true` | 布尔接受 `true/false`、`0/1`、字符串 `"true"/"false"/"0"/"1"` |
+| `banyan.spring.mvc.jackson.date-format` | `yyyy-MM-dd HH:mm:ss` | `Date` 输出 + `LocalDateTime` 反序列化首选格式；空表示不处理日期 |
+| `banyan.spring.mvc.jackson.date-formats` | `[]` | `LocalDateTime` 反序列化的额外候选格式，按顺序尝试 |
+| `banyan.spring.mvc.jackson.local-date-format` | `yyyy-MM-dd` | `LocalDate` 输出 + 反序列化首选格式；不能带时间字段 |
+| `banyan.spring.mvc.jackson.local-date-formats` | `[]` | `LocalDate` 反序列化的额外候选格式，按顺序尝试 |
 | `banyan.spring.mvc.jackson.time-zone` | （空） | 日期时区；空表示沿用应用默认 |
 
 完整默认值与注释见 [`banyan-spring-mvc.yml`](banyan-spring-mvc.yml)，全仓总表见 [`CONFIGURATION.md`](../../CONFIGURATION.md)。
@@ -73,7 +77,9 @@ ExceptionResultFactory exceptionResultFactory() {
 - `Long` → JSON 字符串，避免前端精度丢失。
 - 枚举按 `name()` 序列化。
 - BigDecimal 不使用科学计数法。
-- `java.util.Date` 与 `LocalDateTime` 按 `banyan.spring.mvc.jackson.date-format`（默认 `yyyy-MM-dd HH:mm:ss`）双向转换；`LocalDate` / `LocalTime` 保持 Jackson 默认 ISO 格式。
+- `java.util.Date` 与 `LocalDateTime` 按 `date-format`（默认 `yyyy-MM-dd HH:mm:ss`）转换；`LocalDate` 按 `local-date-format`（默认 `yyyy-MM-dd`）转换；`LocalTime` 保持 Jackson 默认 `HH:mm:ss`。
+- **反序列化支持多格式**：`date-formats` / `local-date-formats` 可追加多个候选，按顺序尝试，全部失败才报错；序列化始终用 `date-format` / `local-date-format`（只能一个输出格式）。
+- **宽松布尔解析**：`lenient-boolean=true`（默认）时，布尔字段接受 `true/false`、数字 `0/1`、字符串 `"true"/"false"/"0"/"1"`。
 
 配置示例：
 

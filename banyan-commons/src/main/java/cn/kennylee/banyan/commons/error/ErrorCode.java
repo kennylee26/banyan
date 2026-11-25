@@ -278,7 +278,13 @@ public enum ErrorCode {
     SPRING_MVC_INTERNAL_ERROR("banyan.spring.mvc.internal-error"),
 
     /** 请求处理异常日志模板，参数为异常类型。 */
-    SPRING_MVC_EXCEPTION_HANDLED("banyan.spring.mvc.exception-handled");
+    SPRING_MVC_EXCEPTION_HANDLED("banyan.spring.mvc.exception-handled"),
+
+    /** 日期字符串无法按配置的格式解析。 */
+    SPRING_MVC_DATE_PARSE_FAILED("banyan.spring.mvc.date-parse-failed"),
+
+    /** 布尔值无法解析。 */
+    SPRING_MVC_BOOLEAN_PARSE_FAILED("banyan.spring.mvc.boolean-parse-failed");
 
     /** 资源文件中的消息 key。 */
     private final String messageKey;
