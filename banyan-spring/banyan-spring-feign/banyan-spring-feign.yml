@@ -1,0 +1,27 @@
+# banyan-spring-feign 配置参考
+# 本文件是显式配置参考，不参与构建、不打入 jar；所有值均为框架默认值，可直接拷贝后按需修改。
+# 对应 java config：FeignProperties / FeignAutoConfiguration / FeignMissingClassAutoConfiguration
+#   （banyan-spring/banyan-spring-feign/src/main/java/cn/kennylee/banyan/spring/feign/autoconfigure/）
+# forward-headers.* 的 clear-after-apply / blocked-headers 继承自 banyan-commons 的 HeaderForwardOptions；
+# logging.* 继承自 banyan-commons 的 LoggingOptions。
+# 全仓总表见 ../../CONFIGURATION.md
+banyan:
+  spring:
+    feign:
+      enabled: true                          # 总开关（Properties 字段默认 true；@ConditionalOnProperty matchIfMissing=true）
+      forward-headers:
+        enabled: false                       # 入站 header 转发开关，默认关闭；@ConditionalOnProperty havingValue="true" 且无 matchIfMissing（FeignProperties.ForwardHeaders 字段默认 false）
+        clear-after-apply: true              # 应用后自动清理上下文（HeaderForwardOptions 字段默认 true）
+        blocked-headers: []                  # 额外阻塞头（HeaderForwardOptions 字段默认空列表）
+      request-log:
+        enabled: true                        # 请求日志开关（FeignProperties.Toggle 字段默认 true；@ConditionalOnProperty havingValue="true" matchIfMissing=true）
+      response-log:
+        enabled: true                        # 响应日志开关（FeignProperties.Toggle 字段默认 true；@ConditionalOnProperty havingValue="true" matchIfMissing=true）
+      logging:
+        mask-sensitive: true                 # 是否对敏感 header 脱敏（LoggingOptions 字段默认 true）
+        masked-headers:                      # 需要脱敏的 header（LoggingOptions 字段默认 ["Authorization","Cookie","Set-Cookie"]）
+          - Authorization
+          - Cookie
+          - Set-Cookie
+        ignored-headers: []                  # 完全不打印的 header（LoggingOptions 字段默认空列表）
+        max-body-length: 2048               # body 打印上限（LoggingOptions.DEFAULT_MAX_BODY_LENGTH=2048 常量）

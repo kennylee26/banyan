@@ -1,0 +1,9 @@
+# banyan-data-mongodb-springdata 配置参考
+# 本文件是显式配置参考，不参与构建、不打入 jar；所有值均为框架默认值，可直接拷贝后按需修改。
+# 对应 java config：仅 @ConditionalOnProperty 条件注解（无 *Properties 类）
+#   MongoDbDasAutoConfiguration / MongoDbDasMissingClassAutoConfiguration
+#   （banyan-data/banyan-data-mongodb-springdata/src/main/java/cn/kennylee/banyan/data/mongodb/springdata/autoconfigure/）
+# 全仓总表见 ../../CONFIGURATION.md
+banyan:
+  data-mongodb:
+    enabled: true   # 总开关；false 时不注册任何 banyan-data-mongodb bean（仅 @ConditionalOnProperty，matchIfMissing=true；无 Properties 字段）

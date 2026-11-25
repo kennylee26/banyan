@@ -1,0 +1,19 @@
+# banyan-cache 配置参考
+# 本文件是显式配置参考，不参与构建、不打入 jar；所有值均为框架默认值，可直接拷贝后按需修改。
+# 对应 java config：CacheProperties / CacheAutoConfiguration / CacheMissingClassAutoConfiguration
+#   （banyan-cache/src/main/java/cn/kennylee/banyan/cache/autoconfigure/）
+# 全仓总表见 ../CONFIGURATION.md
+banyan:
+  cache:
+    enabled: true                 # 总开关；false 时不注册任何 banyan-cache bean（Properties 字段默认 true；@ConditionalOnProperty matchIfMissing=true）
+    read-write-enabled: true       # 读写开关；false 时读返回空、写 no-op（Properties 字段默认 true）
+    max-key-length: 512           # key 最大长度（CacheKeys.DEFAULT_MAX_KEY_LENGTH=512 常量）
+    type-marker:
+      enabled: true               # 是否给本库写入的值附加类型标记（Properties 字段默认 true）
+    penetration:
+      enabled: false              # 穿透防护开关（Properties 字段默认 false）
+    lock:
+      ttl: 5s                     # 删缓存锁 TTL（Duration.ofSeconds(5)）
+    scan:
+      batch-size: 500             # 单批扫描与删除数量（Properties 字段默认 500）
+      max-deletions: 1000         # 单次调用最大删除数量（Properties 字段默认 1000）

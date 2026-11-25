@@ -1,0 +1,34 @@
+# banyan-mq 配置参考（聚合根）
+# 本文件是显式配置参考，不参与构建、不打入 jar；所有值均为框架默认值，可直接拷贝后按需修改。
+# 聚合 banyan-mq-commons-spring / banyan-mq-producer / banyan-mq-consumer / banyan-mq-kafka-spring / banyan-mq-rocketmq-apache 各子模块的 banyan.mq.* 键。
+# 对应 java config：MqProperties（commons-spring）、MqCommonsAutoConfiguration（commons-spring）、
+#   MqProducerAutoConfiguration / MqProducerMissingClassAutoConfiguration（producer）、
+#   MqConsumerAutoConfiguration / MqConsumerMissingClassAutoConfiguration（consumer）、
+#   KafkaMqAutoConfiguration / KafkaMqMissingClassAutoConfiguration（kafka-spring）、
+#   RocketMqAutoConfiguration / RocketMqMissingClassAutoConfiguration（rocketmq-apache）
+# 既有 banyan-mq/CONFIGURATION.md 保留不动，见该文件了解更多原生配置说明。
+# 全仓总表见 ../CONFIGURATION.md
+banyan:
+  mq:
+    enabled: true                    # 总开关；false 时不注册任何 banyan-mq bean（MqProperties 字段默认 true / commons-spring；@ConditionalOnProperty 与 @ConditionalOnExpression 亦读此键 / 全部子模块；matchIfMissing=true）
+    suffix:                          # 环境后缀；为空时用首个激活 profile，没有 profile 时不追加（MqProperties 字段，无显式默认值 / commons-spring）
+    producer:
+      enabled: true                  # 生产者模块开关（MqProperties.Producer / commons-spring；producer 的 @ConditionalOnExpression 亦读此键；表达式默认 true）
+      tag-suffix-enabled: true       # 发送侧是否默认给 tag 追加环境后缀（MqProperties.Producer / commons-spring）
+    consumer:
+      enabled: true                  # 消费者模块开关（MqProperties.Consumer / commons-spring；consumer 的 @ConditionalOnExpression 亦读此键；表达式默认 true）
+      suffix-enabled: true           # 消费者是否给消费组与 tag 追加环境后缀（MqProperties.Consumer / commons-spring）
+    kafka:
+      enabled: true                  # Kafka 后端开关（仅 @ConditionalOnProperty / kafka-spring；matchIfMissing=true；无 Properties 字段）
+    rocketmq:
+      enabled: true                  # RocketMQ 后端开关（仅 @ConditionalOnProperty / rocketmq-apache；matchIfMissing=true；无 Properties 字段）
+    # 逻辑实例：Map<String, Instance>，实例名到后端类型的映射（MqProperties / commons-spring）。
+    # 键形态为 banyan.mq.instances.<name>.type；<name> 为业务自定义实例名，type 取 kafka / rocketmq。
+    # 默认空 Map：未声明 instances 时，每个后端自动生成一个同名实例（实例名 = 后端类型），单后端项目零配置。
+    # 声明后业务通过实例名路由；未声明的实例在启动期报错。示例：
+    # instances:
+    #   member-kafka:
+    #     type: kafka
+    #   member-rocketmq:
+    #     type: rocketmq
+    instances: {}                     # 逻辑实例映射（MqProperties.instances，默认空 LinkedHashMap / commons-spring）

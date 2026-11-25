@@ -1,0 +1,23 @@
+# banyan-sign-openapi 配置参考
+# 本文件是显式配置参考，不参与构建、不打入 jar；所有值均为框架默认值，可直接拷贝后按需修改。
+# 对应 java config：OpenApiSignProperties / OpenApiSignAutoConfiguration / OpenApiSignMissingClassAutoConfiguration
+#   （banyan-sign/banyan-sign-openapi/src/main/java/cn/kennylee/banyan/openapi/sign/autoconfigure/）
+# 全仓总表见 ../../CONFIGURATION.md
+banyan:
+  openapi-sign:
+    enabled: true                  # 总开关（Properties 字段默认 true；@ConditionalOnProperty matchIfMissing=true）
+    encrypted: true                # 是否要求并执行请求体解密（Properties 字段默认 true）
+    sign-algorithm: HmacSHA256     # 签名算法标识（HmacSha256SignAlgorithm.NAME 常量）
+    cipher: aes-gcm                # 加密算法标识（AesGcmPayloadCipher.NAME 常量）
+    window: 5m                     # 验签时间窗口（Duration.ofMinutes(5)）
+    reveal-reason: false           # 是否在响应中返回具体失败原因（Properties 字段默认 false）
+    headers:
+      alg: X-Banyan-Alg            # 算法 header 名（Signs.HEADER_ALG 常量）
+      key-id: X-Banyan-KeyId       # 密钥标识 header 名（Signs.HEADER_KEY_ID 常量）
+      timestamp: X-Banyan-Timestamp # 时间戳 header 名（Signs.HEADER_TIMESTAMP 常量）
+      nonce: X-Banyan-Nonce        # nonce header 名（Signs.HEADER_NONCE 常量）
+      sign: X-Banyan-Sign          # 签名 header 名（Signs.HEADER_SIGN 常量）
+    keys: {}                       # keyId 到 secret 的映射，仅用于演示与联调（LinkedHashMap，默认空 Map）
+    error:
+      code: openapi.sign.invalid   # 响应中的错误码，不随失败原因变化（DEFAULT_ERROR_CODE 常量）
+      message:                     # 通用失败文案；为空时取消息资源（Properties 字段无显式默认值，为空）

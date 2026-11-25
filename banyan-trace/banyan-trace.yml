@@ -1,0 +1,28 @@
+# banyan-trace 配置参考
+# 本文件是显式配置参考，不参与构建、不打入 jar；所有值均为框架默认值，可直接拷贝后按需修改。
+# 对应 java config：TraceProperties / TraceAutoConfiguration / TraceContextPropagationAutoConfiguration / TraceMissingClassAutoConfiguration
+#   （banyan-trace/src/main/java/cn/kennylee/banyan/trace/autoconfigure/）
+# 全仓总表见 ../CONFIGURATION.md
+banyan:
+  trace:
+    enabled: true                          # 总开关；false 时不注册任何 banyan-trace bean（Properties 字段默认 true；@ConditionalOnProperty matchIfMissing=true）
+    header-name: X-Trace-Id                # 传输 header 名（DEFAULT_HEADER_NAME 常量）
+    mdc-key: traceId                       # 日志 MDC key（DEFAULT_MDC_KEY 常量）
+    accept-incoming: true                  # 是否沿用上游传入的 TraceId（Properties 字段默认 true）
+    accept-query-trace-id: false           # 是否允许从 query 参数兜底取 TraceId（Properties 字段默认 false）
+    response-header:
+      enabled: true                        # 是否回写响应头（Properties 字段默认 true）
+    servlet:
+      enabled: true                        # 是否启用 Servlet 过滤器（@ConditionalOnProperty matchIfMissing=true）
+      filter-order: -2147483638            # 过滤器顺序（Ordered.HIGHEST_PRECEDENCE + 10 = -2147483648 + 10）
+    webflux:
+      enabled: true                        # 是否启用 WebFlux 过滤器（@ConditionalOnProperty matchIfMissing=true）
+      context-propagation:
+        enabled: true                      # 是否开启 Reactor 自动上下文传播（@ConditionalOnProperty matchIfMissing=true）
+    feign:
+      enabled: true                        # 是否启用 Feign 出向透传（@ConditionalOnProperty matchIfMissing=true）
+      response-enabled: true               # 是否启用响应侧 TraceId 补全（@ConditionalOnProperty matchIfMissing=true）
+    dubbo:
+      enabled: true                        # 是否启用 Dubbo 提供端与消费端透传（@ConditionalOnProperty matchIfMissing=true）
+    async:
+      decorate-executors: true             # 是否自动给容器中的线程池补设装饰器（Properties 字段默认 true）

@@ -1,0 +1,21 @@
+# banyan-data-mysql-mybatis 配置参考
+# 本文件是显式配置参考，不参与构建、不打入 jar；所有值均为框架默认值，可直接拷贝后按需修改。
+# 对应 java config：MyBatisDasProperties / MyBatisDasAutoConfiguration / MyBatisInterceptorAutoConfiguration / MyBatisInterceptorMissingClassAutoConfiguration
+#   （banyan-data/banyan-data-mysql-mybatis/src/main/java/cn/kennylee/banyan/data/mysql/mybatis/autoconfigure/）
+# 另外 banyan.data-mysql.max-update-columns 由 BaseDas.java 通过 Environment.getProperty 读取（非 Properties 字段）
+# 全仓总表见 ../../CONFIGURATION.md
+banyan:
+  data-mysql:
+    enabled: true                          # 总开关（仅 @ConditionalOnProperty，matchIfMissing=true；无 Properties 字段）
+    max-update-columns: 6                  # 单条批量 UPDATE 允许更新的列数上限；BaseDas.DEFAULT_MAX_UPDATE_COLUMNS=6，硬上限 32（Environment.getProperty 读取）
+    pagination:
+      enabled: true                        # 是否启用分页（Properties 字段默认 true）
+      max-limit: -1                        # 单页上限，-1 表示不限制（Properties 字段默认 -1L）
+      overflow: false                      # 页码超出末页时是否回到首页（Properties 字段默认 false）
+      db-type:                             # 数据库类型，留空时由 MyBatis-Plus 自动探测（Properties 字段无显式默认值，为空）
+    like-escape:
+      enabled: true                        # 框架自身查询 DTO 产出的 like 条件是否转义（Properties 字段默认 true）
+      inner-interceptor:
+        enabled: false                     # 是否启用全局 SQL 层转义（Properties 字段默认 false）
+    block-attack:
+      enabled: false                       # 是否启用全表更新/删除防护（Properties 字段默认 false）

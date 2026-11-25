@@ -1,0 +1,22 @@
+# banyan-log 配置参考
+# 本文件是显式配置参考，不参与构建、不打入 jar；所有值均为框架默认值，可直接拷贝后按需修改。
+# 对应 java config：LogProperties / LogAutoConfiguration / LogMissingClassAutoConfiguration
+#   （banyan-log/src/main/java/cn/kennylee/banyan/log/autoconfigure/）
+# 全仓总表见 ../CONFIGURATION.md
+#
+# 说明：以下 banyan.log.logback.* 键由 logback XML 模板的 <springProperty> 读取，Java 侧无默认值，
+# 仅在 banyan-log/src/main/resources/banyan/logback/banyan-logback-spring.xml 中声明 defaultValue，
+# 故此处仅以注释列出键名与来源，不作为 YAML 键、不提供 Java 侧默认值：
+#   # banyan.log.logback.trace-id-key   → <springProperty source="banyan.log.logback.trace-id-key" defaultValue="traceId"/>（XML 默认值见模板）
+#   # banyan.log.logback.path           → <springProperty source="banyan.log.logback.path" defaultValue="logs"/>（XML 默认值见模板）
+#   # banyan.log.logback.max-size       → <springProperty source="banyan.log.logback.max-size" defaultValue="100MB"/>（XML 默认值见模板）
+#   # banyan.log.logback.max-history    → <springProperty source="banyan.log.logback.max-history" defaultValue="30"/>（XML 默认值见模板）
+#   # banyan.log.logback.total-size-cap → <springProperty source="banyan.log.logback.total-size-cap" defaultValue="10GB"/>（XML 默认值见模板）
+# 模板中的 logging.pattern.correlation / spring.application.name / logging.level.root 属 Spring Boot / logback 原生键，非本库属性。
+banyan:
+  log:
+    enabled: true                 # 总开关；只管 Java 侧能力，不影响宿主 include 的 XML 模板（Properties 字段默认 true；@ConditionalOnProperty matchIfMissing=true）
+    lifecycle:
+      enabled: true               # 生命周期日志开关（Properties 字段默认 true；@ConditionalOnProperty matchIfMissing=true）
+      environment-enabled: true   # 是否输出环境快照（Properties 字段默认 true）
+      banner:                     # 自定义启动横幅；留空时使用消息资源（Properties 字段无显式默认值，为空）
