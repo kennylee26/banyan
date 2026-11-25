@@ -2,7 +2,7 @@
 
 Feign 应用能力扩展。引入后自动装配请求/响应日志与 header 转发能力，不用自己写 `RequestInterceptor` / `Decoder`。
 
-## 这个模块带来什么
+## 一、模块能力
 
 - **请求/响应 DEBUG 日志**：默认开启，敏感 header 默认脱敏，可配置忽略头、脱敏名单与 body 截断长度。
 - **入站 header 转发**：默认**关闭**（避免自动带出 Cookie / Authorization 等敏感头）；开启后转发入站 header，支持额外阻塞头与自定义头。
@@ -10,7 +10,9 @@ Feign 应用能力扩展。引入后自动装配请求/响应日志与 header �
 - **透明响应日志解码器**：包装当前 `Decoder`，只打印响应、不判断业务返回体、不破坏原解码结果或异常。
 - **traceId 配合**：`banyan-trace` 在 classpath 有 Feign 时自动出向透传 `X-Trace-Id`、响应侧补全，两模块互不依赖。
 
-适合「用了 Spring Cloud OpenFeign、想统一日志与 header 传播」的应用。只发简单调用、不需要日志与转发的话，这个包带来的价值有限。
+适合「用了 Spring Cloud OpenFeign、想统一日志与 header 传播」的应用。只发简单调用、不需要日志与转发的话，这个包带来的价值有限。各能力的源码位置见文末「七、能力 → 代码位置」。
+
+## 二、引入
 
 ```xml
 <dependency>
@@ -20,7 +22,7 @@ Feign 应用能力扩展。引入后自动装配请求/响应日志与 header �
 </dependency>
 ```
 
-## 配置
+## 三、配置
 
 | 配置项 | 默认 | 说明 |
 |---|---|---|
@@ -37,7 +39,9 @@ Feign 应用能力扩展。引入后自动装配请求/响应日志与 header �
 
 默认阻塞头：`Cookie`、`Set-Cookie`、`Content-Length`、`Content-Type`、`Accept`、`Authorization`。
 
-## 单次 header 上下文
+完整默认值与注释见 [`banyan-spring-feign.yml`](banyan-spring-feign.yml)，全仓总表见 [`CONFIGURATION.md`](../../CONFIGURATION.md)。
+
+## 四、单次 header 上下文
 
 ```java
 HeaderContextHolder.addCustomHeader("X-Tenant", "t1");
@@ -52,7 +56,7 @@ HeaderContextHolder.setClearAtOnce(false);     // 自行控制 clear()
 默认 apply 后自动 `clear()`，避免异步/线程池串 header；同一线程里串联多个出站能力时，
 先 `setClearAtOnce(false)`，由调用方统一 `clear()`，避免前一个能力清掉后一个要用的 header。
 
-## traceId
+## 五、traceId
 
 trace 能力在 `banyan-trace`：
 
@@ -60,8 +64,19 @@ trace 能力在 `banyan-trace`：
 - 响应侧：当前线程无 traceId 且响应头带 `X-Trace-Id` 时临时补全，finally 恢复。
 - 开关：`banyan.trace.feign.enabled` / `banyan.trace.feign.response-enabled`。
 
-## 响应日志解码器
+## 六、响应日志解码器
 
 `LoggingFeignDecoderCustomizer` 通过 `FeignBuilderCustomizer` 包装当前 Decoder，不判断业务返回体、不改变原解码结果或异常；body 只读取一次后重建 Response 再委托。
 
 需要关闭时：`banyan.spring.feign.response-log.enabled=false`。
+
+## 七、能力 → 代码位置
+
+| 能力 | 源码位置 | 关键类型 |
+|---|---|---|
+| 请求日志与 header 转发 | [`interceptor/`](src/main/java/cn/kennylee/banyan/spring/feign/interceptor/) | `FeignRequestLogInterceptor`、`ForwardHeadersInterceptor` |
+| 响应日志解码器 | [`logging/`](src/main/java/cn/kennylee/banyan/spring/feign/logging/) | `LoggingFeignDecoder`、`LoggingFeignDecoderCustomizer`、`LoggingFeignDecoderCapability` |
+| 配置属性 | [`FeignProperties.java`](src/main/java/cn/kennylee/banyan/spring/feign/autoconfigure/FeignProperties.java) | `FeignProperties`（`forward-headers` 继承 `HeaderForwardOptions`、`logging` 继承 `LoggingOptions`，均在 `banyan-commons`） |
+| 自动装配与缺类降级 | [`autoconfigure/`](src/main/java/cn/kennylee/banyan/spring/feign/autoconfigure/) | `FeignAutoConfiguration`、`FeignMissingClassAutoConfiguration`，注册清单见 [`AutoConfiguration.imports`](src/main/resources/META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports) |
+| 单次 header 上下文 | `banyan-commons` 的 `cn.kennylee.banyan.commons.http` | `HeaderContextHolder`、`HeaderForwardOptions` |
+| 配置参考 | [`banyan-spring-feign.yml`](banyan-spring-feign.yml) | 全部键与默认值 |
