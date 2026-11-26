@@ -37,6 +37,9 @@ An infrastructure toolkit for Spring Boot.
 | `banyan-spring` | Parent module of Spring Boot application capabilities (compile-scope Spring deps, enabled switches) |
 | `banyan-spring-feign` | Feign capability: header forwarding, request/response logging and auto-configuration |
 | `banyan-spring-mvc` | Spring MVC capability: ordered exception advices, replaceable error response and optional Jackson enhancements |
+| `banyan-excel` | Parent module of the spreadsheet export layer |
+| `banyan-excel-exporter` | Zero-dependency export contracts: batch source, row writer SPI, export flow and result |
+| `banyan-excel-exporter-fastexcel` | FastExcel backend: xlsx templates, automatic sheet splitting and CSV output |
 
 ## Configuration reference
 
@@ -90,6 +93,9 @@ Some modules have their own `README.md` with usage examples and gotchas (Java pa
 | [`banyan-data/README.md`](banyan-data/README.md) | Data access layer contracts, MySQL and MongoDB quick start, module dependency direction |
 | [`banyan-data-mysql-mybatis/README.md`](banyan-data/banyan-data-mysql-mybatis/README.md) | `BanyanQueryWrapper`, LIKE escaping boundary |
 | [`banyan-mq/README.md`](banyan-mq/README.md) | `@MqConsumer`, producer/consumer split, instance routing, capability differences |
+| [`banyan-excel/README.md`](banyan-excel/README.md) | Spreadsheet export family overview and module dependency direction |
+| [`banyan-excel/banyan-excel-exporter/README.md`](banyan-excel/banyan-excel-exporter/README.md) | Zero-dependency export contracts: batch source, cursor, limits and result |
+| [`banyan-excel/banyan-excel-exporter-fastexcel/README.md`](banyan-excel/banyan-excel-exporter-fastexcel/README.md) | FastExcel backend: xlsx templates, automatic sheet splitting, CSV |
 
 ## Coordinates
 

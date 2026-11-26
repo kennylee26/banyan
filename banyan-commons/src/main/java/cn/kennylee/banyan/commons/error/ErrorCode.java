@@ -284,7 +284,16 @@ public enum ErrorCode {
     SPRING_MVC_DATE_PARSE_FAILED("banyan.spring.mvc.date-parse-failed"),
 
     /** 布尔值无法解析。 */
-    SPRING_MVC_BOOLEAN_PARSE_FAILED("banyan.spring.mvc.boolean-parse-failed");
+    SPRING_MVC_BOOLEAN_PARSE_FAILED("banyan.spring.mvc.boolean-parse-failed"),
+
+    /** 导出失败。 */
+    EXPORT_FAILED("banyan.excel.export-failed"),
+
+    /** 导出配置非法。 */
+    EXPORT_CONFIG_INVALID("banyan.excel.config-invalid"),
+
+    /** 导出必需参数为空。 */
+    EXPORT_REQUIRED("banyan.excel.required");
 
     /** 资源文件中的消息 key。 */
     private final String messageKey;
