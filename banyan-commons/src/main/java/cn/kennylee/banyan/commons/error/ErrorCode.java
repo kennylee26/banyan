@@ -293,7 +293,16 @@ public enum ErrorCode {
     EXPORT_CONFIG_INVALID("banyan.excel.config-invalid"),
 
     /** 导出必需参数为空。 */
-    EXPORT_REQUIRED("banyan.excel.required");
+    EXPORT_REQUIRED("banyan.excel.required"),
+
+    /** 解析 Excel 失败。 */
+    PARSE_FAILED("banyan.excel.parse-failed"),
+
+    /** 解析配置非法。 */
+    PARSE_CONFIG_INVALID("banyan.excel.parse-config-invalid"),
+
+    /** 解析必需参数为空。 */
+    PARSE_REQUIRED("banyan.excel.parse-required");
 
     /** 资源文件中的消息 key。 */
     private final String messageKey;

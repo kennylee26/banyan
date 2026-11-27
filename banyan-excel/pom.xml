@@ -15,10 +15,12 @@
     <packaging>pom</packaging>
 
     <name>banyan-excel</name>
-    <description>表格导出模块族：零依赖公共契约与可替换的写出实现</description>
+    <description>表格读写模块族：零依赖公共契约与可替换的读写实现</description>
 
     <modules>
         <module>banyan-excel-exporter</module>
         <module>banyan-excel-exporter-fastexcel</module>
+        <module>banyan-excel-parser</module>
+        <module>banyan-excel-parser-fastexcel</module>
     </modules>
 </project>

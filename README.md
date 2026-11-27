@@ -37,9 +37,11 @@ An infrastructure toolkit for Spring Boot.
 | `banyan-spring` | Parent module of Spring Boot application capabilities (compile-scope Spring deps, enabled switches) |
 | `banyan-spring-feign` | Feign capability: header forwarding, request/response logging and auto-configuration |
 | `banyan-spring-mvc` | Spring MVC capability: ordered exception advices, replaceable error response and optional Jackson enhancements |
-| `banyan-excel` | Parent module of the spreadsheet export layer |
+| `banyan-excel` | Parent module of the spreadsheet read/write layer |
 | `banyan-excel-exporter` | Zero-dependency export contracts: batch source, row writer SPI, export flow and result |
 | `banyan-excel-exporter-fastexcel` | FastExcel backend: xlsx templates, automatic sheet splitting and CSV output |
+| `banyan-excel-parser` | Zero-dependency parse contracts: push-based batch reading, row reader SPI and result |
+| `banyan-excel-parser-fastexcel` | FastExcel backend: streaming xlsx reading, header aliases, sheet selection and CSV |
 
 ## Configuration reference
 
@@ -93,9 +95,11 @@ Some modules have their own `README.md` with usage examples and gotchas (Java pa
 | [`banyan-data/README.md`](banyan-data/README.md) | Data access layer contracts, MySQL and MongoDB quick start, module dependency direction |
 | [`banyan-data-mysql-mybatis/README.md`](banyan-data/banyan-data-mysql-mybatis/README.md) | `BanyanQueryWrapper`, LIKE escaping boundary |
 | [`banyan-mq/README.md`](banyan-mq/README.md) | `@MqConsumer`, producer/consumer split, instance routing, capability differences |
-| [`banyan-excel/README.md`](banyan-excel/README.md) | Spreadsheet export family overview and module dependency direction |
+| [`banyan-excel/README.md`](banyan-excel/README.md) | Spreadsheet read/write family overview and module dependency direction |
 | [`banyan-excel/banyan-excel-exporter/README.md`](banyan-excel/banyan-excel-exporter/README.md) | Zero-dependency export contracts: batch source, cursor, limits and result |
 | [`banyan-excel/banyan-excel-exporter-fastexcel/README.md`](banyan-excel/banyan-excel-exporter-fastexcel/README.md) | FastExcel backend: xlsx templates, automatic sheet splitting, CSV |
+| [`banyan-excel/banyan-excel-parser/README.md`](banyan-excel/banyan-excel-parser/README.md) | Zero-dependency parse contracts: push-based batches, row cursor, limits and result |
+| [`banyan-excel/banyan-excel-parser-fastexcel/README.md`](banyan-excel/banyan-excel-parser-fastexcel/README.md) | FastExcel backend: streaming xlsx, header aliases, sheet selection, CSV |
 
 ## Coordinates
 

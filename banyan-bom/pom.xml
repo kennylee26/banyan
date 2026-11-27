@@ -139,6 +139,16 @@
                 <artifactId>banyan-excel-exporter-fastexcel</artifactId>
                 <version>${project.version}</version>
             </dependency>
+            <dependency>
+                <groupId>cn.kennylee.banyan</groupId>
+                <artifactId>banyan-excel-parser</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>cn.kennylee.banyan</groupId>
+                <artifactId>banyan-excel-parser-fastexcel</artifactId>
+                <version>${project.version}</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 </project>

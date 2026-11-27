@@ -37,9 +37,11 @@
 | `banyan-spring` | Spring Boot 应用能力扩展父模块（强依赖 Spring 生态，提供 enabled 开关） |
 | `banyan-spring-feign` | Feign 能力：header 转发、请求/响应日志与自动装配 |
 | `banyan-spring-mvc` | Spring MVC 能力：按优先级分级的异常 advice、可替换错误响应与可选 Jackson 增强 |
-| `banyan-excel` | 表格导出模块族父模块 |
+| `banyan-excel` | 表格读写模块族父模块 |
 | `banyan-excel-exporter` | 零依赖导出契约：批次数据源、行写入器 SPI、导出流程与结果 |
 | `banyan-excel-exporter-fastexcel` | 基于 FastExcel 的实现：xlsx 模板填充、自动分 sheet 与 CSV 输出 |
+| `banyan-excel-parser` | 零依赖解析契约：推送式分批读取、行读取器 SPI 与结果 |
+| `banyan-excel-parser-fastexcel` | 基于 FastExcel 的实现：xlsx 流式读取、表头别名、sheet 选择与 CSV |
 
 ## 配置参考
 
@@ -93,9 +95,11 @@
 | [`banyan-data/README.md`](banyan-data/README.md) | 数据访问层公共契约、MySQL 与 MongoDB 快速接入、模块依赖方向 |
 | [`banyan-data-mysql-mybatis/README.md`](banyan-data/banyan-data-mysql-mybatis/README.md) | `BanyanQueryWrapper`、LIKE 转义边界 |
 | [`banyan-mq/README.md`](banyan-mq/README.md) | `@MqConsumer`、生产者/消费者拆分、实例路由、能力差异 |
-| [`banyan-excel/README.md`](banyan-excel/README.md) | 表格导出模块族概览与依赖方向 |
+| [`banyan-excel/README.md`](banyan-excel/README.md) | 表格读写模块族概览与依赖方向 |
 | [`banyan-excel/banyan-excel-exporter/README.md`](banyan-excel/banyan-excel-exporter/README.md) | 零依赖导出契约：批次数据源、游标、上限与结果 |
 | [`banyan-excel/banyan-excel-exporter-fastexcel/README.md`](banyan-excel/banyan-excel-exporter-fastexcel/README.md) | FastExcel 实现：xlsx 模板、自动分 sheet、CSV |
+| [`banyan-excel/banyan-excel-parser/README.md`](banyan-excel/banyan-excel-parser/README.md) | 零依赖解析契约：推送式分批、行号、上限与结果 |
+| [`banyan-excel/banyan-excel-parser-fastexcel/README.md`](banyan-excel/banyan-excel-parser-fastexcel/README.md) | FastExcel 实现：xlsx 流式读取、表头别名、sheet 选择、CSV |
 
 ## 坐标
 
